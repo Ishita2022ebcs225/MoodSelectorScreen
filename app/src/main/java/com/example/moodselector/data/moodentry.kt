@@ -10,7 +10,7 @@ data class MoodEntry(
 
     val mood: String,
 
-    val subtitle: String,
+    val emoji: String,
 
-    val timestamp: Long
+    val timestamp: String
 )
