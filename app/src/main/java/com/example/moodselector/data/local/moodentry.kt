@@ -1,4 +1,4 @@
-package com.example.moodselector.data
+package com.example.moodselector.data.local
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 

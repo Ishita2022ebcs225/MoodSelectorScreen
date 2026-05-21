@@ -1,9 +1,9 @@
-package com.example.moodselector.viewmodel
+package com.example.moodselector.presentations.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.moodselector.data.MoodEntry
-import com.example.moodselector.repository.MoodRepository
+import com.example.moodselector.data.local.MoodEntry
+import com.example.moodselector.domain.repository.MoodRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
@@ -18,7 +18,7 @@ class MoodViewModel @Inject constructor(
     private val repository: MoodRepository
 ) : ViewModel() {
 
-    val moodList = repository.allMoods
+    val moodList = repository.getAllMoods()
         .stateIn(
             viewModelScope,
             SharingStarted.WhileSubscribed(5000),

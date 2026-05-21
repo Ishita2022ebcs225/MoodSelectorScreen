@@ -1,22 +1,20 @@
 package com.example.moodselector.di
 
-import com.example.moodselector.data.MoodDao
-import com.example.moodselector.repository.MoodRepository
+import com.example.moodselector.data.repository.MoodRepositoryImpl
+import com.example.moodselector.domain.repository.MoodRepository
+import dagger.Binds
 import dagger.Module
-import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-object RepositoryModule {
+abstract class RepositoryModule {
 
-    @Provides
+    @Binds
     @Singleton
-    fun provideMoodRepository(
-        dao: MoodDao
-    ): MoodRepository {
-        return MoodRepository(dao)
-    }
+    abstract fun bindMoodRepository(
+        impl: MoodRepositoryImpl
+    ): MoodRepository
 }

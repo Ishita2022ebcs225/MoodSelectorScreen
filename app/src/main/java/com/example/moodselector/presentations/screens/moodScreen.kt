@@ -1,4 +1,4 @@
-package com.example.moodselector.ui.theme
+package com.example.moodselector.presentations.screens
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -21,7 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.moodselector.viewmodel.MoodViewModel
+import com.example.moodselector.presentations.viewmodel.MoodViewModel
 
 data class MoodItem(
     val emoji: String,

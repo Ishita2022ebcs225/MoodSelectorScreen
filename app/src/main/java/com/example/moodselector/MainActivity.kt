@@ -9,9 +9,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.moodselector.ui.theme.MoodselectorTheme
-import com.example.moodselector.ui.theme.MoodScreen
-import com.example.moodselector.viewmodel.MoodViewModel
+import com.example.moodselector.presentations.theme.MoodselectorTheme
+import com.example.moodselector.presentations.screens.MoodScreen
+import com.example.moodselector.presentations.viewmodel.MoodViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
 

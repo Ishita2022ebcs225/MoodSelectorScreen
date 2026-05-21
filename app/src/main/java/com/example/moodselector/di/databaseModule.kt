@@ -2,8 +2,8 @@ package com.example.moodselector.di
 
 import android.content.Context
 import androidx.room.Room
-import com.example.moodselector.data.MoodDao
-import com.example.moodselector.data.MoodDatabase
+import com.example.moodselector.data.local.MoodDao
+import com.example.moodselector.data.local.MoodDatabase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
