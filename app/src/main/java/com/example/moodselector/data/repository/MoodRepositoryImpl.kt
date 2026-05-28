@@ -1,7 +1,7 @@
 package com.example.moodselector.data.repository
 
-import com.example.moodselector.data.local.MoodDao
-import com.example.moodselector.data.local.MoodEntry
+import com.example.moodselector.data.local.dao.MoodDao
+import com.example.moodselector.data.local.entity.MoodEntry
 import com.example.moodselector.domain.repository.MoodRepository
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject

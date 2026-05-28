@@ -1,8 +1,8 @@
-package com.example.moodselector.presentations.viewmodel
+package com.example.moodselector.presentations.mood
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.moodselector.data.local.MoodEntry
+import com.example.moodselector.data.local.entity.MoodEntry
 import com.example.moodselector.domain.repository.MoodRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
@@ -18,14 +18,19 @@ class MoodViewModel @Inject constructor(
     private val repository: MoodRepository
 ) : ViewModel() {
 
+    // Observe all moods
     val moodList = repository.getAllMoods()
         .stateIn(
-            viewModelScope,
-            SharingStarted.WhileSubscribed(5000),
-            emptyList()
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
         )
 
-    fun addMood(mood: String, emoji: String) {
+    // Add mood entry
+    fun addMood(
+        mood: String,
+        emoji: String
+    ) {
 
         val timestamp = SimpleDateFormat(
             "dd MMM yyyy • hh:mm a",
@@ -33,6 +38,7 @@ class MoodViewModel @Inject constructor(
         ).format(Date())
 
         viewModelScope.launch {
+
             repository.insertMood(
                 MoodEntry(
                     mood = mood,
@@ -40,6 +46,16 @@ class MoodViewModel @Inject constructor(
                     timestamp = timestamp
                 )
             )
+        }
+    }
+
+    // Optional (good to have later)
+    fun deleteMood(
+        mood: MoodEntry
+    ) {
+
+        viewModelScope.launch {
+            repository.deleteMood(mood)
         }
     }
 }

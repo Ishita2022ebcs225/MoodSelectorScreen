@@ -1,6 +1,6 @@
 package com.example.moodselector.domain.repository
 
-import com.example.moodselector.data.local.MoodEntry
+import com.example.moodselector.data.local.entity.MoodEntry
 import kotlinx.coroutines.flow.Flow
 
 interface MoodRepository {

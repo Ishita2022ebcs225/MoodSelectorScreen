@@ -1,6 +1,8 @@
 package com.example.moodselector.di
 
+import com.example.moodselector.data.repository.JournalRepositoryImpl
 import com.example.moodselector.data.repository.MoodRepositoryImpl
+import com.example.moodselector.domain.repository.JournalRepository
 import com.example.moodselector.domain.repository.MoodRepository
 import dagger.Binds
 import dagger.Module
@@ -17,4 +19,10 @@ abstract class RepositoryModule {
     abstract fun bindMoodRepository(
         impl: MoodRepositoryImpl
     ): MoodRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindJournalRepository(
+        impl: JournalRepositoryImpl
+    ): JournalRepository
 }

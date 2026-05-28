@@ -4,16 +4,10 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.ui.Modifier
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.compose.rememberNavController
+import com.example.moodselector.presentations.navigation.AppNavHost
 import com.example.moodselector.presentations.theme.MoodselectorTheme
-import com.example.moodselector.presentations.screens.MoodScreen
-import com.example.moodselector.presentations.viewmodel.MoodViewModel
 import dagger.hilt.android.AndroidEntryPoint
-
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -24,20 +18,13 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         setContent {
-
             MoodselectorTheme {
 
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
+                // ✅ SINGLE GLOBAL NAV CONTROLLER
+                val navController = rememberNavController()
 
-                    val moodViewModel: MoodViewModel = hiltViewModel()
-
-                    MoodScreen(
-                        moodViewModel = moodViewModel
-                    )
-                }
+                // ✅ ONLY ENTRY POINT TO NAVIGATION
+                AppNavHost(navController = navController)
             }
         }
     }
