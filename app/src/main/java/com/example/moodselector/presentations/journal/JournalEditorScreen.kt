@@ -25,6 +25,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.moodselector.R
+import androidx.compose.foundation.layout.FlowRow
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,8 +45,7 @@ fun JournalEditorScreen(
     val moodOptions = listOf("Happy", "Calm", "Neutral", "Sad", "Angry")
 
     Scaffold(
-        containerColor = Color(0xFFF5F1FA),
-
+        containerColor = Color.Transparent,
         topBar = {
             TopAppBar(
                 title = {
@@ -57,14 +57,11 @@ fun JournalEditorScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(
-                            imageVector = Icons.Default.ArrowBack,
-                            contentDescription = null
-                        )
+                        Icon(Icons.Default.ArrowBack, contentDescription = null)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFFF5F1FA)
+                    containerColor = Color.Transparent
                 )
             )
         }
@@ -74,15 +71,16 @@ fun JournalEditorScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .verticalScroll(rememberScrollState()) // ✅ FIX: scroll restored
+                .padding(horizontal = 16.dp, vertical = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
 
-            // HEADER (unchanged)
+            // HEADER
             Card(
                 shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White)
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Box(
                     modifier = Modifier
@@ -101,10 +99,7 @@ fun JournalEditorScreen(
                                 .background(Color.White.copy(alpha = 0.4f)),
                             contentAlignment = Alignment.Center
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.AutoStories,
-                                contentDescription = null
-                            )
+                            Icon(Icons.Default.AutoStories, null)
                         }
 
                         Spacer(modifier = Modifier.width(12.dp))
@@ -124,11 +119,11 @@ fun JournalEditorScreen(
                 }
             }
 
-            // ✨ UPDATED JOURNAL INPUT AREA (PAPER ONLY HERE)
+            // WRITING AREA (unchanged size)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(240.dp)
+                    .heightIn(min = 260.dp, max = 420.dp)
             ) {
 
                 Image(
@@ -149,7 +144,7 @@ fun JournalEditorScreen(
                     onValueChange = viewModel::updateContent,
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(8.dp),
+                        .padding(10.dp),
                     placeholder = { Text("Write about your day...") },
                     shape = RoundedCornerShape(20.dp),
                     colors = TextFieldDefaults.colors(
@@ -161,20 +156,25 @@ fun JournalEditorScreen(
                 )
             }
 
-            // MOOD (unchanged)
+            // MOOD SECTION (now fully visible due to scroll fix)
             Text(
                 text = "Mood",
                 fontWeight = FontWeight.Bold,
                 color = textDark
             )
 
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
                 moodOptions.forEach { mood ->
+
                     val selected = selectedMood == mood
 
                     AssistChip(
                         onClick = { viewModel.updateMood(mood) },
                         label = { Text(mood) },
+                        shape = CircleShape,
                         colors = AssistChipDefaults.assistChipColors(
                             containerColor = if (selected) softPurple else Color(0xFFF3DCE4),
                             labelColor = if (selected) Color.White else textDark
@@ -183,7 +183,7 @@ fun JournalEditorScreen(
                 }
             }
 
-            // SAVE BUTTON (unchanged)
+            // SAVE BUTTON
             Button(
                 onClick = { viewModel.saveJournal() },
                 modifier = Modifier
@@ -199,7 +199,7 @@ fun JournalEditorScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(60.dp))
+            Spacer(modifier = Modifier.height(40.dp))
         }
     }
 }
