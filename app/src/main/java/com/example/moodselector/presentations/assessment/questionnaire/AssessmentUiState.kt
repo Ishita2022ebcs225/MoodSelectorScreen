@@ -1,6 +1,7 @@
 package com.example.moodselector.presentations.assessment.questionnaire
 
 import com.example.moodselector.domain.assessment.model.AssessmentDefinition
+import com.example.moodselector.domain.assessment.model.AssessmentQuestion
 
 data class AssessmentUiState(
 
@@ -9,7 +10,9 @@ data class AssessmentUiState(
     val currentQuestionIndex: Int = 0,
 
     /**
-     * Maps question ID to selected score (0-3)
+     * Maps question ID to selected score.
+     * Example:
+     * Question 1 -> 2 (More than half the days)
      */
     val selectedAnswers: Map<Int, Int> = emptyMap(),
 
@@ -18,4 +21,11 @@ data class AssessmentUiState(
     val totalScore: Int = 0,
 
     val severity: String = ""
-)
+
+) {
+
+    val currentQuestion: AssessmentQuestion?
+        get() = assessment
+            ?.questions
+            ?.getOrNull(currentQuestionIndex)
+}

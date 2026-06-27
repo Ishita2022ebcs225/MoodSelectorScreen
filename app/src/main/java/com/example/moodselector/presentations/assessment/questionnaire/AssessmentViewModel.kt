@@ -1,18 +1,21 @@
 package com.example.moodselector.presentations.assessment.questionnaire
 
 import androidx.lifecycle.ViewModel
-import com.example.moodselector.domain.assessment.definitions.GAD7Definition
-import com.example.moodselector.domain.assessment.definitions.PHQ9Definition
-import com.example.moodselector.domain.assessment.model.AssessmentDefinition
+import com.example.moodselector.data.assessment.provider.AssessmentDefinitionProvider
 import com.example.moodselector.domain.assessment.model.AssessmentType
 import com.example.moodselector.domain.assessment.utils.GAD7SeverityCalculator
 import com.example.moodselector.domain.assessment.utils.PHQ9SeverityCalculator
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import javax.inject.Inject
 
-class AssessmentViewModel : ViewModel() {
+@HiltViewModel
+class AssessmentViewModel @Inject constructor(
+    private val assessmentDefinitionProvider: AssessmentDefinitionProvider
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(
         AssessmentUiState()
@@ -25,10 +28,9 @@ class AssessmentViewModel : ViewModel() {
         type: AssessmentType
     ) {
 
-        val definition = when (type) {
-            AssessmentType.PHQ9 -> PHQ9Definition.assessment
-            AssessmentType.GAD7 -> GAD7Definition.assessment
-        }
+        val definition =
+            assessmentDefinitionProvider
+                .getAssessmentDefinition(type)
 
         _uiState.value = AssessmentUiState(
             assessment = definition
