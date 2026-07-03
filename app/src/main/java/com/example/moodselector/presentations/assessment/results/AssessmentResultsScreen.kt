@@ -12,21 +12,29 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Divider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 
 @Composable
 fun AssessmentResultsScreen(
-    assessmentTitle: String,
-    totalScore: Int,
-    severity: String,
+
+    phq9Score: Int,
+    phq9Severity: String,
+
+    gad7Score: Int,
+    gad7Severity: String,
+
     onContinueClicked: () -> Unit,
+
     modifier: Modifier = Modifier
+
 ) {
 
     Column(
@@ -34,23 +42,15 @@ fun AssessmentResultsScreen(
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
             .padding(24.dp),
+
         horizontalAlignment = Alignment.CenterHorizontally,
+
         verticalArrangement = Arrangement.Center
     ) {
 
         Text(
             text = "Assessment Complete",
             style = MaterialTheme.typography.headlineLarge,
-            textAlign = TextAlign.Center
-        )
-
-        Spacer(
-            modifier = Modifier.height(16.dp)
-        )
-
-        Text(
-            text = assessmentTitle,
-            style = MaterialTheme.typography.titleLarge,
             textAlign = TextAlign.Center
         )
 
@@ -64,32 +64,57 @@ fun AssessmentResultsScreen(
         ) {
 
             Column(
-                modifier = Modifier.padding(24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                modifier = Modifier.padding(24.dp)
             ) {
 
                 Text(
-                    text = "Your Score",
+                    text = "Depression Screening (PHQ-9)",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+
+                Spacer(
+                    modifier = Modifier.height(12.dp)
+                )
+
+                Text(
+                    text = "Score: $phq9Score",
                     style = MaterialTheme.typography.titleMedium
                 )
 
-                Spacer(
-                    modifier = Modifier.height(8.dp)
-                )
-
                 Text(
-                    text = totalScore.toString(),
-                    style = MaterialTheme.typography.displayMedium
+                    text = "Severity: $phq9Severity",
+                    style = MaterialTheme.typography.bodyLarge
                 )
 
                 Spacer(
-                    modifier = Modifier.height(16.dp)
+                    modifier = Modifier.height(20.dp)
+                )
+
+                Divider()
+
+                Spacer(
+                    modifier = Modifier.height(20.dp)
                 )
 
                 Text(
-                    text = severity,
-                    style = MaterialTheme.typography.headlineSmall,
-                    textAlign = TextAlign.Center
+                    text = "Anxiety Screening (GAD-7)",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+
+                Spacer(
+                    modifier = Modifier.height(12.dp)
+                )
+
+                Text(
+                    text = "Score: $gad7Score",
+                    style = MaterialTheme.typography.titleMedium
+                )
+
+                Text(
+                    text = "Severity: $gad7Severity",
+                    style = MaterialTheme.typography.bodyLarge
                 )
             }
         }
@@ -100,9 +125,11 @@ fun AssessmentResultsScreen(
 
         Text(
             text =
-                "This assessment is a screening tool and is not a clinical diagnosis. " +
-                        "If your symptoms are affecting your daily life, consider speaking with a qualified mental health professional.",
+                "These questionnaires are validated screening tools and are not intended to provide a clinical diagnosis.\n\n" +
+                        "If your symptoms are affecting your daily life, consider discussing your results with a qualified mental health professional.",
+
             style = MaterialTheme.typography.bodyMedium,
+
             textAlign = TextAlign.Center
         )
 

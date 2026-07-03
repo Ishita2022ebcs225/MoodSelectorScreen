@@ -4,25 +4,57 @@ sealed class Screen(
     val route: String
 ) {
 
-    object Insights : Screen(
+    /*
+     * -------------------------
+     * Assessment
+     * -------------------------
+     */
+
+    data object AssessmentOnboarding : Screen(
+        "assessment_onboarding"
+    )
+
+    data object AssessmentQuestionnaire : Screen(
+        "assessment_questionnaire"
+    )
+
+    data object AssessmentResults : Screen(
+        "assessment_results"
+    )
+
+    /*
+     * -------------------------
+     * Main
+     * -------------------------
+     */
+
+    data object Mood : Screen(
+        "mood"
+    )
+
+    data object Insights : Screen(
         "insights"
     )
 
-    object History : Screen(
+    data object History : Screen(
         "history"
     )
 
-    object Graph : Screen(
+    data object Graph : Screen(
         "graph"
     )
 
-    // Journal Home Screen
-    object Journal : Screen(
+    /*
+     * -------------------------
+     * Journal
+     * -------------------------
+     */
+
+    data object Journal : Screen(
         "journal"
     )
 
-    // Journal Editor Screen
-    object JournalEditor : Screen(
+    data object JournalEditor : Screen(
         "journal_editor"
     )
 }

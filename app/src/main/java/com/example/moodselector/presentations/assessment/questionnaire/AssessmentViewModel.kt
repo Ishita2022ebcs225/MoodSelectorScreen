@@ -24,7 +24,11 @@ class AssessmentViewModel @Inject constructor(
     val uiState: StateFlow<AssessmentUiState> =
         _uiState.asStateFlow()
 
-    fun loadAssessment(
+    init {
+        loadAssessment(AssessmentType.PHQ9)
+    }
+
+    private fun loadAssessment(
         type: AssessmentType
     ) {
 
@@ -32,9 +36,15 @@ class AssessmentViewModel @Inject constructor(
             assessmentDefinitionProvider
                 .getAssessmentDefinition(type)
 
-        _uiState.value = AssessmentUiState(
-            assessment = definition
-        )
+        _uiState.update {
+
+            it.copy(
+                assessment = definition,
+                currentAssessmentType = type,
+                currentQuestionIndex = 0,
+                selectedAnswers = emptyMap()
+            )
+        }
     }
 
     fun selectAnswer(
@@ -48,6 +58,7 @@ class AssessmentViewModel @Inject constructor(
         updatedAnswers[questionId] = score
 
         _uiState.update {
+
             it.copy(
                 selectedAnswers = updatedAnswers
             )
@@ -65,6 +76,7 @@ class AssessmentViewModel @Inject constructor(
         if (currentIndex < assessment.questions.lastIndex) {
 
             _uiState.update {
+
                 it.copy(
                     currentQuestionIndex = currentIndex + 1
                 )
@@ -72,7 +84,7 @@ class AssessmentViewModel @Inject constructor(
 
         } else {
 
-            completeAssessment()
+            completeCurrentAssessment()
         }
     }
 
@@ -84,6 +96,7 @@ class AssessmentViewModel @Inject constructor(
         if (currentIndex > 0) {
 
             _uiState.update {
+
                 it.copy(
                     currentQuestionIndex = currentIndex - 1
                 )
@@ -91,7 +104,7 @@ class AssessmentViewModel @Inject constructor(
         }
     }
 
-    private fun completeAssessment() {
+    private fun completeCurrentAssessment() {
 
         val assessment =
             _uiState.value.assessment ?: return
@@ -99,32 +112,51 @@ class AssessmentViewModel @Inject constructor(
         val score =
             _uiState.value.selectedAnswers.values.sum()
 
-        val severity = when (assessment.type) {
+        when (assessment.type) {
 
-            AssessmentType.PHQ9 ->
-                PHQ9SeverityCalculator.getSeverity(score)
+            AssessmentType.PHQ9 -> {
 
-            AssessmentType.GAD7 ->
-                GAD7SeverityCalculator.getSeverity(score)
-        }
+                val severity =
+                    PHQ9SeverityCalculator.getSeverity(score)
 
-        _uiState.update {
+                _uiState.update {
 
-            it.copy(
-                isCompleted = true,
-                totalScore = score,
-                severity = severity
-            )
+                    it.copy(
+                        phq9Score = score,
+                        phq9Severity = severity,
+                        phq9Completed = true
+                    )
+                }
+
+                loadAssessment(
+                    AssessmentType.GAD7
+                )
+            }
+
+            AssessmentType.GAD7 -> {
+
+                val severity =
+                    GAD7SeverityCalculator.getSeverity(score)
+
+                _uiState.update {
+
+                    it.copy(
+                        gad7Score = score,
+                        gad7Severity = severity,
+                        gad7Completed = true,
+                        isCompleted = true
+                    )
+                }
+            }
         }
     }
 
     fun restartAssessment() {
 
-        val assessment =
-            _uiState.value.assessment
+        _uiState.value = AssessmentUiState()
 
-        _uiState.value = AssessmentUiState(
-            assessment = assessment
+        loadAssessment(
+            AssessmentType.PHQ9
         )
     }
 }

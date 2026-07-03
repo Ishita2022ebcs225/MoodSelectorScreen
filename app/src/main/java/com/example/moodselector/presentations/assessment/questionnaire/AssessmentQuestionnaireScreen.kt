@@ -20,31 +20,32 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.moodselector.domain.assessment.model.AssessmentType
 import com.example.moodselector.presentations.assessment.questionnaire.components.AssessmentProgressIndicator
 import com.example.moodselector.presentations.assessment.questionnaire.components.QuestionCard
 
 @Composable
 fun AssessmentQuestionnaireScreen(
     viewModel: AssessmentViewModel = hiltViewModel(),
-    onAssessmentCompleted: () -> Unit = {}
+    onAssessmentCompleted: (
+        phq9Score: Int,
+        phq9Severity: String,
+        gad7Score: Int,
+        gad7Severity: String
+    ) -> Unit = { _, _, _, _ -> }
 ) {
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    LaunchedEffect(Unit) {
-
-        if (uiState.assessment == null) {
-            viewModel.loadAssessment(
-                AssessmentType.PHQ9
-            )
-        }
-    }
-
     if (uiState.isCompleted) {
 
-        LaunchedEffect(uiState.isCompleted) {
-            onAssessmentCompleted()
+        LaunchedEffect(Unit) {
+
+            onAssessmentCompleted(
+                uiState.phq9Score,
+                uiState.phq9Severity,
+                uiState.gad7Score,
+                uiState.gad7Severity
+            )
         }
 
         return
@@ -74,29 +75,36 @@ fun AssessmentQuestionnaireScreen(
         )
 
         Text(
-            text = assessment.instructions,
+            text = assessment.description,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
         Spacer(
-            modifier = Modifier.height(16.dp)
+            modifier = Modifier.height(12.dp)
+        )
+
+        Text(
+            text = assessment.instructions,
+            style = MaterialTheme.typography.bodyMedium
+        )
+
+        Spacer(
+            modifier = Modifier.height(20.dp)
         )
 
         AssessmentProgressIndicator(
             currentQuestion = uiState.currentQuestionIndex,
-            totalQuestions = assessment.questions.size
+            totalQuestions = uiState.totalQuestions
         )
 
         Spacer(
-            modifier = Modifier.height(16.dp)
+            modifier = Modifier.height(20.dp)
         )
 
         LazyColumn(
             modifier = Modifier.weight(1f),
-            contentPadding = PaddingValues(
-                bottom = 16.dp
-            )
+            contentPadding = PaddingValues(bottom = 16.dp)
         ) {
 
             item {
@@ -140,16 +148,22 @@ fun AssessmentQuestionnaireScreen(
                 modifier = Modifier.fillMaxWidth()
             ) {
 
-                Text(
-                    text = if (
-                        uiState.currentQuestionIndex ==
-                        assessment.questions.lastIndex
-                    ) {
-                        "Finish Assessment"
+                val buttonText = if (
+                    uiState.currentQuestionIndex ==
+                    assessment.questions.lastIndex
+                ) {
+
+                    if (uiState.isPHQ9) {
+                        "Continue to GAD-7"
                     } else {
-                        "Next Question"
+                        "Finish Assessment"
                     }
-                )
+
+                } else {
+                    "Next Question"
+                }
+
+                Text(buttonText)
             }
         }
     }
