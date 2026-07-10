@@ -16,135 +16,139 @@ import androidx.compose.material3.Divider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 @Composable
 fun AssessmentResultsScreen(
 
-    phq9Score: Int,
-    phq9Severity: String,
-
-    gad7Score: Int,
-    gad7Severity: String,
-
     onContinueClicked: () -> Unit,
 
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+
+    viewModel: AssessmentResultsViewModel = hiltViewModel()
 
 ) {
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(24.dp),
+    val result by viewModel.latestResult.collectAsStateWithLifecycle()
 
-        horizontalAlignment = Alignment.CenterHorizontally,
+    result?.let { assessment ->
 
-        verticalArrangement = Arrangement.Center
-    ) {
+        Column(
+            modifier = modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(24.dp),
 
-        Text(
-            text = "Assessment Complete",
-            style = MaterialTheme.typography.headlineLarge,
-            textAlign = TextAlign.Center
-        )
+            horizontalAlignment = Alignment.CenterHorizontally,
 
-        Spacer(
-            modifier = Modifier.height(24.dp)
-        )
-
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors()
-        ) {
-
-            Column(
-                modifier = Modifier.padding(24.dp)
-            ) {
-
-                Text(
-                    text = "Depression Screening (PHQ-9)",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
-                )
-
-                Spacer(
-                    modifier = Modifier.height(12.dp)
-                )
-
-                Text(
-                    text = "Score: $phq9Score",
-                    style = MaterialTheme.typography.titleMedium
-                )
-
-                Text(
-                    text = "Severity: $phq9Severity",
-                    style = MaterialTheme.typography.bodyLarge
-                )
-
-                Spacer(
-                    modifier = Modifier.height(20.dp)
-                )
-
-                Divider()
-
-                Spacer(
-                    modifier = Modifier.height(20.dp)
-                )
-
-                Text(
-                    text = "Anxiety Screening (GAD-7)",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
-                )
-
-                Spacer(
-                    modifier = Modifier.height(12.dp)
-                )
-
-                Text(
-                    text = "Score: $gad7Score",
-                    style = MaterialTheme.typography.titleMedium
-                )
-
-                Text(
-                    text = "Severity: $gad7Severity",
-                    style = MaterialTheme.typography.bodyLarge
-                )
-            }
-        }
-
-        Spacer(
-            modifier = Modifier.height(24.dp)
-        )
-
-        Text(
-            text =
-                "These questionnaires are validated screening tools and are not intended to provide a clinical diagnosis.\n\n" +
-                        "If your symptoms are affecting your daily life, consider discussing your results with a qualified mental health professional.",
-
-            style = MaterialTheme.typography.bodyMedium,
-
-            textAlign = TextAlign.Center
-        )
-
-        Spacer(
-            modifier = Modifier.height(32.dp)
-        )
-
-        Button(
-            onClick = onContinueClicked,
-            modifier = Modifier.fillMaxWidth()
+            verticalArrangement = Arrangement.Center
         ) {
 
             Text(
-                text = "Continue"
+                text = "Assessment Complete",
+                style = MaterialTheme.typography.headlineLarge,
+                textAlign = TextAlign.Center
             )
+
+            Spacer(
+                modifier = Modifier.height(24.dp)
+            )
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors()
+            ) {
+
+                Column(
+                    modifier = Modifier.padding(24.dp)
+                ) {
+
+                    Text(
+                        text = "Depression Screening (PHQ-9)",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    Spacer(
+                        modifier = Modifier.height(12.dp)
+                    )
+
+                    Text(
+                        text = "Score: ${assessment.phq9Score}",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+
+                    Text(
+                        text = "Severity: ${assessment.phq9Severity}",
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+
+                    Spacer(
+                        modifier = Modifier.height(20.dp)
+                    )
+
+                    Divider()
+
+                    Spacer(
+                        modifier = Modifier.height(20.dp)
+                    )
+
+                    Text(
+                        text = "Anxiety Screening (GAD-7)",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    Spacer(
+                        modifier = Modifier.height(12.dp)
+                    )
+
+                    Text(
+                        text = "Score: ${assessment.gad7Score}",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+
+                    Text(
+                        text = "Severity: ${assessment.gad7Severity}",
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                }
+            }
+
+            Spacer(
+                modifier = Modifier.height(24.dp)
+            )
+
+            Text(
+                text =
+                    "These questionnaires are validated screening tools and are not intended to provide a clinical diagnosis.\n\n" +
+                            "If your symptoms are affecting your daily life, consider discussing your results with a qualified mental health professional.",
+
+                style = MaterialTheme.typography.bodyMedium,
+
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(
+                modifier = Modifier.height(32.dp)
+            )
+
+            Button(
+                onClick = onContinueClicked,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+
+                Text(
+                    text = "Continue"
+                )
+            }
         }
     }
 }

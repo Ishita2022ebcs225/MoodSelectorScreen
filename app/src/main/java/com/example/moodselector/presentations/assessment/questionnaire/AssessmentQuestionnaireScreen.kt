@@ -36,10 +36,8 @@ fun AssessmentQuestionnaireScreen(
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    if (uiState.isCompleted) {
-
-        LaunchedEffect(Unit) {
-
+    LaunchedEffect(uiState.isCompleted) {
+        if (uiState.isCompleted) {
             onAssessmentCompleted(
                 uiState.phq9Score,
                 uiState.phq9Severity,
@@ -47,7 +45,9 @@ fun AssessmentQuestionnaireScreen(
                 uiState.gad7Severity
             )
         }
+    }
 
+    if (uiState.isCompleted) {
         return
     }
 
@@ -148,20 +148,20 @@ fun AssessmentQuestionnaireScreen(
                 modifier = Modifier.fillMaxWidth()
             ) {
 
-                val buttonText = if (
-                    uiState.currentQuestionIndex ==
-                    assessment.questions.lastIndex
-                ) {
+                val buttonText =
+                    if (uiState.currentQuestionIndex ==
+                        assessment.questions.lastIndex
+                    ) {
 
-                    if (uiState.isPHQ9) {
-                        "Continue to GAD-7"
+                        if (uiState.isPHQ9) {
+                            "Continue to GAD-7"
+                        } else {
+                            "Finish Assessment"
+                        }
+
                     } else {
-                        "Finish Assessment"
+                        "Next Question"
                     }
-
-                } else {
-                    "Next Question"
-                }
 
                 Text(buttonText)
             }

@@ -1,20 +1,27 @@
 package com.example.moodselector.presentations.assessment.questionnaire
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.moodselector.data.assessment.provider.AssessmentDefinitionProvider
+import com.example.moodselector.data.local.entity.AssessmentResultEntity
+import com.example.moodselector.data.preferences.UserPreferencesRepository
 import com.example.moodselector.domain.assessment.model.AssessmentType
 import com.example.moodselector.domain.assessment.utils.GAD7SeverityCalculator
 import com.example.moodselector.domain.assessment.utils.PHQ9SeverityCalculator
+import com.example.moodselector.domain.repository.AssessmentRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class AssessmentViewModel @Inject constructor(
-    private val assessmentDefinitionProvider: AssessmentDefinitionProvider
+    private val assessmentDefinitionProvider: AssessmentDefinitionProvider,
+    private val assessmentRepository: AssessmentRepository,
+    private val userPreferencesRepository: UserPreferencesRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(
@@ -138,14 +145,33 @@ class AssessmentViewModel @Inject constructor(
                 val severity =
                     GAD7SeverityCalculator.getSeverity(score)
 
-                _uiState.update {
+                val updatedState = _uiState.value.copy(
+                    gad7Score = score,
+                    gad7Severity = severity,
+                    gad7Completed = true,
+                    isCompleted = true
+                )
 
-                    it.copy(
-                        gad7Score = score,
-                        gad7Severity = severity,
-                        gad7Completed = true,
-                        isCompleted = true
+                _uiState.value = updatedState
+
+                val diagnosisSummary =
+                    "Depression: ${updatedState.phq9Severity}, Anxiety: ${updatedState.gad7Severity}"
+
+                viewModelScope.launch {
+
+                    assessmentRepository.saveResult(
+
+                        AssessmentResultEntity(
+                            timestamp = System.currentTimeMillis(),
+                            phq9Score = updatedState.phq9Score,
+                            phq9Severity = updatedState.phq9Severity,
+                            gad7Score = updatedState.gad7Score,
+                            gad7Severity = updatedState.gad7Severity,
+                            diagnosisSummary = diagnosisSummary
+                        )
                     )
+
+                    userPreferencesRepository.setAssessmentCompleted(true)
                 }
             }
         }

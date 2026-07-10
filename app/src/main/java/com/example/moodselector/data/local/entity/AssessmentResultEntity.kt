@@ -13,7 +13,11 @@ data class AssessmentResultEntity(
 
     val phq9Score: Int,
 
+    val phq9Severity: String,
+
     val gad7Score: Int,
+
+    val gad7Severity: String,
 
     val diagnosisSummary: String
 )
