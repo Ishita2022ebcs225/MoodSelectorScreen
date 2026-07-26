@@ -1,38 +1,25 @@
 package com.example.moodselector.domain.cbt.model
 
 /**
- * Represents the different therapeutic approaches
- * available within the CBT module.
+ * Categories of Cognitive Behavioral Therapy (CBT) exercises.
+ *
+ * These categories are used to organize exercises,
+ * support filtering, and power personalized recommendations.
  */
 enum class CBTCategory {
 
     /**
-     * Mindfulness-based exercises such as
-     * breathing, grounding and body scan.
+     * Identifying and challenging unhelpful thoughts.
+     */
+    COGNITIVE,
+
+    /**
+     * Encourages healthy behaviors and positive daily activities.
+     */
+    BEHAVIORAL,
+
+    /**
+     * Promotes present-moment awareness and acceptance, reduces stress
      */
     MINDFULNESS,
-
-    /**
-     * Encourages participation in meaningful
-     * and enjoyable activities.
-     */
-    BEHAVIORAL_ACTIVATION,
-
-    /**
-     * Rational Emotive Behavior Therapy exercises
-     * for identifying and challenging irrational beliefs.
-     */
-    REBT,
-
-    /**
-     * Gradual exposure to feared situations
-     * to reduce avoidance and anxiety.
-     */
-    EXPOSURE_THERAPY,
-
-    /**
-     * Reflection exercises such as
-     * thought records and journaling.
-     */
-    REFLECTION
 }
