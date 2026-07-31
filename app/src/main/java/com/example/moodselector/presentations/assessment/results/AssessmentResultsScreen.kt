@@ -86,7 +86,7 @@ fun AssessmentResultsScreen(
                     )
 
                     Text(
-                        text = "Severity: ${assessment.phq9Severity}",
+                        text = "Severity: ${assessment.phq9Severity.displayName} depression",
                         style = MaterialTheme.typography.bodyLarge
                     )
 
@@ -116,7 +116,7 @@ fun AssessmentResultsScreen(
                     )
 
                     Text(
-                        text = "Severity: ${assessment.gad7Severity}",
+                        text = "Severity: ${assessment.gad7Severity.displayName} anxiety",
                         style = MaterialTheme.typography.bodyLarge
                     )
                 }

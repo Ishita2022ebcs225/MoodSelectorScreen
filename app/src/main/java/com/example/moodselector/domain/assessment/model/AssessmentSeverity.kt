@@ -7,30 +7,32 @@ package com.example.moodselector.domain.assessment.model
  * (e.g., PHQ-9 and GAD-7) to enable consistent recommendations
  * throughout the application.
  */
-enum class AssessmentSeverity {
+enum class AssessmentSeverity(
+    val displayName: String
+) {
 
     /**
      * Little to no clinically significant symptoms.
      */
-    MINIMAL,
+    MINIMAL("Minimal"),
 
     /**
      * Mild symptoms.
      */
-    MILD,
+    MILD("Mild"),
 
     /**
      * Moderate symptoms.
      */
-    MODERATE,
+    MODERATE("Moderate"),
 
     /**
      * Moderately severe symptoms.
      */
-    MODERATELY_SEVERE,
+    MODERATELY_SEVERE("Moderately Severe"),
 
     /**
      * Severe symptoms.
      */
-    SEVERE
+    SEVERE("Severe")
 }

@@ -2,6 +2,8 @@ package com.example.moodselector.data.local.database
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
+import androidx.room.TypeConverters
+import com.example.moodselector.data.local.converter.AssessmentSeverityConverter
 import com.example.moodselector.data.local.dao.AssessmentResultDao
 import com.example.moodselector.data.local.dao.JournalDao
 import com.example.moodselector.data.local.dao.MoodDao
@@ -15,8 +17,11 @@ import com.example.moodselector.data.local.entity.MoodEntry
         JournalEntity::class,
         AssessmentResultEntity::class
     ],
-    version = 3,
+    version = 4,
     exportSchema = false
+)
+@TypeConverters(
+    AssessmentSeverityConverter::class
 )
 abstract class AppDatabase : RoomDatabase() {
 

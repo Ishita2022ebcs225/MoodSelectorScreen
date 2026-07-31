@@ -33,7 +33,7 @@ object CBTActivityProvider {
     /**
      * Every CBT exercise available in the app.
      */
-    val allExercises: List<CBTActivity>
+    val allActivities: List<CBTActivity>
         get() = buildList {
             addAll(behavioralActivationExercises)
             addAll(mindfulnessExercises)

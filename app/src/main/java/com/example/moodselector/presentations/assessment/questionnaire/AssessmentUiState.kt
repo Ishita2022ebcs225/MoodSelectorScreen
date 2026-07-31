@@ -2,6 +2,7 @@ package com.example.moodselector.presentations.assessment.questionnaire
 
 import com.example.moodselector.domain.assessment.model.AssessmentDefinition
 import com.example.moodselector.domain.assessment.model.AssessmentQuestion
+import com.example.moodselector.domain.assessment.model.AssessmentSeverity
 import com.example.moodselector.domain.assessment.model.AssessmentType
 
 data class AssessmentUiState(
@@ -35,14 +36,14 @@ data class AssessmentUiState(
      */
     val phq9Score: Int = 0,
 
-    val phq9Severity: String = "",
+    val phq9Severity: AssessmentSeverity = AssessmentSeverity.MINIMAL,
 
     /**
      * GAD-7 results
      */
     val gad7Score: Int = 0,
 
-    val gad7Severity: String = "",
+    val gad7Severity: AssessmentSeverity = AssessmentSeverity.MINIMAL,
 
     /**
      * Whether PHQ-9 has been completed.
