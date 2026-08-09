@@ -22,4 +22,5 @@ enum class CBTCategory {
      * Promotes present-moment awareness and acceptance, reduces stress
      */
     MINDFULNESS,
+
 }

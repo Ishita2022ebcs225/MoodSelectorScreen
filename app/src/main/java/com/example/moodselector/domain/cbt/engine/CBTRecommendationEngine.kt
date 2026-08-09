@@ -1,86 +1,113 @@
 package com.example.moodselector.domain.cbt.engine
 
 import com.example.moodselector.domain.assessment.model.AssessmentSeverity
+import com.example.moodselector.domain.cbt.definitions.CBTActivityProvider
 import com.example.moodselector.domain.cbt.model.CBTActivity
-import com.example.moodselector.domain.cbt.model.RecommendationTarget
-import com.example.moodselector.domain.cbt.utils.CBTActivityProvider
+import com.example.moodselector.domain.cbt.model.CBTCategory
 
 /**
- * Generates personalized CBT activity recommendations
- * based on assessment outcomes.
+ * Generates personalized CBT exercise recommendations based on
+ * the user's assessment severities.
  *
- * Initially, recommendations are driven by PHQ-9 and GAD-7
- * severity levels. The engine can later be expanded to
- * include mood history, journal entries, hormonal health,
- * and completed activities.
+ * The engine is completely independent of Android framework classes
+ * and only relies on domain models.
  */
 object CBTRecommendationEngine {
 
     /**
-     * Returns a list of recommended CBT activities.
+     * Returns a personalized list of CBT activities based on the
+     * user's PHQ-9 and GAD-7 severity levels.
      *
-     * @param depressionSeverity PHQ-9 severity.
-     * @param anxietySeverity GAD-7 severity.
+     * Duplicate activities are removed automatically.
      */
-    fun recommendActivities(
-        depressionSeverity: AssessmentSeverity?,
-        anxietySeverity: AssessmentSeverity?
+    fun recommend(
+        phq9Severity: AssessmentSeverity,
+        gad7Severity: AssessmentSeverity
     ): List<CBTActivity> {
 
-        val recommendationTargets = mutableSetOf<RecommendationTarget>()
+        val recommendedActivities = mutableListOf<CBTActivity>()
 
-        // Depression recommendations
-        when (depressionSeverity) {
-            AssessmentSeverity.MINIMAL -> {}
+        recommendedActivities += depressionActivities(phq9Severity)
+        recommendedActivities += anxietyActivities(gad7Severity)
+
+        return recommendedActivities.distinctBy { it.id }
+    }
+
+    /**
+     * Selects activities that target depressive symptoms.
+     */
+    private fun depressionActivities(
+        severity: AssessmentSeverity
+    ): List<CBTActivity> {
+
+        return when (severity) {
+
+            AssessmentSeverity.MINIMAL ->
+                emptyList()
 
             AssessmentSeverity.MILD ->
-                recommendationTargets.add(
-                    RecommendationTarget.MILD_DEPRESSION
+                CBTActivityProvider.getActivitiesByCategory(
+                    CBTCategory.BEHAVIORAL
                 )
 
             AssessmentSeverity.MODERATE ->
-                recommendationTargets.add(
-                    RecommendationTarget.MODERATE_DEPRESSION
-                )
+                CBTActivityProvider.getActivitiesByCategory(
+                    CBTCategory.BEHAVIORAL
+                ) +
+                        CBTActivityProvider.getActivitiesByCategory(
+                            CBTCategory.MINDFULNESS
+                        )
 
             AssessmentSeverity.MODERATELY_SEVERE,
             AssessmentSeverity.SEVERE ->
-                recommendationTargets.add(
-                    RecommendationTarget.SEVERE_DEPRESSION
-                )
-
-            null -> {}
+                CBTActivityProvider.getActivitiesByCategory(
+                    CBTCategory.BEHAVIORAL
+                ) +
+                        CBTActivityProvider.getActivitiesByCategory(
+                            CBTCategory.MINDFULNESS
+                        ) +
+                        CBTActivityProvider.getActivitiesByCategory(
+                            CBTCategory.COGNITIVE
+                        )
         }
+    }
 
-        // Anxiety recommendations
-        when (anxietySeverity) {
-            AssessmentSeverity.MINIMAL -> {}
+    /**
+     * Selects activities that target anxiety symptoms.
+     */
+    private fun anxietyActivities(
+        severity: AssessmentSeverity
+    ): List<CBTActivity> {
+
+        return when (severity) {
+
+            AssessmentSeverity.MINIMAL ->
+                emptyList()
 
             AssessmentSeverity.MILD ->
-                recommendationTargets.add(
-                    RecommendationTarget.MILD_ANXIETY
+                CBTActivityProvider.getActivitiesByCategory(
+                    CBTCategory.MINDFULNESS
                 )
 
             AssessmentSeverity.MODERATE ->
-                recommendationTargets.add(
-                    RecommendationTarget.MODERATE_ANXIETY
-                )
+                CBTActivityProvider.getActivitiesByCategory(
+                    CBTCategory.MINDFULNESS
+                ) +
+                        CBTActivityProvider.getActivitiesByCategory(
+                            CBTCategory.COGNITIVE
+                        )
 
             AssessmentSeverity.MODERATELY_SEVERE,
             AssessmentSeverity.SEVERE ->
-                recommendationTargets.add(
-                    RecommendationTarget.SEVERE_ANXIETY
-                )
-
-            null -> {}
+                CBTActivityProvider.getActivitiesByCategory(
+                    CBTCategory.MINDFULNESS
+                ) +
+                        CBTActivityProvider.getActivitiesByCategory(
+                            CBTCategory.COGNITIVE
+                        ) +
+                        CBTActivityProvider.getActivitiesByCategory(
+                            CBTCategory.BEHAVIORAL
+                        )
         }
-
-        return CBTActivityProvider.allActivities
-            .filter { activity ->
-                activity.recommendedFor.any {
-                    it in recommendationTargets
-                }
-            }
-            .distinctBy { it.id }
     }
 }

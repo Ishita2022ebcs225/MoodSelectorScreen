@@ -1,9 +1,7 @@
-package com.example.moodselector.domain.cbt.utils
+package com.example.moodselector.domain.cbt.definitions
 
-import com.example.moodselector.domain.cbt.definitions.BehavioralActivationExercises
-import com.example.moodselector.domain.cbt.definitions.MindfulnessExercises
-import com.example.moodselector.domain.cbt.definitions.REBTExercises
 import com.example.moodselector.domain.cbt.model.CBTActivity
+import com.example.moodselector.domain.cbt.model.CBTCategory
 
 /**
  * Provides access to all CBT exercises available in the application.
@@ -18,6 +16,7 @@ object CBTActivityProvider {
      */
     val behavioralActivationExercises: List<CBTActivity>
         get() = BehavioralActivationExercises.activities
+
     /**
      * Mindfulness exercises.
      */
@@ -39,4 +38,26 @@ object CBTActivityProvider {
             addAll(mindfulnessExercises)
             addAll(rebtExercises)
         }
+
+    /**
+     * Returns all exercises belonging to the given CBT category.
+     */
+    fun getActivitiesByCategory(
+        category: CBTCategory
+    ): List<CBTActivity> {
+        return allActivities.filter {
+            it.category == category
+        }
+    }
+
+    /**
+     * Returns a CBT exercise by its unique ID.
+     */
+    fun getActivityById(
+        id: String
+    ): CBTActivity? {
+        return allActivities.find {
+            it.id == id
+        }
+    }
 }
