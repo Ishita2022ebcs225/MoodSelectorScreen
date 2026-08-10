@@ -1,5 +1,7 @@
+
 package com.example.moodselector.presentations.assessment.results
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -8,32 +10,39 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.SelfImprovement
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Divider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
+private val LavenderBackground = Color(0xFFF8F4FC)
+private val SoftLavender = Color(0xFFE9DDF4)
+private val DeepLavender = Color(0xFF765A86)
+private val TextPrimary = Color(0xFF443A48)
+private val TextSecondary = Color(0xFF766B7A)
+
 @Composable
 fun AssessmentResultsScreen(
-
     onContinueClicked: () -> Unit,
-
     modifier: Modifier = Modifier,
-
     viewModel: AssessmentResultsViewModel = hiltViewModel()
-
 ) {
 
     val result by viewModel.latestResult.collectAsStateWithLifecycle()
@@ -43,6 +52,7 @@ fun AssessmentResultsScreen(
         Column(
             modifier = modifier
                 .fillMaxSize()
+                .background(LavenderBackground)
                 .verticalScroll(rememberScrollState())
                 .padding(24.dp),
 
@@ -54,6 +64,8 @@ fun AssessmentResultsScreen(
             Text(
                 text = "Assessment Complete",
                 style = MaterialTheme.typography.headlineLarge,
+                fontWeight = FontWeight.SemiBold,
+                color = TextPrimary,
                 textAlign = TextAlign.Center
             )
 
@@ -63,7 +75,13 @@ fun AssessmentResultsScreen(
 
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors()
+                colors = CardDefaults.cardColors(
+                    containerColor = Color.White
+                ),
+                shape = RoundedCornerShape(24.dp),
+                elevation = CardDefaults.cardElevation(
+                    defaultElevation = 1.dp
+                )
             ) {
 
                 Column(
@@ -73,7 +91,8 @@ fun AssessmentResultsScreen(
                     Text(
                         text = "Depression Screening (PHQ-9)",
                         style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        color = TextPrimary
                     )
 
                     Spacer(
@@ -82,12 +101,14 @@ fun AssessmentResultsScreen(
 
                     Text(
                         text = "Score: ${assessment.phq9Score}",
-                        style = MaterialTheme.typography.titleMedium
+                        style = MaterialTheme.typography.titleMedium,
+                        color = TextPrimary
                     )
 
                     Text(
                         text = "Severity: ${assessment.phq9Severity.displayName} depression",
-                        style = MaterialTheme.typography.bodyLarge
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = TextSecondary
                     )
 
                     Spacer(
@@ -103,7 +124,8 @@ fun AssessmentResultsScreen(
                     Text(
                         text = "Anxiety Screening (GAD-7)",
                         style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        color = TextPrimary
                     )
 
                     Spacer(
@@ -112,12 +134,14 @@ fun AssessmentResultsScreen(
 
                     Text(
                         text = "Score: ${assessment.gad7Score}",
-                        style = MaterialTheme.typography.titleMedium
+                        style = MaterialTheme.typography.titleMedium,
+                        color = TextPrimary
                     )
 
                     Text(
                         text = "Severity: ${assessment.gad7Severity.displayName} anxiety",
-                        style = MaterialTheme.typography.bodyLarge
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = TextSecondary
                     )
                 }
             }
@@ -133,8 +157,74 @@ fun AssessmentResultsScreen(
 
                 style = MaterialTheme.typography.bodyMedium,
 
+                color = TextSecondary,
+
                 textAlign = TextAlign.Center
             )
+
+            Spacer(
+                modifier = Modifier.height(24.dp)
+            )
+
+            /*
+             * --------------------------------------------------
+             * CBT Guidance
+             * --------------------------------------------------
+             */
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = SoftLavender
+                ),
+                shape = RoundedCornerShape(24.dp),
+                elevation = CardDefaults.cardElevation(
+                    defaultElevation = 0.dp
+                )
+            ) {
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+
+                    Icon(
+                        imageVector = Icons.Outlined.SelfImprovement,
+                        contentDescription = null,
+                        tint = DeepLavender
+                    )
+
+                    Spacer(
+                        modifier = Modifier.height(12.dp)
+                    )
+
+                    Text(
+                        text = "Personalized CBT support",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.SemiBold,
+                        color = TextPrimary,
+                        textAlign = TextAlign.Center
+                    )
+
+                    Spacer(
+                        modifier = Modifier.height(8.dp)
+                    )
+
+                    Text(
+                        text =
+                            "Based on your assessment results, personalized CBT exercises will be available in the CBT section of the app.\n\n" +
+                                    "You can explore them whenever you're ready and work through them at your own pace.",
+
+                        style = MaterialTheme.typography.bodyMedium,
+
+                        color = TextSecondary,
+
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
 
             Spacer(
                 modifier = Modifier.height(32.dp)

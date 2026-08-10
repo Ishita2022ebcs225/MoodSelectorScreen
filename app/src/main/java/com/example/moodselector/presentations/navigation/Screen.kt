@@ -24,13 +24,19 @@ sealed class Screen(
 
     /*
      * -------------------------
-     * Main
+     * CBT
      * -------------------------
      */
 
-    data object Mood : Screen(
-        "mood"
+    data object CBTHome : Screen(
+        "cbt_home"
     )
+
+    /*
+     * -------------------------
+     * Main
+     * -------------------------
+     */
 
     data object Insights : Screen(
         "insights"

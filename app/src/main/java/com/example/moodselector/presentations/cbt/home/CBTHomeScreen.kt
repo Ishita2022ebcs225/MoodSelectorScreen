@@ -29,14 +29,18 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.moodselector.domain.cbt.model.CBTActivity
 import com.example.moodselector.domain.cbt.model.CBTCategory
+import com.example.moodselector.presentations.cbt.CBTViewModel
 
 private val LavenderBackground = Color(0xFFF8F4FC)
 private val SoftLavender = Color(0xFFE9DDF4)
@@ -50,10 +54,12 @@ private val TextSecondary = Color(0xFF766B7A)
 
 @Composable
 fun CBTHomeScreen(
-    activities: List<CBTActivity>,
     onActivityClick: (CBTActivity) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    viewModel: CBTViewModel = hiltViewModel()
 ) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
@@ -74,7 +80,7 @@ fun CBTHomeScreen(
         item {
             ProgressCard(
                 completedCount = 0,
-                totalCount = activities.size
+                totalCount = uiState.activities.size
             )
         }
 
@@ -85,25 +91,38 @@ fun CBTHomeScreen(
             )
         }
 
-        if (activities.isEmpty()) {
-
-            item {
-                EmptyPlanCard()
+        when {
+            uiState.isLoading -> {
+                item {
+                    LoadingPlanCard()
+                }
             }
 
-        } else {
+            !uiState.hasAssessmentResult -> {
+                item {
+                    NoAssessmentCard()
+                }
+            }
 
-            items(
-                items = activities,
-                key = { it.id }
-            ) { activity ->
+            uiState.activities.isEmpty() -> {
+                item {
+                    EmptyPlanCard()
+                }
+            }
 
-                CBTActivityCard(
-                    activity = activity,
-                    onClick = {
-                        onActivityClick(activity)
-                    }
-                )
+            else -> {
+                items(
+                    items = uiState.activities,
+                    key = { it.id }
+                ) { activity ->
+
+                    CBTActivityCard(
+                        activity = activity,
+                        onClick = {
+                            onActivityClick(activity)
+                        }
+                    )
+                }
             }
         }
 
@@ -370,6 +389,100 @@ private fun CategoryLabel(
             color = DeepLavender,
             fontWeight = FontWeight.Medium
         )
+    }
+}
+
+@Composable
+private fun LoadingPlanCard() {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = SoftLavender
+        ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 0.dp
+        )
+    ) {
+
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(28.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+
+            Icon(
+                imageVector = Icons.Outlined.SelfImprovement,
+                contentDescription = null,
+                tint = DeepLavender,
+                modifier = Modifier.size(40.dp)
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Text(
+                text = "Preparing your plan...",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = TextPrimary
+            )
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            Text(
+                text = "We're personalizing your exercises.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = TextSecondary
+            )
+        }
+    }
+}
+
+@Composable
+private fun NoAssessmentCard() {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = SoftLavender
+        ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 0.dp
+        )
+    ) {
+
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(28.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+
+            Icon(
+                imageVector = Icons.Outlined.SelfImprovement,
+                contentDescription = null,
+                tint = DeepLavender,
+                modifier = Modifier.size(40.dp)
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Text(
+                text = "Complete your assessment first",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = TextPrimary
+            )
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            Text(
+                text = "Your personalized CBT plan will appear here after your assessment.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = TextSecondary
+            )
+        }
     }
 }
 
