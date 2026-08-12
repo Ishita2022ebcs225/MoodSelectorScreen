@@ -3,6 +3,7 @@ package com.example.moodselector.di
 import android.content.Context
 import androidx.room.Room
 import com.example.moodselector.data.local.dao.AssessmentResultDao
+import com.example.moodselector.data.local.dao.CBTActivityCompletionDao
 import com.example.moodselector.data.local.dao.JournalDao
 import com.example.moodselector.data.local.dao.MoodDao
 import com.example.moodselector.data.local.database.AppDatabase
@@ -51,5 +52,12 @@ object DatabaseModule {
         database: AppDatabase
     ): AssessmentResultDao {
         return database.assessmentResultDao()
+    }
+
+    @Provides
+    fun provideCBTActivityCompletionDao(
+        database: AppDatabase
+    ): CBTActivityCompletionDao {
+        return database.cbtActivityCompletionDao()
     }
 }

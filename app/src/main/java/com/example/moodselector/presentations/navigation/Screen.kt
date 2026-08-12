@@ -32,6 +32,14 @@ sealed class Screen(
         "cbt_home"
     )
 
+    data object CBTProgress : Screen(
+        "cbt_progress"
+    )
+
+    data object ActivityScheduling : Screen(
+        "activity_scheduling"
+    )
+
     /*
      * -------------------------
      * Main

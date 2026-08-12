@@ -27,10 +27,13 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.example.moodselector.domain.cbt.definitions.BehavioralActivationExercises
 import com.example.moodselector.presentations.assessment.onboarding.AssessmentOnboardingScreen
 import com.example.moodselector.presentations.assessment.questionnaire.AssessmentQuestionnaireScreen
 import com.example.moodselector.presentations.assessment.results.AssessmentResultsScreen
+import com.example.moodselector.presentations.cbt.exercises.ActivitySchedulingScreen
 import com.example.moodselector.presentations.cbt.home.CBTHomeScreen
+import com.example.moodselector.presentations.cbt.progress.CBTProgressScreen
 import com.example.moodselector.presentations.journal.JournalEditorScreen
 import com.example.moodselector.presentations.journal.JournalScreen
 import com.example.moodselector.presentations.mood.MoodGraphScreen
@@ -59,9 +62,6 @@ fun AppNavHost(
      * --------------------------------------------------
      * Bottom navigation items
      * --------------------------------------------------
-     *
-     * The bottom navigation is controlled entirely by
-     * AppNavHost.
      *
      * Home
      * CBT
@@ -113,6 +113,13 @@ fun AppNavHost(
     /*
      * --------------------------------------------------
      * Bottom navigation visibility
+     * --------------------------------------------------
+     *
+     * The bottom navigation is shown only on the main
+     * application screens.
+     *
+     * Individual CBT exercises and CBT progress
+     * intentionally have their own focused experience.
      * --------------------------------------------------
      */
 
@@ -241,6 +248,7 @@ fun AppNavHost(
 
             modifier = Modifier
                 .padding(paddingValues)
+
         ) {
 
             /*
@@ -355,11 +363,87 @@ fun AppNavHost(
 
                     onActivityClick = { activity ->
 
+                        when (activity.id) {
+
+                            "activity_scheduling" -> {
+
+                                navController.navigate(
+                                    Screen.ActivityScheduling.route
+                                ) {
+                                    launchSingleTop = true
+                                }
+                            }
+                        }
+                    },
+
+                    onProgressClick = {
+
+                        navController.navigate(
+                            Screen.CBTProgress.route
+                        ) {
+                            launchSingleTop = true
+                        }
+                    }
+                )
+            }
+
+            /*
+             * --------------------------------------------------
+             * CBT Progress
+             * --------------------------------------------------
+             *
+             * This is intentionally NOT part of the
+             * bottom navigation.
+             *
+             * It is accessed from CBT Home and provides
+             * the user's completed CBT activity timeline.
+             * --------------------------------------------------
+             */
+
+            composable(
+                route = Screen.CBTProgress.route
+            ) {
+
+                CBTProgressScreen(
+
+                    onBackClick = {
+
+                        navController.popBackStack()
+                    }
+                )
+            }
+
+            /*
+             * --------------------------------------------------
+             * Activity Scheduling
+             * --------------------------------------------------
+             */
+
+            composable(
+                route = Screen.ActivityScheduling.route
+            ) {
+
+                ActivitySchedulingScreen(
+
+                    activity =
+                        BehavioralActivationExercises
+                            .activityScheduling,
+
+                    onBackClick = {
+
+                        navController.popBackStack()
+                    },
+
+                    onExerciseCompleted = {
+
                         /*
-                         * Individual CBT exercise navigation
-                         * will be added when the exercise screens
-                         * are implemented.
+                         * The activity has already been
+                         * persisted by the exercise screen.
+                         *
+                         * Return to CBT Home after completion.
                          */
+
+                        navController.popBackStack()
                     }
                 )
             }
@@ -415,10 +499,6 @@ fun AppNavHost(
              * --------------------------------------------------
              * Journal Editor
              * --------------------------------------------------
-             *
-             * This screen is intentionally not included in
-             * the bottom navigation.
-             * --------------------------------------------------
              */
 
             composable(
@@ -436,3 +516,4 @@ fun AppNavHost(
         }
     }
 }
+

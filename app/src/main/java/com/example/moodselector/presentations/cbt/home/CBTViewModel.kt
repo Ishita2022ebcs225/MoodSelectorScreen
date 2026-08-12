@@ -1,4 +1,4 @@
-package com.example.moodselector.presentations.cbt
+package com.example.moodselector.presentations.cbt.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
