@@ -6,13 +6,13 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -31,24 +31,22 @@ import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material.icons.filled.SelfImprovement
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.TaskAlt
-import androidx.compose.material.icons.filled.ThumbUp
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -65,7 +63,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.moodselector.domain.cbt.model.CBTActivity
-import com.example.moodselector.presentations.cbt.progress.CBTProgressViewModel
 
 private val Lavender = Color(0xFF6C63FF)
 private val SoftLavender = Color(0xFFEDEBFF)
@@ -87,17 +84,41 @@ private val Background = Color(0xFFFAF9FD)
 @Composable
 fun ActivitySchedulingScreen(
     activity: CBTActivity,
+    scheduledActivityId: Int?,
     onBackClick: () -> Unit,
     onExerciseCompleted: () -> Unit,
-    viewModel: CBTProgressViewModel = hiltViewModel()
+    onViewScheduledActivities: () -> Unit,
+    scheduledViewModel: ScheduledCBTActivityViewModel = hiltViewModel()
 ) {
+
+    /*
+     * --------------------------------------------------
+     * State
+     * --------------------------------------------------
+     *
+     * IMPORTANT:
+     *
+     * This screen is ONLY for creating/editing a schedule.
+     *
+     * Completion is intentionally NOT part of this screen.
+     *
+     * There is no:
+     * - completed state
+     * - completion checkbox
+     * - completion persistence
+     * - reflection step
+     *
+     * Those belong to the separate completion flow.
+     */
 
     var currentStep by remember {
         mutableIntStateOf(0)
     }
 
     var activityName by remember {
-        mutableStateOf(TextFieldValue(""))
+        mutableStateOf(
+            TextFieldValue("")
+        )
     }
 
     var isPleasure by remember {
@@ -109,26 +130,139 @@ fun ActivitySchedulingScreen(
     }
 
     var whenText by remember {
-        mutableStateOf(TextFieldValue(""))
+        mutableStateOf(
+            TextFieldValue("")
+        )
     }
 
     var whereText by remember {
-        mutableStateOf(TextFieldValue(""))
-    }
-
-    var completed by remember {
-        mutableStateOf(false)
-    }
-
-    var reflection by remember {
-        mutableStateOf(TextFieldValue(""))
+        mutableStateOf(
+            TextFieldValue("")
+        )
     }
 
     var isSaving by remember {
         mutableStateOf(false)
     }
 
-    val totalSteps = 4
+    var isLoading by remember {
+        mutableStateOf(
+            scheduledActivityId != null
+        )
+    }
+
+    /*
+     * --------------------------------------------------
+     * Load existing scheduled activity when editing
+     * --------------------------------------------------
+     */
+
+    LaunchedEffect(scheduledActivityId) {
+
+        if (scheduledActivityId != null) {
+
+            val scheduledActivity =
+                scheduledViewModel
+                    .getScheduledActivityById(
+                        scheduledActivityId
+                    )
+
+            scheduledActivity?.let {
+
+                activityName =
+                    TextFieldValue(
+                        it.activityName
+                    )
+
+                whenText =
+                    TextFieldValue(
+                        it.scheduledWhen
+                    )
+
+                whereText =
+                    TextFieldValue(
+                        it.scheduledWhere
+                    )
+
+                isPleasure =
+                    it.activityType.contains(
+                        "Pleasure",
+                        ignoreCase = true
+                    )
+
+                isMastery =
+                    it.activityType.contains(
+                        "Mastery",
+                        ignoreCase = true
+                    )
+            }
+
+            isLoading = false
+        }
+    }
+
+    /*
+     * --------------------------------------------------
+     * ONLY TWO STEPS
+     * --------------------------------------------------
+     */
+
+    val totalSteps = 2
+
+    /*
+     * --------------------------------------------------
+     * Activity type
+     * --------------------------------------------------
+     */
+
+    val activityType =
+        buildList {
+
+            if (isPleasure) {
+                add("Pleasure")
+            }
+
+            if (isMastery) {
+                add("Mastery")
+            }
+
+        }.joinToString(" + ")
+
+    /*
+     * --------------------------------------------------
+     * Loading state
+     * --------------------------------------------------
+     */
+
+    if (isLoading) {
+
+        Scaffold(
+            containerColor = Background
+        ) { paddingValues ->
+
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
+                contentAlignment =
+                    Alignment.Center
+            ) {
+
+                Text(
+                    text = "Loading your plan...",
+                    color = TextSecondary
+                )
+            }
+        }
+
+        return
+    }
+
+    /*
+     * --------------------------------------------------
+     * Main screen
+     * --------------------------------------------------
+     */
 
     Scaffold(
 
@@ -144,14 +278,24 @@ fun ActivitySchedulingScreen(
 
                         Text(
                             text = activity.title,
-                            fontWeight = FontWeight.SemiBold,
+                            fontWeight =
+                                FontWeight.SemiBold,
                             fontSize = 18.sp
                         )
 
                         Text(
-                            text = "Behavioral Activation",
-                            color = TextSecondary,
-                            fontSize = 12.sp
+                            text =
+                                if (
+                                    scheduledActivityId != null
+                                ) {
+                                    "Edit your plan"
+                                } else {
+                                    "Behavioral Activation"
+                                },
+                            color =
+                                TextSecondary,
+                            fontSize =
+                                12.sp
                         )
                     }
                 },
@@ -159,19 +303,42 @@ fun ActivitySchedulingScreen(
                 navigationIcon = {
 
                     IconButton(
-                        onClick = onBackClick
+                        onClick =
+                            onBackClick
                     ) {
 
                         Icon(
-                            imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "Back"
+                            imageVector =
+                                Icons.Default.ArrowBack,
+                            contentDescription =
+                                "Back"
                         )
                     }
                 },
 
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Background
-                )
+                actions = {
+
+                    IconButton(
+                        onClick =
+                            onViewScheduledActivities
+                    ) {
+
+                        Icon(
+                            imageVector =
+                                Icons.Default.CalendarToday,
+                            contentDescription =
+                                "Scheduled activities",
+                            tint =
+                                Lavender
+                        )
+                    }
+                },
+
+                colors =
+                    TopAppBarDefaults.topAppBarColors(
+                        containerColor =
+                            Background
+                    )
             )
         }
 
@@ -179,10 +346,11 @@ fun ActivitySchedulingScreen(
 
         Column(
 
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .navigationBarsPadding()
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .navigationBarsPadding()
         ) {
 
             /*
@@ -194,71 +362,77 @@ fun ActivitySchedulingScreen(
             LinearProgressIndicator(
 
                 progress = {
-                    (currentStep + 1).toFloat() / totalSteps
+                    (currentStep + 1)
+                        .toFloat() /
+                            totalSteps
                 },
 
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(4.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .height(4.dp),
 
-                color = Lavender,
+                color =
+                    Lavender,
 
-                trackColor = SoftLavender
+                trackColor =
+                    SoftLavender
             )
 
             Column(
 
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(
-                        rememberScrollState()
-                    )
-                    .padding(
-                        horizontal = 20.dp,
-                        vertical = 18.dp
-                    )
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .verticalScroll(
+                            rememberScrollState()
+                        )
+                        .padding(
+                            horizontal = 20.dp,
+                            vertical = 18.dp
+                        )
             ) {
 
-                /*
-                 * --------------------------------------------------
-                 * Step Header
-                 * --------------------------------------------------
-                 */
-
                 StepHeader(
-                    step = currentStep + 1,
-                    totalSteps = totalSteps
+                    step =
+                        currentStep + 1,
+                    totalSteps =
+                        totalSteps
                 )
 
                 Spacer(
-                    modifier = Modifier.height(18.dp)
+                    modifier =
+                        Modifier.height(18.dp)
                 )
 
-                when (currentStep) {
+                /*
+                 * --------------------------------------------------
+                 * Scheduling steps ONLY
+                 * --------------------------------------------------
+                 */
 
-                    /*
-                     * ==================================================
-                     * STEP 1
-                     * ==================================================
-                     */
+                when (currentStep) {
 
                     0 -> {
 
                         ActivitySelectionStep(
 
-                            activityName = activityName,
+                            activityName =
+                                activityName,
 
                             onActivityNameChange = {
                                 activityName = it
                             },
 
-                            isPleasure = isPleasure,
+                            isPleasure =
+                                isPleasure,
 
                             onPleasureChange = {
                                 isPleasure = it
                             },
 
-                            isMastery = isMastery,
+                            isMastery =
+                                isMastery,
 
                             onMasteryChange = {
                                 isMastery = it
@@ -266,95 +440,43 @@ fun ActivitySchedulingScreen(
                         )
                     }
 
-                    /*
-                     * ==================================================
-                     * STEP 2
-                     * ==================================================
-                     */
-
                     1 -> {
 
                         SchedulingStep(
 
-                            whenText = whenText,
+                            whenText =
+                                whenText,
 
                             onWhenChange = {
                                 whenText = it
                             },
 
-                            whereText = whereText,
+                            whereText =
+                                whereText,
 
                             onWhereChange = {
                                 whereText = it
                             }
                         )
                     }
-
-                    /*
-                     * ==================================================
-                     * STEP 3
-                     * ==================================================
-                     */
-
-                    2 -> {
-
-                        CompletionStep(
-
-                            activityName =
-                                activityName.text,
-
-                            whenText =
-                                whenText.text,
-
-                            whereText =
-                                whereText.text,
-
-                            isPleasure =
-                                isPleasure,
-
-                            isMastery =
-                                isMastery,
-
-                            completed =
-                                completed,
-
-                            onCompletedChange = {
-                                completed = it
-                            }
-                        )
-                    }
-
-                    /*
-                     * ==================================================
-                     * STEP 4
-                     * ==================================================
-                     */
-
-                    3 -> {
-
-                        ReflectionStep(
-
-                            reflection = reflection,
-
-                            onReflectionChange = {
-                                reflection = it
-                            }
-                        )
-                    }
                 }
 
                 Spacer(
-                    modifier = Modifier.height(28.dp)
+                    modifier =
+                        Modifier.height(28.dp)
                 )
 
                 /*
                  * --------------------------------------------------
-                 * Navigation Buttons
+                 * Navigation
                  * --------------------------------------------------
                  */
 
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+
+                    modifier =
+                        Modifier.fillMaxWidth(),
+
                     horizontalArrangement =
                         Arrangement.spacedBy(12.dp)
                 ) {
@@ -367,18 +489,22 @@ fun ActivitySchedulingScreen(
                                 currentStep--
                             },
 
-                            modifier = Modifier.weight(1f),
+                            modifier =
+                                Modifier.weight(1f),
 
                             colors =
-                                ButtonDefaults.buttonColors(
-                                    containerColor =
-                                        SoftLavender,
-                                    contentColor =
-                                        Lavender
-                                ),
+                                ButtonDefaults
+                                    .buttonColors(
+                                        containerColor =
+                                            SoftLavender,
+                                        contentColor =
+                                            Lavender
+                                    ),
 
                             shape =
-                                RoundedCornerShape(16.dp)
+                                RoundedCornerShape(
+                                    16.dp
+                                )
                         ) {
 
                             Text(
@@ -393,6 +519,12 @@ fun ActivitySchedulingScreen(
 
                         onClick = {
 
+                            /*
+                             * --------------------------------------
+                             * Step 1 -> Step 2
+                             * --------------------------------------
+                             */
+
                             if (
                                 currentStep <
                                 totalSteps - 1
@@ -400,59 +532,72 @@ fun ActivitySchedulingScreen(
 
                                 currentStep++
 
-                            } else {
-
-                                if (isSaving) {
-                                    return@Button
-                                }
-
-                                isSaving = true
-
-                                val activityType =
-                                    buildList {
-
-                                        if (isPleasure) {
-                                            add("Pleasure")
-                                        }
-
-                                        if (isMastery) {
-                                            add("Mastery")
-                                        }
-
-                                    }.joinToString(" + ")
-
-                                viewModel.saveActivityCompletion(
-
-                                    activityId =
-                                        activity.id,
-
-                                    activityTitle =
-                                        activity.title,
-
-                                    activityDescription =
-                                        activity.description,
-
-                                    activityName =
-                                        activityName.text,
-
-                                    activityType =
-                                        activityType,
-
-                                    scheduledWhen =
-                                        whenText.text,
-
-                                    scheduledWhere =
-                                        whereText.text,
-
-                                    reflection =
-                                        reflection.text,
-
-                                    onSaved = {
-
-                                        onExerciseCompleted()
-                                    }
-                                )
+                                return@Button
                             }
+
+                            /*
+                             * --------------------------------------
+                             * Final step
+                             * --------------------------------------
+                             *
+                             * This ONLY saves the schedule.
+                             *
+                             * It does NOT:
+                             * - mark the activity complete
+                             * - save CBT completion
+                             * - create a progress entry
+                             * - ask for reflection
+                             */
+
+                            if (isSaving) {
+                                return@Button
+                            }
+
+                            isSaving = true
+
+                            scheduledViewModel.saveScheduledActivity(
+
+                                id =
+                                    scheduledActivityId ?: 0,
+
+                                activityId =
+                                    activity.id,
+
+                                activityTitle =
+                                    activity.title,
+
+                                activityDescription =
+                                    activity.description,
+
+                                activityName =
+                                    activityName.text,
+
+                                activityType =
+                                    activityType,
+
+                                scheduledWhen =
+                                    whenText.text,
+
+                                scheduledWhere =
+                                    whereText.text,
+
+                                onSaved = {
+
+                                    /*
+                                     * The schedule has been saved.
+                                     *
+                                     * We return to the previous flow.
+                                     *
+                                     * Completion will happen later,
+                                     * after the user actually performs
+                                     * the scheduled activity.
+                                     */
+
+                                    isSaving = false
+
+                                    onExerciseCompleted()
+                                }
+                            )
                         },
 
                         modifier =
@@ -463,7 +608,8 @@ fun ActivitySchedulingScreen(
                                     when (currentStep) {
 
                                         0 ->
-                                            activityName.text
+                                            activityName
+                                                .text
                                                 .isNotBlank() &&
                                                     (
                                                             isPleasure ||
@@ -471,63 +617,121 @@ fun ActivitySchedulingScreen(
                                                             )
 
                                         1 ->
-                                            whenText.text
+                                            whenText
+                                                .text
                                                 .isNotBlank() &&
-                                                    whereText.text
+                                                    whereText
+                                                        .text
                                                         .isNotBlank()
 
-                                        2 ->
-                                            completed
-
                                         else ->
-                                            true
+                                            false
                                     },
 
                         colors =
-                            ButtonDefaults.buttonColors(
-                                containerColor =
-                                    Lavender,
-                                contentColor =
-                                    Color.White,
-                                disabledContainerColor =
-                                    SoftLavender,
-                                disabledContentColor =
-                                    TextSecondary
-                            ),
+                            ButtonDefaults
+                                .buttonColors(
+
+                                    containerColor =
+                                        Lavender,
+
+                                    contentColor =
+                                        Color.White,
+
+                                    disabledContainerColor =
+                                        SoftLavender,
+
+                                    disabledContentColor =
+                                        TextSecondary
+                                ),
 
                         shape =
-                            RoundedCornerShape(16.dp)
+                            RoundedCornerShape(
+                                16.dp
+                            )
                     ) {
 
-                        if (isSaving) {
+                        Text(
 
-                            Text(
-                                text = "Saving..."
-                            )
-
-                        } else {
-
-                            Text(
-                                text =
+                            text =
+                                if (
+                                    currentStep ==
+                                    totalSteps - 1
+                                ) {
                                     if (
-                                        currentStep ==
-                                        totalSteps - 1
+                                        scheduledActivityId !=
+                                        null
                                     ) {
-                                        "Complete"
+                                        "Save Changes"
                                     } else {
-                                        "Continue"
-                                    },
+                                        "Save Schedule"
+                                    }
+                                } else {
+                                    "Continue"
+                                },
 
-                                fontWeight =
-                                    FontWeight.SemiBold
-                            )
-                        }
+                            fontWeight =
+                                FontWeight.SemiBold
+                        )
+                    }
+                }
+
+                /*
+                 * --------------------------------------------------
+                 * Scheduled activity shortcut
+                 * --------------------------------------------------
+                 */
+
+                if (
+                    currentStep == 0 &&
+                    scheduledActivityId == null
+                ) {
+
+                    Spacer(
+                        modifier =
+                            Modifier.height(14.dp)
+                    )
+
+                    TextButton(
+
+                        onClick =
+                            onViewScheduledActivities,
+
+                        modifier =
+                            Modifier.fillMaxWidth()
+                    ) {
+
+                        Icon(
+                            imageVector =
+                                Icons.Default.CalendarToday,
+                            contentDescription =
+                                null,
+                            tint =
+                                Lavender,
+                            modifier =
+                                Modifier.size(
+                                    18.dp
+                                )
+                        )
+
+                        Spacer(
+                            modifier =
+                                Modifier.width(6.dp)
+                        )
+
+                        Text(
+                            text =
+                                "View my scheduled activities",
+                            color =
+                                Lavender
+                        )
                     }
                 }
             }
         }
     }
 }
+
 
 /*
  * ==============================================================
@@ -542,74 +746,104 @@ private fun StepHeader(
 ) {
 
     Row(
-        modifier = Modifier.fillMaxWidth(),
+
+        modifier =
+            Modifier.fillMaxWidth(),
+
         horizontalArrangement =
             Arrangement.SpaceBetween,
+
         verticalAlignment =
             Alignment.CenterVertically
     ) {
 
         Text(
-            text = "Step $step of $totalSteps",
-            color = Lavender,
-            fontWeight = FontWeight.Bold,
-            fontSize = 13.sp
+            text =
+                "Step $step of $totalSteps",
+
+            color =
+                Lavender,
+
+            fontWeight =
+                FontWeight.Bold,
+
+            fontSize =
+                13.sp
         )
 
         Text(
-            text = when (step) {
-                1 -> "Choose your activity"
-                2 -> "Make your plan"
-                3 -> "Complete your activity"
-                else -> "Reflect"
-            },
-            color = TextSecondary,
-            fontSize = 13.sp
+
+            text =
+                when (step) {
+
+                    1 ->
+                        "Choose your activity"
+
+                    else ->
+                        "Make your plan"
+                },
+
+            color =
+                TextSecondary,
+
+            fontSize =
+                13.sp
         )
     }
 }
 
+
 /*
  * ==============================================================
- * STEP 1 — ACTIVITY SELECTION
+ * STEP 1
  * ==============================================================
  */
 
 @Composable
 private fun ActivitySelectionStep(
     activityName: TextFieldValue,
-    onActivityNameChange: (TextFieldValue) -> Unit,
+    onActivityNameChange:
+        (TextFieldValue) -> Unit,
     isPleasure: Boolean,
-    onPleasureChange: (Boolean) -> Unit,
+    onPleasureChange:
+        (Boolean) -> Unit,
     isMastery: Boolean,
-    onMasteryChange: (Boolean) -> Unit
+    onMasteryChange:
+        (Boolean) -> Unit
 ) {
 
     ExerciseIntroCard(
 
-        icon = Icons.Default.Star,
+        icon =
+            Icons.Default.Star,
 
-        title = "Choose one meaningful activity",
+        title =
+            "Choose one meaningful activity",
 
         description =
             "Think of one activity you would like to complete. Keep it realistic and achievable."
     )
 
     Spacer(
-        modifier = Modifier.height(20.dp)
+        modifier =
+            Modifier.height(20.dp)
     )
 
     OutlinedTextField(
 
-        value = activityName,
+        value =
+            activityName,
 
         onValueChange =
             onActivityNameChange,
 
-        modifier = Modifier.fillMaxWidth(),
+        modifier =
+            Modifier.fillMaxWidth(),
 
         label = {
-            Text("What would you like to do?")
+            Text(
+                "What would you like to do?"
+            )
         },
 
         placeholder = {
@@ -623,7 +857,8 @@ private fun ActivitySelectionStep(
             Icon(
                 imageVector =
                     Icons.Default.TaskAlt,
-                contentDescription = null
+                contentDescription =
+                    null
             )
         },
 
@@ -634,29 +869,42 @@ private fun ActivitySelectionStep(
     )
 
     Spacer(
-        modifier = Modifier.height(20.dp)
+        modifier =
+            Modifier.height(20.dp)
     )
 
     Text(
-        text = "How would you classify this activity?",
-        color = TextPrimary,
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 15.sp
+        text =
+            "How would you classify this activity?",
+
+        color =
+            TextPrimary,
+
+        fontWeight =
+            FontWeight.SemiBold,
+
+        fontSize =
+            15.sp
     )
 
     Spacer(
-        modifier = Modifier.height(12.dp)
+        modifier =
+            Modifier.height(12.dp)
     )
 
     Row(
-        modifier = Modifier.fillMaxWidth(),
+
+        modifier =
+            Modifier.fillMaxWidth(),
+
         horizontalArrangement =
             Arrangement.spacedBy(12.dp)
     ) {
 
         ActivityTypeCard(
 
-            title = "Pleasure",
+            title =
+                "Pleasure",
 
             description =
                 "Something enjoyable",
@@ -682,7 +930,8 @@ private fun ActivitySelectionStep(
 
         ActivityTypeCard(
 
-            title = "Mastery",
+            title =
+                "Mastery",
 
             description =
                 "Something meaningful",
@@ -708,48 +957,61 @@ private fun ActivitySelectionStep(
     }
 }
 
+
 /*
  * ==============================================================
- * STEP 2 — SCHEDULING
+ * STEP 2
  * ==============================================================
  */
 
 @Composable
 private fun SchedulingStep(
     whenText: TextFieldValue,
-    onWhenChange: (TextFieldValue) -> Unit,
+    onWhenChange:
+        (TextFieldValue) -> Unit,
     whereText: TextFieldValue,
-    onWhereChange: (TextFieldValue) -> Unit
+    onWhereChange:
+        (TextFieldValue) -> Unit
 ) {
 
     ExerciseIntroCard(
 
-        icon = Icons.Default.CalendarToday,
+        icon =
+            Icons.Default.CalendarToday,
 
-        title = "Make your plan specific",
+        title =
+            "Make your plan specific",
 
         description =
             "Deciding when and where you will do something makes it easier to turn an intention into action."
     )
 
     Spacer(
-        modifier = Modifier.height(20.dp)
+        modifier =
+            Modifier.height(20.dp)
     )
 
     OutlinedTextField(
 
-        value = whenText,
+        value =
+            whenText,
 
-        onValueChange = onWhenChange,
+        onValueChange =
+            onWhenChange,
 
-        modifier = Modifier.fillMaxWidth(),
+        modifier =
+            Modifier.fillMaxWidth(),
 
         label = {
-            Text("When will you do it?")
+            Text(
+                "When will you do it?"
+            )
         },
 
         placeholder = {
-            Text("e.g. Tomorrow at 6:00 PM")
+            Text(
+                "e.g. Tomorrow at 6:00 PM"
+            )
         },
 
         leadingIcon = {
@@ -757,7 +1019,8 @@ private fun SchedulingStep(
             Icon(
                 imageVector =
                     Icons.Default.AccessTime,
-                contentDescription = null
+                contentDescription =
+                    null
             )
         },
 
@@ -766,8 +1029,10 @@ private fun SchedulingStep(
             Icon(
                 imageVector =
                     Icons.Default.Event,
-                contentDescription = null,
-                tint = Lavender
+                contentDescription =
+                    null,
+                tint =
+                    Lavender
             )
         },
 
@@ -778,23 +1043,31 @@ private fun SchedulingStep(
     )
 
     Spacer(
-        modifier = Modifier.height(16.dp)
+        modifier =
+            Modifier.height(16.dp)
     )
 
     OutlinedTextField(
 
-        value = whereText,
+        value =
+            whereText,
 
-        onValueChange = onWhereChange,
+        onValueChange =
+            onWhereChange,
 
-        modifier = Modifier.fillMaxWidth(),
+        modifier =
+            Modifier.fillMaxWidth(),
 
         label = {
-            Text("Where will you do it?")
+            Text(
+                "Where will you do it?"
+            )
         },
 
         placeholder = {
-            Text("e.g. Around my neighborhood")
+            Text(
+                "e.g. Around my neighborhood"
+            )
         },
 
         leadingIcon = {
@@ -802,7 +1075,8 @@ private fun SchedulingStep(
             Icon(
                 imageVector =
                     Icons.Default.LocationOn,
-                contentDescription = null
+                contentDescription =
+                    null
             )
         },
 
@@ -811,296 +1085,10 @@ private fun SchedulingStep(
 
         singleLine = true
     )
-}
-
-/*
- * ==============================================================
- * STEP 3 — COMPLETION
- * ==============================================================
- */
-
-@Composable
-private fun CompletionStep(
-    activityName: String,
-    whenText: String,
-    whereText: String,
-    isPleasure: Boolean,
-    isMastery: Boolean,
-    completed: Boolean,
-    onCompletedChange: (Boolean) -> Unit
-) {
-
-    ExerciseIntroCard(
-
-        icon = Icons.Default.TaskAlt,
-
-        title = "Check in with your plan",
-
-        description =
-            "When you have completed the activity, check the box below."
-    )
 
     Spacer(
-        modifier = Modifier.height(18.dp)
-    )
-
-    Card(
-
         modifier =
-            Modifier.fillMaxWidth(),
-
-        shape =
-            RoundedCornerShape(20.dp),
-
-        colors =
-            CardDefaults.cardColors(
-                containerColor =
-                    SurfaceWhite
-            ),
-
-        elevation =
-            CardDefaults.cardElevation(
-                defaultElevation = 2.dp
-            )
-    ) {
-
-        Column(
-            modifier =
-                Modifier.padding(18.dp)
-        ) {
-
-            Text(
-                text = activityName,
-                color = TextPrimary,
-                fontWeight = FontWeight.Bold,
-                fontSize = 18.sp
-            )
-
-            Spacer(
-                modifier = Modifier.height(12.dp)
-            )
-
-            DetailRow(
-                icon = Icons.Default.AccessTime,
-                text = whenText
-            )
-
-            Spacer(
-                modifier = Modifier.height(8.dp)
-            )
-
-            DetailRow(
-                icon = Icons.Default.LocationOn,
-                text = whereText
-            )
-
-            Spacer(
-                modifier = Modifier.height(12.dp)
-            )
-
-            Row(
-                horizontalArrangement =
-                    Arrangement.spacedBy(8.dp)
-            ) {
-
-                if (isPleasure) {
-
-                    TypeTag(
-                        text = "Pleasure",
-                        backgroundColor = SoftRose,
-                        textColor = Rose
-                    )
-                }
-
-                if (isMastery) {
-
-                    TypeTag(
-                        text = "Mastery",
-                        backgroundColor = SoftTeal,
-                        textColor = Teal
-                    )
-                }
-            }
-        }
-    }
-
-    Spacer(
-        modifier = Modifier.height(18.dp)
-    )
-
-    Card(
-
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable {
-                onCompletedChange(!completed)
-            },
-
-        shape =
-            RoundedCornerShape(18.dp),
-
-        colors =
-            CardDefaults.cardColors(
-                containerColor =
-                    if (completed) {
-                        SoftLavender
-                    } else {
-                        SurfaceWhite
-                    }
-            )
-    ) {
-
-        Row(
-
-            modifier =
-                Modifier.padding(12.dp),
-
-            verticalAlignment =
-                Alignment.CenterVertically
-        ) {
-
-            Checkbox(
-                checked = completed,
-                onCheckedChange =
-                    onCompletedChange
-            )
-
-            Column(
-                modifier =
-                    Modifier.weight(1f)
-            ) {
-
-                Text(
-                    text =
-                        "I've completed this activity",
-
-                    color = TextPrimary,
-
-                    fontWeight =
-                        FontWeight.SemiBold
-                )
-
-                Text(
-                    text =
-                        "Check this when you have finished.",
-
-                    color =
-                        TextSecondary,
-
-                    fontSize = 12.sp
-                )
-            }
-
-            if (completed) {
-
-                Icon(
-
-                    imageVector =
-                        Icons.Default.CheckCircle,
-
-                    contentDescription = null,
-
-                    tint = Lavender
-                )
-            }
-        }
-    }
-}
-
-/*
- * ==============================================================
- * STEP 4 — REFLECTION
- * ==============================================================
- */
-
-@Composable
-private fun ReflectionStep(
-    reflection: TextFieldValue,
-    onReflectionChange:
-        (TextFieldValue) -> Unit
-) {
-
-    ExerciseIntroCard(
-
-        icon = Icons.Default.Psychology,
-
-        title = "Reflect on your experience",
-
-        description =
-            "Take a moment to notice what the experience was like. There is no right or wrong answer."
-    )
-
-    Spacer(
-        modifier = Modifier.height(20.dp)
-    )
-
-    ReflectionPromptCard(
-
-        icon = Icons.Default.SelfImprovement,
-
-        title = "Before the activity",
-
-        text =
-            "How were you feeling before you started? Was anything making it difficult to get started?"
-    )
-
-    Spacer(
-        modifier = Modifier.height(12.dp)
-    )
-
-    ReflectionPromptCard(
-
-        icon = Icons.Default.ThumbUp,
-
-        title = "After the activity",
-
-        text =
-            "How did you feel afterward? Did anything make the activity easier or harder?"
-    )
-
-    Spacer(
-        modifier = Modifier.height(20.dp)
-    )
-
-    OutlinedTextField(
-
-        value = reflection,
-
-        onValueChange =
-            onReflectionChange,
-
-        modifier =
-            Modifier.fillMaxWidth(),
-
-        label = {
-            Text("Your remarks")
-        },
-
-        placeholder = {
-            Text(
-                "Write anything you'd like to remember..."
-            )
-        },
-
-        leadingIcon = {
-
-            Icon(
-                imageVector =
-                    Icons.Default.Edit,
-                contentDescription = null
-            )
-        },
-
-        shape =
-            RoundedCornerShape(16.dp),
-
-        minLines = 5,
-
-        maxLines = 8
-    )
-
-    Spacer(
-        modifier = Modifier.height(16.dp)
+            Modifier.height(18.dp)
     )
 
     Card(
@@ -1132,30 +1120,36 @@ private fun ReflectionStep(
                 imageVector =
                     Icons.Default.Lightbulb,
 
-                contentDescription = null,
+                contentDescription =
+                    null,
 
-                tint = Lavender
+                tint =
+                    Lavender
             )
 
             Spacer(
-                modifier = Modifier.width(12.dp)
+                modifier =
+                    Modifier.width(12.dp)
             )
 
             Text(
 
                 text =
-                    "Small actions count. Completing one meaningful activity is already a step toward building a healthier routine.",
+                    "You are creating a plan, not completing the activity yet. Once saved, your plan will appear in Scheduled Activities.",
 
                 color =
                     TextSecondary,
 
-                fontSize = 13.sp,
+                fontSize =
+                    13.sp,
 
-                lineHeight = 19.sp
+                lineHeight =
+                    19.sp
             )
         }
     }
 }
+
 
 /*
  * ==============================================================
@@ -1196,51 +1190,76 @@ private fun ExerciseIntroCard(
 
             Box(
 
-                modifier = Modifier
-                    .size(46.dp)
-                    .clip(CircleShape)
-                    .background(
-                        SoftLavender
-                    ),
+                modifier =
+                    Modifier
+                        .size(46.dp)
+                        .clip(
+                            CircleShape
+                        )
+                        .background(
+                            SoftLavender
+                        ),
 
                 contentAlignment =
                     Alignment.Center
             ) {
 
                 Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = Lavender
+                    imageVector =
+                        icon,
+
+                    contentDescription =
+                        null,
+
+                    tint =
+                        Lavender
                 )
             }
 
             Spacer(
-                modifier = Modifier.width(14.dp)
+                modifier =
+                    Modifier.width(14.dp)
             )
 
             Column {
 
                 Text(
-                    text = title,
-                    color = TextPrimary,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 17.sp
+                    text =
+                        title,
+
+                    color =
+                        TextPrimary,
+
+                    fontWeight =
+                        FontWeight.Bold,
+
+                    fontSize =
+                        17.sp
                 )
 
                 Spacer(
-                    modifier = Modifier.height(5.dp)
+                    modifier =
+                        Modifier.height(5.dp)
                 )
 
                 Text(
-                    text = description,
-                    color = TextSecondary,
-                    fontSize = 13.sp,
-                    lineHeight = 19.sp
+                    text =
+                        description,
+
+                    color =
+                        TextSecondary,
+
+                    fontSize =
+                        13.sp,
+
+                    lineHeight =
+                        19.sp
                 )
             }
         }
     }
 }
+
 
 @Composable
 private fun ActivityTypeCard(
@@ -1276,7 +1295,11 @@ private fun ActivityTypeCard(
         elevation =
             CardDefaults.cardElevation(
                 defaultElevation =
-                    if (selected) 2.dp else 1.dp
+                    if (selected) {
+                        2.dp
+                    } else {
+                        1.dp
+                    }
             )
     ) {
 
@@ -1291,18 +1314,21 @@ private fun ActivityTypeCard(
 
             Box(
 
-                modifier = Modifier
-                    .size(42.dp)
-                    .clip(CircleShape)
-                    .background(
-                        if (selected) {
-                            Color.White.copy(
-                                alpha = 0.7f
-                            )
-                        } else {
-                            selectedColor
-                        }
-                    ),
+                modifier =
+                    Modifier
+                        .size(42.dp)
+                        .clip(
+                            CircleShape
+                        )
+                        .background(
+                            if (selected) {
+                                Color.White.copy(
+                                    alpha = 0.7f
+                                )
+                            } else {
+                                selectedColor
+                            }
+                        ),
 
                 contentAlignment =
                     Alignment.Center
@@ -1311,7 +1337,10 @@ private fun ActivityTypeCard(
                 Icon(
 
                     imageVector =
-                        if (title == "Pleasure") {
+                        if (
+                            title ==
+                            "Pleasure"
+                        ) {
                             Icons.Default.Star
                         } else {
                             Icons.Default.TaskAlt
@@ -1331,9 +1360,14 @@ private fun ActivityTypeCard(
             )
 
             Text(
-                text = title,
-                color = TextPrimary,
-                fontWeight = FontWeight.Bold
+                text =
+                    title,
+
+                color =
+                    TextPrimary,
+
+                fontWeight =
+                    FontWeight.Bold
             )
 
             Spacer(
@@ -1342,9 +1376,14 @@ private fun ActivityTypeCard(
             )
 
             Text(
-                text = description,
-                color = TextSecondary,
-                fontSize = 12.sp
+                text =
+                    description,
+
+                color =
+                    TextSecondary,
+
+                fontSize =
+                    12.sp
             )
 
             Spacer(
@@ -1355,12 +1394,16 @@ private fun ActivityTypeCard(
             if (selected) {
 
                 Icon(
+
                     imageVector =
                         Icons.Default.CheckCircle,
+
                     contentDescription =
                         "Selected",
+
                     tint =
                         iconColor,
+
                     modifier =
                         Modifier.size(20.dp)
                 )
@@ -1368,151 +1411,3 @@ private fun ActivityTypeCard(
         }
     }
 }
-
-@Composable
-private fun DetailRow(
-    icon: ImageVector,
-    text: String
-) {
-
-    Row(
-        verticalAlignment =
-            Alignment.CenterVertically
-    ) {
-
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = Lavender,
-            modifier =
-                Modifier.size(19.dp)
-        )
-
-        Spacer(
-            modifier =
-                Modifier.width(10.dp)
-        )
-
-        Text(
-            text = text,
-            color = TextSecondary,
-            fontSize = 13.sp
-        )
-    }
-}
-
-@Composable
-private fun TypeTag(
-    text: String,
-    backgroundColor: Color,
-    textColor: Color
-) {
-
-    Box(
-
-        modifier = Modifier
-            .clip(
-                RoundedCornerShape(50)
-            )
-            .background(
-                backgroundColor
-            )
-            .padding(
-                horizontal = 12.dp,
-                vertical = 6.dp
-            )
-    ) {
-
-        Text(
-            text = text,
-            color = textColor,
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 12.sp
-        )
-    }
-}
-
-@Composable
-private fun ReflectionPromptCard(
-    icon: ImageVector,
-    title: String,
-    text: String
-) {
-
-    Card(
-
-        modifier =
-            Modifier.fillMaxWidth(),
-
-        shape =
-            RoundedCornerShape(18.dp),
-
-        colors =
-            CardDefaults.cardColors(
-                containerColor =
-                    SurfaceWhite
-            )
-    ) {
-
-        Row(
-
-            modifier =
-                Modifier.padding(16.dp),
-
-            verticalAlignment =
-                Alignment.Top
-        ) {
-
-            Box(
-
-                modifier = Modifier
-                    .size(38.dp)
-                    .clip(CircleShape)
-                    .background(
-                        SoftLavender
-                    ),
-
-                contentAlignment =
-                    Alignment.Center
-            ) {
-
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = Lavender,
-                    modifier =
-                        Modifier.size(20.dp)
-                )
-            }
-
-            Spacer(
-                modifier =
-                    Modifier.width(12.dp)
-            )
-
-            Column {
-
-                Text(
-                    text = title,
-                    color = TextPrimary,
-                    fontWeight =
-                        FontWeight.SemiBold,
-                    fontSize = 14.sp
-                )
-
-                Spacer(
-                    modifier =
-                        Modifier.height(4.dp)
-                )
-
-                Text(
-                    text = text,
-                    color = TextSecondary,
-                    fontSize = 12.sp,
-                    lineHeight = 18.sp
-                )
-            }
-        }
-    }
-}
-

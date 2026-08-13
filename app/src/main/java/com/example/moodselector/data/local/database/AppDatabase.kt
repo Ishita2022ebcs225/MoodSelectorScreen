@@ -6,12 +6,16 @@ import androidx.room.TypeConverters
 import com.example.moodselector.data.local.converter.AssessmentSeverityConverter
 import com.example.moodselector.data.local.dao.AssessmentResultDao
 import com.example.moodselector.data.local.dao.CBTActivityCompletionDao
+import com.example.moodselector.data.local.dao.FiveMinuteStarterCompletionDao
 import com.example.moodselector.data.local.dao.JournalDao
+import com.example.moodselector.data.local.dao.MindfulMeditationCompletionDao
 import com.example.moodselector.data.local.dao.MoodDao
 import com.example.moodselector.data.local.dao.ScheduledCBTActivityDao
 import com.example.moodselector.data.local.entity.AssessmentResultEntity
 import com.example.moodselector.data.local.entity.CBTActivityCompletionEntity
+import com.example.moodselector.data.local.entity.FiveMinuteStarterCompletionEntity
 import com.example.moodselector.data.local.entity.JournalEntity
+import com.example.moodselector.data.local.entity.MindfulMeditationCompletionEntity
 import com.example.moodselector.data.local.entity.MoodEntry
 import com.example.moodselector.data.local.entity.ScheduledCBTActivityEntity
 
@@ -21,9 +25,11 @@ import com.example.moodselector.data.local.entity.ScheduledCBTActivityEntity
         JournalEntity::class,
         AssessmentResultEntity::class,
         CBTActivityCompletionEntity::class,
-        ScheduledCBTActivityEntity::class
+        ScheduledCBTActivityEntity::class,
+        FiveMinuteStarterCompletionEntity::class,
+        MindfulMeditationCompletionEntity::class
     ],
-    version = 6,
+    version = 8,
     exportSchema = false
 )
 @TypeConverters(
@@ -31,14 +37,64 @@ import com.example.moodselector.data.local.entity.ScheduledCBTActivityEntity
 )
 abstract class AppDatabase : RoomDatabase() {
 
+    /*
+     * --------------------------------------------------
+     * MOOD
+     * --------------------------------------------------
+     */
+
     abstract fun moodDao(): MoodDao
+
+    /*
+     * --------------------------------------------------
+     * JOURNAL
+     * --------------------------------------------------
+     */
 
     abstract fun journalDao(): JournalDao
 
-    abstract fun assessmentResultDao(): AssessmentResultDao
+    /*
+     * --------------------------------------------------
+     * ASSESSMENT
+     * --------------------------------------------------
+     */
 
-    abstract fun cbtActivityCompletionDao(): CBTActivityCompletionDao
+    abstract fun assessmentResultDao():
+            AssessmentResultDao
 
-    abstract fun scheduledCBTActivityDao(): ScheduledCBTActivityDao
+    /*
+     * --------------------------------------------------
+     * GENERAL CBT COMPLETIONS
+     * --------------------------------------------------
+     */
+
+    abstract fun cbtActivityCompletionDao():
+            CBTActivityCompletionDao
+
+    /*
+     * --------------------------------------------------
+     * SCHEDULED CBT ACTIVITIES
+     * --------------------------------------------------
+     */
+
+    abstract fun scheduledCBTActivityDao():
+            ScheduledCBTActivityDao
+
+    /*
+     * --------------------------------------------------
+     * FIVE-MINUTE STARTER
+     * --------------------------------------------------
+     */
+
+    abstract fun fiveMinuteStarterCompletionDao():
+            FiveMinuteStarterCompletionDao
+
+    /*
+     * --------------------------------------------------
+     * MINDFUL MEDITATION
+     * --------------------------------------------------
+     */
+
+    abstract fun mindfulMeditationCompletionDao():
+            MindfulMeditationCompletionDao
 }
-

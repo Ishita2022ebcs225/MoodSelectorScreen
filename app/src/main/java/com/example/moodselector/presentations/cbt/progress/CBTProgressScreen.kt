@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -21,9 +22,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.EmojiEvents
-import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.SelfImprovement
+import androidx.compose.material.icons.filled.Spa
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.TaskAlt
 import androidx.compose.material3.Card
@@ -47,6 +47,8 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.moodselector.data.local.entity.CBTActivityCompletionEntity
+import com.example.moodselector.data.local.entity.FiveMinuteStarterCompletionEntity
+import com.example.moodselector.data.local.entity.MindfulMeditationCompletionEntity
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -74,14 +76,20 @@ fun CBTProgressScreen(
     viewModel: CBTProgressViewModel = hiltViewModel()
 ) {
 
-    val completions by viewModel
-        .completions
+    val progressItems by
+    viewModel.progressItems
         .collectAsStateWithLifecycle(
             initialValue = emptyList()
         )
 
-    val completionCount by viewModel
-        .completionCount
+    /*
+     * IMPORTANT:
+     *
+     * This is the number of UNIQUE exercises completed,
+     * not the number of completion records.
+     */
+    val completionCount by
+    viewModel.uniqueCompletedExerciseCount
         .collectAsStateWithLifecycle(
             initialValue = 0
         )
@@ -141,7 +149,7 @@ fun CBTProgressScreen(
 
     ) { paddingValues ->
 
-        if (completions.isEmpty()) {
+        if (progressItems.isEmpty()) {
 
             EmptyProgressState(
                 modifier = Modifier
@@ -168,9 +176,9 @@ fun CBTProgressScreen(
             ) {
 
                 /*
-                 * --------------------------------------------------
-                 * Progress Summary
-                 * --------------------------------------------------
+                 * ------------------------------------------
+                 * PROGRESS SUMMARY
+                 * ------------------------------------------
                  */
 
                 item {
@@ -181,10 +189,11 @@ fun CBTProgressScreen(
                     )
                 }
 
+
                 /*
-                 * --------------------------------------------------
-                 * Timeline
-                 * --------------------------------------------------
+                 * ------------------------------------------
+                 * JOURNEY
+                 * ------------------------------------------
                  */
 
                 item {
@@ -197,20 +206,68 @@ fun CBTProgressScreen(
                     )
                 }
 
+
+                /*
+                 * ------------------------------------------
+                 * COMBINED TIMELINE
+                 * ------------------------------------------
+                 */
+
                 items(
 
-                    items = completions,
+                    items = progressItems,
 
-                    key = {
-                        it.id
+                    key = { item ->
+
+                        when (item) {
+
+                            is CBTProgressItem.ActivityCompletion ->
+                                "activity_${item.completion.id}"
+
+                            is CBTProgressItem.FiveMinuteStarterCompletion ->
+                                "starter_${item.completion.id}"
+
+                            is CBTProgressItem.MindfulMeditationCompletion ->
+                                "meditation_${item.completion.id}"
+                        }
                     }
 
-                ) { completion ->
+                ) { item ->
 
-                    TimelineItem(
-                        completion = completion
-                    )
+                    when (item) {
+
+                        is CBTProgressItem.ActivityCompletion -> {
+
+                            ActivityCompletionTimelineItem(
+                                completion =
+                                    item.completion
+                            )
+                        }
+
+                        is CBTProgressItem.FiveMinuteStarterCompletion -> {
+
+                            FiveMinuteStarterTimelineItem(
+                                completion =
+                                    item.completion
+                            )
+                        }
+
+                        is CBTProgressItem.MindfulMeditationCompletion -> {
+
+                            MindfulMeditationTimelineItem(
+                                completion =
+                                    item.completion
+                            )
+                        }
+                    }
                 }
+
+
+                /*
+                 * ------------------------------------------
+                 * ENCOURAGEMENT
+                 * ------------------------------------------
+                 */
 
                 item {
 
@@ -226,10 +283,11 @@ fun CBTProgressScreen(
     }
 }
 
+
 /*
- * ==============================================================
+ * ======================================================
  * PROGRESS SUMMARY
- * ==============================================================
+ * ======================================================
  */
 
 @Composable
@@ -336,15 +394,79 @@ private fun ProgressSummaryCard(
     }
 }
 
+
 /*
- * ==============================================================
- * TIMELINE ITEM
- * ==============================================================
+ * ======================================================
+ * ACTIVITY SCHEDULING TIMELINE ITEM
+ * ======================================================
  */
 
 @Composable
-private fun TimelineItem(
+private fun ActivityCompletionTimelineItem(
     completion: CBTActivityCompletionEntity
+) {
+
+    TimelineContainer {
+
+        CompletionCard(
+            completion = completion,
+            modifier = Modifier.weight(1f)
+        )
+    }
+}
+
+
+/*
+ * ======================================================
+ * FIVE-MINUTE STARTER TIMELINE ITEM
+ * ======================================================
+ */
+
+@Composable
+private fun FiveMinuteStarterTimelineItem(
+    completion: FiveMinuteStarterCompletionEntity
+) {
+
+    TimelineContainer {
+
+        FiveMinuteStarterCompletionCard(
+            completion = completion,
+            modifier = Modifier.weight(1f)
+        )
+    }
+}
+
+
+/*
+ * ======================================================
+ * MINDFUL MEDITATION TIMELINE ITEM
+ * ======================================================
+ */
+
+@Composable
+private fun MindfulMeditationTimelineItem(
+    completion: MindfulMeditationCompletionEntity
+) {
+
+    TimelineContainer {
+
+        MindfulMeditationCompletionCard(
+            completion = completion,
+            modifier = Modifier.weight(1f)
+        )
+    }
+}
+
+
+/*
+ * ======================================================
+ * TIMELINE CONTAINER
+ * ======================================================
+ */
+
+@Composable
+private fun TimelineContainer(
+    content: @Composable RowScope.() -> Unit
 ) {
 
     Row(
@@ -355,12 +477,6 @@ private fun TimelineItem(
         verticalAlignment =
             Alignment.Top
     ) {
-
-        /*
-         * --------------------------------------------------
-         * Timeline Indicator
-         * --------------------------------------------------
-         */
 
         Column(
 
@@ -418,27 +534,15 @@ private fun TimelineItem(
                 Modifier.width(12.dp)
         )
 
-        /*
-         * --------------------------------------------------
-         * Completion Card
-         * --------------------------------------------------
-         */
-
-        CompletionCard(
-
-            completion =
-                completion,
-
-            modifier =
-                Modifier.weight(1f)
-        )
+        content()
     }
 }
 
+
 /*
- * ==============================================================
- * COMPLETION CARD
- * ==============================================================
+ * ======================================================
+ * ACTIVITY SCHEDULING COMPLETION CARD
+ * ======================================================
  */
 
 @Composable
@@ -472,12 +576,6 @@ private fun CompletionCard(
                 Modifier.padding(17.dp)
         ) {
 
-            /*
-             * --------------------------------------------------
-             * Date
-             * --------------------------------------------------
-             */
-
             Text(
 
                 text =
@@ -499,12 +597,6 @@ private fun CompletionCard(
                 modifier =
                     Modifier.height(7.dp)
             )
-
-            /*
-             * --------------------------------------------------
-             * Activity
-             * --------------------------------------------------
-             */
 
             Text(
 
@@ -546,12 +638,6 @@ private fun CompletionCard(
                     Modifier.height(12.dp)
             )
 
-            /*
-             * --------------------------------------------------
-             * Activity Type
-             * --------------------------------------------------
-             */
-
             ActivityTypeTag(
                 activityType =
                     completion.activityType
@@ -562,17 +648,9 @@ private fun CompletionCard(
                     Modifier.height(12.dp)
             )
 
-            /*
-             * --------------------------------------------------
-             * Scheduled Details
-             * --------------------------------------------------
-             */
-
             TimelineDetailRow(
-
                 icon =
-                    Icons.Default.Schedule,
-
+                    androidx.compose.material.icons.Icons.Default.TaskAlt,
                 text =
                     completion.scheduledWhen
             )
@@ -583,23 +661,14 @@ private fun CompletionCard(
             )
 
             TimelineDetailRow(
-
                 icon =
-                    Icons.Default.LocationOn,
-
+                    androidx.compose.material.icons.Icons.Default.TaskAlt,
                 text =
                     completion.scheduledWhere
             )
 
-            /*
-             * --------------------------------------------------
-             * Reflection
-             * --------------------------------------------------
-             */
-
             if (
-                completion.reflection
-                    .isNotBlank()
+                completion.reflection.isNotBlank()
             ) {
 
                 Spacer(
@@ -607,69 +676,524 @@ private fun CompletionCard(
                         Modifier.height(14.dp)
                 )
 
-                Box(
-
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(
-                            RoundedCornerShape(14.dp)
-                        )
-                        .background(
-                            PaleLavender
-                        )
-                        .padding(13.dp)
-                ) {
-
-                    Row(
-                        verticalAlignment =
-                            Alignment.Top
-                    ) {
-
-                        Icon(
-
-                            imageVector =
-                                Icons.Default.SelfImprovement,
-
-                            contentDescription =
-                                null,
-
-                            tint =
-                                Lavender,
-
-                            modifier =
-                                Modifier.size(19.dp)
-                        )
-
-                        Spacer(
-                            modifier =
-                                Modifier.width(9.dp)
-                        )
-
-                        Text(
-
-                            text =
-                                completion.reflection,
-
-                            color =
-                                TextSecondary,
-
-                            fontSize =
-                                13.sp,
-
-                            lineHeight =
-                                19.sp
-                        )
-                    }
-                }
+                ReflectionBox(
+                    reflection =
+                        completion.reflection
+                )
             }
         }
     }
 }
 
+
 /*
- * ==============================================================
+ * ======================================================
+ * FIVE-MINUTE STARTER COMPLETION CARD
+ * ======================================================
+ */
+
+@Composable
+private fun FiveMinuteStarterCompletionCard(
+    completion: FiveMinuteStarterCompletionEntity,
+    modifier: Modifier = Modifier
+) {
+
+    Card(
+
+        modifier = modifier,
+
+        shape =
+            RoundedCornerShape(20.dp),
+
+        colors =
+            CardDefaults.cardColors(
+                containerColor =
+                    SurfaceWhite
+            ),
+
+        elevation =
+            CardDefaults.cardElevation(
+                defaultElevation = 2.dp
+            )
+    ) {
+
+        Column(
+
+            modifier =
+                Modifier.padding(17.dp)
+        ) {
+
+            Text(
+
+                text =
+                    formatDate(
+                        completion.completedAt
+                    ),
+
+                color =
+                    Lavender,
+
+                fontWeight =
+                    FontWeight.Bold,
+
+                fontSize =
+                    12.sp
+            )
+
+            Spacer(
+                modifier =
+                    Modifier.height(7.dp)
+            )
+
+            Text(
+
+                text =
+                    "Five-Minute Starter",
+
+                color =
+                    TextPrimary,
+
+                fontWeight =
+                    FontWeight.Bold,
+
+                fontSize =
+                    17.sp
+            )
+
+            Spacer(
+                modifier =
+                    Modifier.height(4.dp)
+            )
+
+            Text(
+
+                text =
+                    completion.task,
+
+                color =
+                    TextSecondary,
+
+                fontSize =
+                    14.sp,
+
+                fontWeight =
+                    FontWeight.SemiBold
+            )
+
+            Spacer(
+                modifier =
+                    Modifier.height(12.dp)
+            )
+
+            Box(
+
+                modifier = Modifier
+                    .clip(
+                        RoundedCornerShape(50)
+                    )
+                    .background(
+                        SoftTeal
+                    )
+                    .padding(
+                        horizontal = 11.dp,
+                        vertical = 6.dp
+                    )
+            ) {
+
+                Row(
+
+                    verticalAlignment =
+                        Alignment.CenterVertically
+                ) {
+
+                    Icon(
+
+                        imageVector =
+                            Icons.Default.SelfImprovement,
+
+                        contentDescription =
+                            null,
+
+                        tint =
+                            Teal,
+
+                        modifier =
+                            Modifier.size(15.dp)
+                    )
+
+                    Spacer(
+                        modifier =
+                            Modifier.width(5.dp)
+                    )
+
+                    Text(
+
+                        text =
+                            "Behavioral Activation",
+
+                        color =
+                            Teal,
+
+                        fontWeight =
+                            FontWeight.SemiBold,
+
+                        fontSize =
+                            11.sp
+                    )
+                }
+            }
+
+            Spacer(
+                modifier =
+                    Modifier.height(14.dp)
+            )
+
+            TimelineDetailRow(
+
+                icon =
+                    Icons.Default.TaskAlt,
+
+                text =
+                    completion.firstStep
+            )
+
+            if (
+                completion.outcome.isNotBlank()
+            ) {
+
+                Spacer(
+                    modifier =
+                        Modifier.height(14.dp)
+                )
+
+                SmallLabel(
+                    text =
+                        "What happened?"
+                )
+
+                Spacer(
+                    modifier =
+                        Modifier.height(5.dp)
+                )
+
+                Text(
+
+                    text =
+                        completion.outcome,
+
+                    color =
+                        TextSecondary,
+
+                    fontSize =
+                        13.sp,
+
+                    lineHeight =
+                        19.sp
+                )
+            }
+
+            if (
+                completion.reflection.isNotBlank()
+            ) {
+
+                Spacer(
+                    modifier =
+                        Modifier.height(14.dp)
+                )
+
+                ReflectionBox(
+                    reflection =
+                        completion.reflection
+                )
+            }
+        }
+    }
+}
+
+
+/*
+ * ======================================================
+ * MINDFUL MEDITATION COMPLETION CARD
+ * ======================================================
+ */
+
+@Composable
+private fun MindfulMeditationCompletionCard(
+    completion: MindfulMeditationCompletionEntity,
+    modifier: Modifier = Modifier
+) {
+
+    Card(
+
+        modifier = modifier,
+
+        shape =
+            RoundedCornerShape(20.dp),
+
+        colors =
+            CardDefaults.cardColors(
+                containerColor =
+                    SurfaceWhite
+            ),
+
+        elevation =
+            CardDefaults.cardElevation(
+                defaultElevation = 2.dp
+            )
+    ) {
+
+        Column(
+
+            modifier =
+                Modifier.padding(17.dp)
+        ) {
+
+            Text(
+
+                text =
+                    formatDate(
+                        completion.completedAt
+                    ),
+
+                color =
+                    Lavender,
+
+                fontWeight =
+                    FontWeight.Bold,
+
+                fontSize =
+                    12.sp
+            )
+
+            Spacer(
+                modifier =
+                    Modifier.height(7.dp)
+            )
+
+            Text(
+
+                text =
+                    "Mindful Meditation",
+
+                color =
+                    TextPrimary,
+
+                fontWeight =
+                    FontWeight.Bold,
+
+                fontSize =
+                    17.sp
+            )
+
+            Spacer(
+                modifier =
+                    Modifier.height(4.dp)
+            )
+
+            Text(
+
+                text =
+                    "Mindfulness",
+
+                color =
+                    TextSecondary,
+
+                fontSize =
+                    14.sp,
+
+                fontWeight =
+                    FontWeight.SemiBold
+            )
+
+            Spacer(
+                modifier =
+                    Modifier.height(12.dp)
+            )
+
+            /*
+             * Mindfulness category tag
+             */
+
+            Box(
+
+                modifier = Modifier
+                    .clip(
+                        RoundedCornerShape(50)
+                    )
+                    .background(
+                        SoftLavender
+                    )
+                    .padding(
+                        horizontal = 11.dp,
+                        vertical = 6.dp
+                    )
+            ) {
+
+                Row(
+
+                    verticalAlignment =
+                        Alignment.CenterVertically
+                ) {
+
+                    Icon(
+
+                        imageVector =
+                            Icons.Default.Spa,
+
+                        contentDescription =
+                            null,
+
+                        tint =
+                            Lavender,
+
+                        modifier =
+                            Modifier.size(15.dp)
+                    )
+
+                    Spacer(
+                        modifier =
+                            Modifier.width(5.dp)
+                    )
+
+                    Text(
+
+                        text =
+                            "Mindfulness",
+
+                        color =
+                            Lavender,
+
+                        fontWeight =
+                            FontWeight.SemiBold,
+
+                        fontSize =
+                            11.sp
+                    )
+                }
+            }
+
+            /*
+             * Reflection
+             */
+
+            if (
+                completion.reflection.isNotBlank()
+            ) {
+
+                Spacer(
+                    modifier =
+                        Modifier.height(14.dp)
+                )
+
+                ReflectionBox(
+                    reflection =
+                        completion.reflection
+                )
+            }
+        }
+    }
+}
+
+
+/*
+ * ======================================================
+ * REFLECTION BOX
+ * ======================================================
+ */
+
+@Composable
+private fun ReflectionBox(
+    reflection: String
+) {
+
+    Box(
+
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(
+                RoundedCornerShape(14.dp)
+            )
+            .background(
+                PaleLavender
+            )
+            .padding(13.dp)
+    ) {
+
+        Row(
+            verticalAlignment =
+                Alignment.Top
+        ) {
+
+            Icon(
+
+                imageVector =
+                    Icons.Default.SelfImprovement,
+
+                contentDescription =
+                    null,
+
+                tint =
+                    Lavender,
+
+                modifier =
+                    Modifier.size(19.dp)
+            )
+
+            Spacer(
+                modifier =
+                    Modifier.width(9.dp)
+            )
+
+            Text(
+
+                text =
+                    reflection,
+
+                color =
+                    TextSecondary,
+
+                fontSize =
+                    13.sp,
+
+                lineHeight =
+                    19.sp
+            )
+        }
+    }
+}
+
+
+/*
+ * ======================================================
+ * SMALL LABEL
+ * ======================================================
+ */
+
+@Composable
+private fun SmallLabel(
+    text: String
+) {
+
+    Text(
+
+        text = text,
+
+        color =
+            Lavender,
+
+        fontWeight =
+            FontWeight.SemiBold,
+
+        fontSize =
+            12.sp
+    )
+}
+
+
+/*
+ * ======================================================
  * ACTIVITY TYPE TAG
- * ==============================================================
+ * ======================================================
  */
 
 @Composable
@@ -697,78 +1221,74 @@ private fun ActivityTypeTag(
             Teal
         }
 
-    Row(
-        verticalAlignment =
-            Alignment.CenterVertically
+    Box(
+
+        modifier = Modifier
+            .clip(
+                RoundedCornerShape(50)
+            )
+            .background(
+                backgroundColor
+            )
+            .padding(
+                horizontal = 11.dp,
+                vertical = 6.dp
+            )
     ) {
 
-        Box(
+        Row(
 
-            modifier = Modifier
-                .clip(
-                    RoundedCornerShape(50)
-                )
-                .background(
-                    backgroundColor
-                )
-                .padding(
-                    horizontal = 11.dp,
-                    vertical = 6.dp
-                )
+            verticalAlignment =
+                Alignment.CenterVertically
         ) {
 
-            Row(
-                verticalAlignment =
-                    Alignment.CenterVertically
-            ) {
+            Icon(
 
-                Icon(
+                imageVector =
+                    if (isPleasure) {
+                        Icons.Default.Star
+                    } else {
+                        Icons.Default.TaskAlt
+                    },
 
-                    imageVector =
-                        if (isPleasure) {
-                            Icons.Default.Star
-                        } else {
-                            Icons.Default.TaskAlt
-                        },
+                contentDescription =
+                    null,
 
-                    contentDescription =
-                        null,
+                tint =
+                    contentColor,
 
-                    tint =
-                        contentColor,
+                modifier =
+                    Modifier.size(15.dp)
+            )
 
-                    modifier =
-                        Modifier.size(15.dp)
-                )
+            Spacer(
+                modifier =
+                    Modifier.width(5.dp)
+            )
 
-                Spacer(
-                    modifier =
-                        Modifier.width(5.dp)
-                )
+            Text(
 
-                Text(
+                text =
+                    activityType,
 
-                    text =
-                        activityType,
+                color =
+                    contentColor,
 
-                    color =
-                        contentColor,
+                fontWeight =
+                    FontWeight.SemiBold,
 
-                    fontWeight =
-                        FontWeight.SemiBold,
-
-                    fontSize =
-                        11.sp
-                )
-            }
+                fontSize =
+                    11.sp
+            )
         }
     }
 }
 
+
 /*
- * ==============================================================
+ * ======================================================
  * DETAIL ROW
- * ==============================================================
+ * ======================================================
  */
 
 @Composable
@@ -818,10 +1338,11 @@ private fun TimelineDetailRow(
     }
 }
 
+
 /*
- * ==============================================================
+ * ======================================================
  * EMPTY STATE
- * ==============================================================
+ * ======================================================
  */
 
 @Composable
@@ -831,8 +1352,8 @@ private fun EmptyProgressState(
 
     Column(
 
-        modifier = modifier
-            .padding(28.dp),
+        modifier =
+            modifier.padding(28.dp),
 
         horizontalAlignment =
             Alignment.CenterHorizontally,
@@ -913,10 +1434,11 @@ private fun EmptyProgressState(
     }
 }
 
+
 /*
- * ==============================================================
+ * ======================================================
  * ENCOURAGEMENT
- * ==============================================================
+ * ======================================================
  */
 
 @Composable
@@ -985,10 +1507,11 @@ private fun EncouragementCard() {
     }
 }
 
+
 /*
- * ==============================================================
+ * ======================================================
  * DATE FORMATTER
- * ==============================================================
+ * ======================================================
  */
 
 private fun formatDate(
@@ -1005,4 +1528,3 @@ private fun formatDate(
         Date(timestamp)
     )
 }
-

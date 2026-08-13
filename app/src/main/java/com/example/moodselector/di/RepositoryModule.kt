@@ -2,12 +2,18 @@ package com.example.moodselector.di
 
 import com.example.moodselector.data.repository.AssessmentRepositoryImpl
 import com.example.moodselector.data.repository.CBTProgressRepositoryImpl
+import com.example.moodselector.data.repository.FiveMinuteStarterCompletionRepositoryImpl
 import com.example.moodselector.data.repository.JournalRepositoryImpl
+import com.example.moodselector.data.repository.MindfulMeditationCompletionRepositoryImpl
 import com.example.moodselector.data.repository.MoodRepositoryImpl
+import com.example.moodselector.data.repository.ScheduledCBTActivityRepositoryImpl
 import com.example.moodselector.domain.repository.AssessmentRepository
 import com.example.moodselector.domain.repository.CBTProgressRepository
+import com.example.moodselector.domain.repository.FiveMinuteStarterCompletionRepository
 import com.example.moodselector.domain.repository.JournalRepository
+import com.example.moodselector.domain.repository.MindfulMeditationCompletionRepository
 import com.example.moodselector.domain.repository.MoodRepository
+import com.example.moodselector.domain.repository.ScheduledCBTActivityRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -41,4 +47,22 @@ abstract class RepositoryModule {
     abstract fun bindCBTProgressRepository(
         impl: CBTProgressRepositoryImpl
     ): CBTProgressRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindScheduledCBTActivityRepository(
+        impl: ScheduledCBTActivityRepositoryImpl
+    ): ScheduledCBTActivityRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindFiveMinuteStarterCompletionRepository(
+        impl: FiveMinuteStarterCompletionRepositoryImpl
+    ): FiveMinuteStarterCompletionRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindMindfulMeditationCompletionRepository(
+        impl: MindfulMeditationCompletionRepositoryImpl
+    ): MindfulMeditationCompletionRepository
 }

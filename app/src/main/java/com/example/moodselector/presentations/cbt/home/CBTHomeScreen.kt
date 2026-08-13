@@ -41,7 +41,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.moodselector.domain.cbt.model.CBTActivity
 import com.example.moodselector.domain.cbt.model.CBTCategory
-import com.example.moodselector.presentations.cbt.home.CBTViewModel
 import com.example.moodselector.presentations.cbt.progress.CBTProgressViewModel
 
 private val LavenderBackground = Color(0xFFF8F4FC)
@@ -65,14 +64,27 @@ fun CBTHomeScreen(
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
+    /*
+     * --------------------------------------------------
+     * COMBINED COMPLETION COUNT
+     * --------------------------------------------------
+     *
+     * Counts unique completed CBT exercises.
+     *
+     * The ProgressViewModel now includes:
+     *
+     * 1. General CBT completions
+     * 2. Five-Minute Starter completions
+     * 3. Mindful Meditation completions
+     */
+
     val completedCount by progressViewModel
-        .completionCount
+        .uniqueCompletedExerciseCount
         .collectAsStateWithLifecycle(
             initialValue = 0
         )
 
     LazyColumn(
-
         modifier = modifier
             .fillMaxSize()
             .background(LavenderBackground),
@@ -90,37 +102,34 @@ fun CBTHomeScreen(
 
         /*
          * --------------------------------------------------
-         * Header
+         * HEADER
          * --------------------------------------------------
          */
 
         item {
-
             CBTHeader()
         }
 
         /*
          * --------------------------------------------------
-         * Current progress summary
+         * CURRENT PROGRESS SUMMARY
          * --------------------------------------------------
          */
 
         item {
-
             ProgressCard(
                 completedCount = completedCount,
-                totalCount = uiState.activities.size
+                totalCount = uiState.allActivities.size
             )
         }
 
         /*
          * --------------------------------------------------
-         * Detailed progress / timeline
+         * DETAILED PROGRESS / TIMELINE
          * --------------------------------------------------
          */
 
         item {
-
             ProgressTimelineCard(
                 completedCount = completedCount,
                 onClick = onProgressClick
@@ -129,31 +138,23 @@ fun CBTHomeScreen(
 
         /*
          * --------------------------------------------------
-         * Personalized CBT plan
+         * PERSONALIZED CBT PLAN
          * --------------------------------------------------
          */
 
         item {
-
             SectionHeader(
                 title = "Your personalized plan",
                 subtitle =
-                    "Small steps can make a meaningful difference."
+                    "Exercises selected based on your assessment."
             )
         }
-
-        /*
-         * --------------------------------------------------
-         * Plan state
-         * --------------------------------------------------
-         */
 
         when {
 
             uiState.isLoading -> {
 
                 item {
-
                     LoadingPlanCard()
                 }
             }
@@ -161,7 +162,6 @@ fun CBTHomeScreen(
             !uiState.hasAssessmentResult -> {
 
                 item {
-
                     NoAssessmentCard()
                 }
             }
@@ -169,7 +169,6 @@ fun CBTHomeScreen(
             uiState.activities.isEmpty() -> {
 
                 item {
-
                     EmptyPlanCard()
                 }
             }
@@ -178,7 +177,7 @@ fun CBTHomeScreen(
 
                 items(
                     items = uiState.activities,
-                    key = { it.id }
+                    key = { "recommended_${it.id}" }
                 ) { activity ->
 
                     CBTActivityCard(
@@ -194,7 +193,41 @@ fun CBTHomeScreen(
 
         /*
          * --------------------------------------------------
-         * Encouragement
+         * ALL CBT ACTIVITIES
+         * --------------------------------------------------
+         */
+
+        item {
+
+            Spacer(
+                modifier =
+                    Modifier.height(8.dp)
+            )
+
+            SectionHeader(
+                title = "Explore CBT activities",
+                subtitle =
+                    "You can choose any exercise that feels right for you."
+            )
+        }
+
+        items(
+            items = uiState.allActivities,
+            key = { "all_${it.id}" }
+        ) { activity ->
+
+            CBTActivityCard(
+                activity = activity,
+
+                onClick = {
+                    onActivityClick(activity)
+                }
+            )
+        }
+
+        /*
+         * --------------------------------------------------
+         * ENCOURAGEMENT
          * --------------------------------------------------
          */
 
@@ -209,6 +242,7 @@ fun CBTHomeScreen(
         }
     }
 }
+
 
 /*
  * ==========================================================
@@ -230,18 +264,18 @@ private fun CBTHeader() {
         ) {
 
             Box(
-
                 modifier = Modifier
                     .size(52.dp)
                     .clip(CircleShape)
-                    .background(SoftLavender),
+                    .background(
+                        SoftLavender
+                    ),
 
                 contentAlignment =
                     Alignment.Center
             ) {
 
                 Icon(
-
                     imageVector =
                         Icons.Outlined.SelfImprovement,
 
@@ -263,9 +297,7 @@ private fun CBTHeader() {
             Column {
 
                 Text(
-
-                    text =
-                        "Your CBT Plan",
+                    text = "Your CBT Plan",
 
                     style =
                         MaterialTheme.typography.headlineSmall,
@@ -278,7 +310,6 @@ private fun CBTHeader() {
                 )
 
                 Text(
-
                     text =
                         "A little time for yourself",
 
@@ -297,7 +328,6 @@ private fun CBTHeader() {
         )
 
         Text(
-
             text =
                 "Take things one step at a time. " +
                         "Choose an exercise that feels right for you today.",
@@ -314,6 +344,7 @@ private fun CBTHeader() {
     }
 }
 
+
 /*
  * ==========================================================
  * PROGRESS SUMMARY
@@ -327,7 +358,6 @@ private fun ProgressCard(
 ) {
 
     Card(
-
         modifier =
             Modifier.fillMaxWidth(),
 
@@ -347,7 +377,6 @@ private fun ProgressCard(
     ) {
 
         Row(
-
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(20.dp),
@@ -357,7 +386,6 @@ private fun ProgressCard(
         ) {
 
             Box(
-
                 modifier = Modifier
                     .size(46.dp)
                     .clip(CircleShape)
@@ -372,7 +400,6 @@ private fun ProgressCard(
             ) {
 
                 Icon(
-
                     imageVector =
                         Icons.Outlined.TaskAlt,
 
@@ -397,7 +424,6 @@ private fun ProgressCard(
             ) {
 
                 Text(
-
                     text =
                         "Your progress",
 
@@ -417,7 +443,6 @@ private fun ProgressCard(
                 )
 
                 Text(
-
                     text =
                         if (completedCount == 0) {
 
@@ -441,7 +466,6 @@ private fun ProgressCard(
             }
 
             Text(
-
                 text =
                     "$completedCount/$totalCount",
 
@@ -458,6 +482,7 @@ private fun ProgressCard(
     }
 }
 
+
 /*
  * ==========================================================
  * PROGRESS TIMELINE BUTTON
@@ -471,7 +496,6 @@ private fun ProgressTimelineCard(
 ) {
 
     Card(
-
         modifier = Modifier
             .fillMaxWidth()
             .clickable(
@@ -494,18 +518,15 @@ private fun ProgressTimelineCard(
     ) {
 
         Row(
-
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .padding(18.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(18.dp),
 
             verticalAlignment =
                 Alignment.CenterVertically
         ) {
 
             Box(
-
                 modifier = Modifier
                     .size(50.dp)
                     .clip(
@@ -520,7 +541,6 @@ private fun ProgressTimelineCard(
             ) {
 
                 Icon(
-
                     imageVector =
                         Icons.Outlined.EmojiEvents,
 
@@ -545,7 +565,6 @@ private fun ProgressTimelineCard(
             ) {
 
                 Text(
-
                     text =
                         "Your CBT journey",
 
@@ -565,7 +584,6 @@ private fun ProgressTimelineCard(
                 )
 
                 Text(
-
                     text =
                         if (completedCount == 0) {
 
@@ -585,7 +603,6 @@ private fun ProgressTimelineCard(
             }
 
             Icon(
-
                 imageVector =
                     Icons.Outlined.CheckCircle,
 
@@ -602,6 +619,7 @@ private fun ProgressTimelineCard(
     }
 }
 
+
 /*
  * ==========================================================
  * SECTION HEADER
@@ -617,7 +635,6 @@ private fun SectionHeader(
     Column {
 
         Text(
-
             text =
                 title,
 
@@ -637,7 +654,6 @@ private fun SectionHeader(
         )
 
         Text(
-
             text =
                 subtitle,
 
@@ -649,6 +665,7 @@ private fun SectionHeader(
         )
     }
 }
+
 
 /*
  * ==========================================================
@@ -673,7 +690,6 @@ private fun CBTActivityCard(
         )
 
     Card(
-
         modifier = Modifier
             .fillMaxWidth()
             .clickable(
@@ -696,7 +712,6 @@ private fun CBTActivityCard(
     ) {
 
         Row(
-
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(18.dp),
@@ -706,7 +721,6 @@ private fun CBTActivityCard(
         ) {
 
             Box(
-
                 modifier = Modifier
                     .size(52.dp)
                     .clip(
@@ -721,7 +735,6 @@ private fun CBTActivityCard(
             ) {
 
                 Icon(
-
                     imageVector =
                         categoryIcon,
 
@@ -746,7 +759,6 @@ private fun CBTActivityCard(
             ) {
 
                 Text(
-
                     text =
                         activity.title,
 
@@ -766,7 +778,6 @@ private fun CBTActivityCard(
                 )
 
                 Text(
-
                     text =
                         activity.description,
 
@@ -796,7 +807,6 @@ private fun CBTActivityCard(
             )
 
             Icon(
-
                 imageVector =
                     Icons.Outlined.FavoriteBorder,
 
@@ -813,6 +823,7 @@ private fun CBTActivityCard(
     }
 }
 
+
 /*
  * ==========================================================
  * CATEGORY LABEL
@@ -825,7 +836,6 @@ private fun CategoryLabel(
 ) {
 
     Box(
-
         modifier = Modifier
             .clip(
                 RoundedCornerShape(50)
@@ -840,7 +850,6 @@ private fun CategoryLabel(
     ) {
 
         Text(
-
             text =
                 categoryDisplayName(
                     category
@@ -858,6 +867,7 @@ private fun CategoryLabel(
     }
 }
 
+
 /*
  * ==========================================================
  * LOADING
@@ -868,7 +878,6 @@ private fun CategoryLabel(
 private fun LoadingPlanCard() {
 
     Card(
-
         modifier =
             Modifier.fillMaxWidth(),
 
@@ -888,7 +897,6 @@ private fun LoadingPlanCard() {
     ) {
 
         Column(
-
             modifier =
                 Modifier
                     .fillMaxWidth()
@@ -899,7 +907,6 @@ private fun LoadingPlanCard() {
         ) {
 
             Icon(
-
                 imageVector =
                     Icons.Outlined.SelfImprovement,
 
@@ -918,7 +925,6 @@ private fun LoadingPlanCard() {
             )
 
             Text(
-
                 text =
                     "Preparing your plan...",
 
@@ -938,7 +944,6 @@ private fun LoadingPlanCard() {
             )
 
             Text(
-
                 text =
                     "We're personalizing your exercises.",
 
@@ -952,6 +957,7 @@ private fun LoadingPlanCard() {
     }
 }
 
+
 /*
  * ==========================================================
  * NO ASSESSMENT
@@ -962,7 +968,6 @@ private fun LoadingPlanCard() {
 private fun NoAssessmentCard() {
 
     Card(
-
         modifier =
             Modifier.fillMaxWidth(),
 
@@ -982,7 +987,6 @@ private fun NoAssessmentCard() {
     ) {
 
         Column(
-
             modifier =
                 Modifier
                     .fillMaxWidth()
@@ -993,7 +997,6 @@ private fun NoAssessmentCard() {
         ) {
 
             Icon(
-
                 imageVector =
                     Icons.Outlined.SelfImprovement,
 
@@ -1012,7 +1015,6 @@ private fun NoAssessmentCard() {
             )
 
             Text(
-
                 text =
                     "Complete your assessment first",
 
@@ -1032,7 +1034,6 @@ private fun NoAssessmentCard() {
             )
 
             Text(
-
                 text =
                     "Your personalized CBT plan will appear here after your assessment.",
 
@@ -1046,6 +1047,7 @@ private fun NoAssessmentCard() {
     }
 }
 
+
 /*
  * ==========================================================
  * EMPTY PLAN
@@ -1056,7 +1058,6 @@ private fun NoAssessmentCard() {
 private fun EmptyPlanCard() {
 
     Card(
-
         modifier =
             Modifier.fillMaxWidth(),
 
@@ -1076,7 +1077,6 @@ private fun EmptyPlanCard() {
     ) {
 
         Column(
-
             modifier =
                 Modifier
                     .fillMaxWidth()
@@ -1087,7 +1087,6 @@ private fun EmptyPlanCard() {
         ) {
 
             Icon(
-
                 imageVector =
                     Icons.Outlined.SelfImprovement,
 
@@ -1106,7 +1105,6 @@ private fun EmptyPlanCard() {
             )
 
             Text(
-
                 text =
                     "Your plan is taking shape",
 
@@ -1126,7 +1124,6 @@ private fun EmptyPlanCard() {
             )
 
             Text(
-
                 text =
                     "There are no CBT exercises to show right now.",
 
@@ -1140,6 +1137,7 @@ private fun EmptyPlanCard() {
     }
 }
 
+
 /*
  * ==========================================================
  * ENCOURAGEMENT
@@ -1150,7 +1148,6 @@ private fun EmptyPlanCard() {
 private fun EncouragementCard() {
 
     Card(
-
         modifier =
             Modifier.fillMaxWidth(),
 
@@ -1170,7 +1167,6 @@ private fun EncouragementCard() {
     ) {
 
         Row(
-
             modifier =
                 Modifier.padding(20.dp),
 
@@ -1179,7 +1175,6 @@ private fun EncouragementCard() {
         ) {
 
             Icon(
-
                 imageVector =
                     Icons.Outlined.AutoAwesome,
 
@@ -1200,7 +1195,6 @@ private fun EncouragementCard() {
             Column {
 
                 Text(
-
                     text =
                         "Be gentle with yourself",
 
@@ -1220,7 +1214,6 @@ private fun EncouragementCard() {
                 )
 
                 Text(
-
                     text =
                         "Progress doesn't have to be perfect. " +
                                 "Showing up is already a step forward.",
@@ -1235,6 +1228,7 @@ private fun EncouragementCard() {
         }
     }
 }
+
 
 /*
  * ==========================================================
@@ -1289,3 +1283,4 @@ private fun categoryIcon(
     CBTCategory.MINDFULNESS ->
         Icons.Outlined.SelfImprovement
 }
+

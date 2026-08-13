@@ -23,15 +23,25 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.navArgument
 import com.example.moodselector.domain.cbt.definitions.BehavioralActivationExercises
 import com.example.moodselector.presentations.assessment.onboarding.AssessmentOnboardingScreen
 import com.example.moodselector.presentations.assessment.questionnaire.AssessmentQuestionnaireScreen
 import com.example.moodselector.presentations.assessment.results.AssessmentResultsScreen
 import com.example.moodselector.presentations.cbt.exercises.ActivitySchedulingScreen
+import com.example.moodselector.presentations.cbt.exercises.FiveMinuteStarterCompletionScreen
+import com.example.moodselector.presentations.cbt.exercises.FiveMinuteStarterScreen
+import com.example.moodselector.presentations.cbt.exercises.MindfulMeditationScreen
+import com.example.moodselector.presentations.cbt.exercises.ScheduledActivitiesScreen
+import com.example.moodselector.presentations.cbt.exercises.ScheduledActivityCompletionScreen
+import com.example.moodselector.presentations.cbt.exercises.ScheduledCBTActivityViewModel
 import com.example.moodselector.presentations.cbt.home.CBTHomeScreen
 import com.example.moodselector.presentations.cbt.progress.CBTProgressScreen
 import com.example.moodselector.presentations.journal.JournalEditorScreen
@@ -47,9 +57,9 @@ fun AppNavHost(
 ) {
 
     /*
-     * --------------------------------------------------
-     * Current navigation destination
-     * --------------------------------------------------
+     * ==================================================
+     * CURRENT NAVIGATION DESTINATION
+     * ==================================================
      */
 
     val currentBackStackEntry by
@@ -58,17 +68,11 @@ fun AppNavHost(
     val currentRoute =
         currentBackStackEntry?.destination?.route
 
+
     /*
-     * --------------------------------------------------
-     * Bottom navigation items
-     * --------------------------------------------------
-     *
-     * Home
-     * CBT
-     * History
-     * Analytics
-     * Journal
-     * --------------------------------------------------
+     * ==================================================
+     * BOTTOM NAVIGATION ITEMS
+     * ==================================================
      */
 
     data class BottomNavigationItem(
@@ -110,17 +114,11 @@ fun AppNavHost(
         )
     )
 
+
     /*
-     * --------------------------------------------------
-     * Bottom navigation visibility
-     * --------------------------------------------------
-     *
-     * The bottom navigation is shown only on the main
-     * application screens.
-     *
-     * Individual CBT exercises and CBT progress
-     * intentionally have their own focused experience.
-     * --------------------------------------------------
+     * ==================================================
+     * BOTTOM NAVIGATION VISIBILITY
+     * ==================================================
      */
 
     val showBottomNavigation =
@@ -130,23 +128,27 @@ fun AppNavHost(
                 currentRoute == Screen.Graph.route ||
                 currentRoute == Screen.Journal.route
 
+
     /*
-     * --------------------------------------------------
-     * App colors
-     * --------------------------------------------------
+     * ==================================================
+     * APP COLORS
+     * ==================================================
      */
 
-    val darkPurple = Color(0xFF6C63FF)
+    val darkPurple =
+        Color(0xFF6C63FF)
+
 
     /*
-     * --------------------------------------------------
-     * Scaffold
-     * --------------------------------------------------
+     * ==================================================
+     * SCAFFOLD
+     * ==================================================
      */
 
     Scaffold(
 
-        containerColor = Color.Transparent,
+        containerColor =
+            Color.Transparent,
 
         bottomBar = {
 
@@ -155,19 +157,28 @@ fun AppNavHost(
                 NavigationBar(
 
                     containerColor =
-                        Color.White.copy(alpha = 0.96f),
+                        Color.White.copy(
+                            alpha = 0.96f
+                        ),
 
-                    tonalElevation = 12.dp,
+                    tonalElevation =
+                        12.dp,
 
-                    modifier = Modifier
-                        .navigationBarsPadding()
-                        .shadow(
-                            elevation = 22.dp,
-                            shape = RoundedCornerShape(30.dp)
-                        )
-                        .clip(
-                            RoundedCornerShape(30.dp)
-                        )
+                    modifier =
+                        Modifier
+                            .navigationBarsPadding()
+                            .shadow(
+                                elevation = 22.dp,
+                                shape =
+                                    RoundedCornerShape(
+                                        30.dp
+                                    )
+                            )
+                            .clip(
+                                RoundedCornerShape(
+                                    30.dp
+                                )
+                            )
                 ) {
 
                     bottomNavigationItems.forEach { item ->
@@ -188,7 +199,9 @@ fun AppNavHost(
                                     navController.navigate(
                                         item.screen.route
                                     ) {
-                                        launchSingleTop = true
+
+                                        launchSingleTop =
+                                            true
                                     }
                                 }
                             },
@@ -196,36 +209,41 @@ fun AppNavHost(
                             icon = {
 
                                 Icon(
-                                    imageVector = item.icon,
-                                    contentDescription = item.label
+                                    imageVector =
+                                        item.icon,
+
+                                    contentDescription =
+                                        item.label
                                 )
                             },
 
                             label = {
 
                                 Text(
-                                    text = item.label
+                                    text =
+                                        item.label
                                 )
                             },
 
                             colors =
-                                NavigationBarItemDefaults.colors(
+                                NavigationBarItemDefaults
+                                    .colors(
 
-                                    selectedIconColor =
-                                        Color.White,
+                                        selectedIconColor =
+                                            Color.White,
 
-                                    selectedTextColor =
-                                        darkPurple,
+                                        selectedTextColor =
+                                            darkPurple,
 
-                                    indicatorColor =
-                                        darkPurple,
+                                        indicatorColor =
+                                            darkPurple,
 
-                                    unselectedIconColor =
-                                        Color.Gray,
+                                        unselectedIconColor =
+                                            Color.Gray,
 
-                                    unselectedTextColor =
-                                        Color.Gray
-                                )
+                                        unselectedTextColor =
+                                            Color.Gray
+                                    )
                         )
                     }
                 }
@@ -234,22 +252,28 @@ fun AppNavHost(
 
     ) { paddingValues ->
 
+
         /*
-         * --------------------------------------------------
-         * Navigation Host
-         * --------------------------------------------------
+         * ==================================================
+         * NAVIGATION HOST
+         * ==================================================
          */
 
         NavHost(
 
-            navController = navController,
+            navController =
+                navController,
 
-            startDestination = startDestination,
+            startDestination =
+                startDestination,
 
-            modifier = Modifier
-                .padding(paddingValues)
+            modifier =
+                Modifier.padding(
+                    paddingValues
+                )
 
         ) {
+
 
             /*
              * ==================================================
@@ -257,14 +281,9 @@ fun AppNavHost(
              * ==================================================
              */
 
-            /*
-             * --------------------------------------------------
-             * Assessment Onboarding
-             * --------------------------------------------------
-             */
-
             composable(
-                route = Screen.AssessmentOnboarding.route
+                route =
+                    Screen.AssessmentOnboarding.route
             ) {
 
                 AssessmentOnboardingScreen(
@@ -278,14 +297,10 @@ fun AppNavHost(
                 )
             }
 
-            /*
-             * --------------------------------------------------
-             * Assessment Questionnaire
-             * --------------------------------------------------
-             */
 
             composable(
-                route = Screen.AssessmentQuestionnaire.route
+                route =
+                    Screen.AssessmentQuestionnaire.route
             ) {
 
                 AssessmentQuestionnaireScreen(
@@ -300,14 +315,10 @@ fun AppNavHost(
                 )
             }
 
-            /*
-             * --------------------------------------------------
-             * Assessment Results
-             * --------------------------------------------------
-             */
 
             composable(
-                route = Screen.AssessmentResults.route
+                route =
+                    Screen.AssessmentResults.route
             ) {
 
                 AssessmentResultsScreen(
@@ -321,42 +332,43 @@ fun AppNavHost(
                             popUpTo(
                                 Screen.AssessmentOnboarding.route
                             ) {
-                                inclusive = true
+
+                                inclusive =
+                                    true
                             }
 
-                            launchSingleTop = true
+                            launchSingleTop =
+                                true
                         }
                     }
                 )
             }
 
-            /*
-             * ==================================================
-             * MAIN APPLICATION
-             * ==================================================
-             */
 
             /*
-             * --------------------------------------------------
-             * Home
-             * --------------------------------------------------
+             * ==================================================
+             * HOME
+             * ==================================================
              */
 
             composable(
-                route = Screen.Insights.route
+                route =
+                    Screen.Insights.route
             ) {
 
                 MoodInsightsScreen()
             }
 
+
             /*
-             * --------------------------------------------------
-             * CBT Home
-             * --------------------------------------------------
+             * ==================================================
+             * CBT HOME
+             * ==================================================
              */
 
             composable(
-                route = Screen.CBTHome.route
+                route =
+                    Screen.CBTHome.route
             ) {
 
                 CBTHomeScreen(
@@ -365,12 +377,56 @@ fun AppNavHost(
 
                         when (activity.id) {
 
+                            /*
+                             * ----------------------------------
+                             * ACTIVITY SCHEDULING
+                             * ----------------------------------
+                             */
+
                             "activity_scheduling" -> {
 
                                 navController.navigate(
                                     Screen.ActivityScheduling.route
                                 ) {
-                                    launchSingleTop = true
+
+                                    launchSingleTop =
+                                        true
+                                }
+                            }
+
+
+                            /*
+                             * ----------------------------------
+                             * FIVE-MINUTE STARTER
+                             * ----------------------------------
+                             */
+
+                            "five_minute_starter" -> {
+
+                                navController.navigate(
+                                    Screen.FiveMinuteStarter.route
+                                ) {
+
+                                    launchSingleTop =
+                                        true
+                                }
+                            }
+
+
+                            /*
+                             * ----------------------------------
+                             * MINDFUL MEDITATION
+                             * ----------------------------------
+                             */
+
+                            "mindful_meditation" -> {
+
+                                navController.navigate(
+                                    Screen.MindfulMeditation.route
+                                ) {
+
+                                    launchSingleTop =
+                                        true
                                 }
                             }
                         }
@@ -381,27 +437,24 @@ fun AppNavHost(
                         navController.navigate(
                             Screen.CBTProgress.route
                         ) {
-                            launchSingleTop = true
+
+                            launchSingleTop =
+                                true
                         }
                     }
                 )
             }
 
+
             /*
-             * --------------------------------------------------
-             * CBT Progress
-             * --------------------------------------------------
-             *
-             * This is intentionally NOT part of the
-             * bottom navigation.
-             *
-             * It is accessed from CBT Home and provides
-             * the user's completed CBT activity timeline.
-             * --------------------------------------------------
+             * ==================================================
+             * CBT PROGRESS
+             * ==================================================
              */
 
             composable(
-                route = Screen.CBTProgress.route
+                route =
+                    Screen.CBTProgress.route
             ) {
 
                 CBTProgressScreen(
@@ -413,14 +466,16 @@ fun AppNavHost(
                 )
             }
 
+
             /*
-             * --------------------------------------------------
-             * Activity Scheduling
-             * --------------------------------------------------
+             * ==================================================
+             * ACTIVITY SCHEDULING
+             * ==================================================
              */
 
             composable(
-                route = Screen.ActivityScheduling.route
+                route =
+                    Screen.ActivityScheduling.route
             ) {
 
                 ActivitySchedulingScreen(
@@ -429,6 +484,9 @@ fun AppNavHost(
                         BehavioralActivationExercises
                             .activityScheduling,
 
+                    scheduledActivityId =
+                        null,
+
                     onBackClick = {
 
                         navController.popBackStack()
@@ -436,52 +494,459 @@ fun AppNavHost(
 
                     onExerciseCompleted = {
 
-                        /*
-                         * The activity has already been
-                         * persisted by the exercise screen.
-                         *
-                         * Return to CBT Home after completion.
-                         */
+                        navController.navigate(
+                            Screen.ActivityScheduling.route
+                        ) {
 
-                        navController.popBackStack()
+                            popUpTo(
+                                Screen.ActivityScheduling.route
+                            ) {
+
+                                inclusive =
+                                    true
+                            }
+
+                            launchSingleTop =
+                                true
+                        }
+                    },
+
+                    onViewScheduledActivities = {
+
+                        navController.navigate(
+                            Screen.ScheduledActivities.route
+                        ) {
+
+                            launchSingleTop =
+                                true
+                        }
                     }
                 )
             }
 
+
             /*
-             * --------------------------------------------------
-             * History
-             * --------------------------------------------------
+             * ==================================================
+             * ACTIVITY SCHEDULING — EDIT EXISTING PLAN
+             * ==================================================
              */
 
             composable(
-                route = Screen.History.route
+
+                route =
+                    Screen.ActivitySchedulingEdit.route,
+
+                arguments =
+                    listOf(
+
+                        navArgument(
+                            "scheduledActivityId"
+                        ) {
+
+                            type =
+                                NavType.IntType
+                        }
+                    )
+
+            ) { backStackEntry ->
+
+                val scheduledActivityId =
+                    backStackEntry.arguments?.getInt(
+                        "scheduledActivityId"
+                    )
+
+                ActivitySchedulingScreen(
+
+                    activity =
+                        BehavioralActivationExercises
+                            .activityScheduling,
+
+                    scheduledActivityId =
+                        scheduledActivityId,
+
+                    onBackClick = {
+
+                        navController.popBackStack()
+                    },
+
+                    onExerciseCompleted = {
+
+                        navController.navigate(
+                            Screen.ActivityScheduling.route
+                        ) {
+
+                            popUpTo(
+                                Screen.ActivitySchedulingEdit.route
+                            ) {
+
+                                inclusive =
+                                    true
+                            }
+
+                            launchSingleTop =
+                                true
+                        }
+                    },
+
+                    onViewScheduledActivities = {
+
+                        navController.navigate(
+                            Screen.ScheduledActivities.route
+                        ) {
+
+                            launchSingleTop =
+                                true
+                        }
+                    }
+                )
+            }
+
+
+            /*
+             * ==================================================
+             * SCHEDULED ACTIVITIES
+             * ==================================================
+             */
+
+            composable(
+                route =
+                    Screen.ScheduledActivities.route
+            ) {
+
+                ScheduledActivitiesScreen(
+
+                    onBackClick = {
+
+                        navController.popBackStack()
+                    },
+
+                    onScheduleActivityClick = {
+
+                        navController.navigate(
+                            Screen.ActivityScheduling.route
+                        ) {
+
+                            launchSingleTop =
+                                true
+                        }
+                    },
+
+                    onEditActivity = {
+                            scheduledActivity ->
+
+                        navController.navigate(
+
+                            Screen.ActivitySchedulingEdit
+                                .createRoute(
+                                    scheduledActivity.id
+                                )
+
+                        ) {
+
+                            launchSingleTop =
+                                true
+                        }
+                    },
+
+                    onCompleteActivity = {
+                            scheduledActivity ->
+
+                        navController.navigate(
+
+                            Screen.ScheduledActivityCompletion
+                                .createRoute(
+                                    scheduledActivity.id
+                                )
+
+                        ) {
+
+                            launchSingleTop =
+                                true
+                        }
+                    }
+                )
+            }
+
+
+            /*
+             * ==================================================
+             * SCHEDULED ACTIVITY COMPLETION
+             * ==================================================
+             */
+
+            composable(
+
+                route =
+                    Screen.ScheduledActivityCompletion.route,
+
+                arguments =
+                    listOf(
+
+                        navArgument(
+                            "scheduledActivityId"
+                        ) {
+
+                            type =
+                                NavType.IntType
+                        }
+                    )
+
+            ) { backStackEntry ->
+
+                val scheduledActivityId =
+                    backStackEntry.arguments?.getInt(
+                        "scheduledActivityId"
+                    )
+
+                val scheduledViewModel:
+                        ScheduledCBTActivityViewModel =
+                    hiltViewModel()
+
+                val scheduledActivities by
+                scheduledViewModel
+                    .scheduledActivities
+                    .collectAsStateWithLifecycle(
+                        initialValue =
+                            emptyList()
+                    )
+
+                val scheduledActivity =
+                    scheduledActivities.firstOrNull {
+
+                        it.id ==
+                                scheduledActivityId
+                    }
+
+                if (scheduledActivity != null) {
+
+                    ScheduledActivityCompletionScreen(
+
+                        scheduledActivity =
+                            scheduledActivity,
+
+                        onBackClick = {
+
+                            navController.popBackStack()
+                        },
+
+                        onActivityCompleted = {
+
+                            navController.popBackStack()
+                        }
+                    )
+                }
+            }
+
+
+            /*
+             * ==================================================
+             * FIVE-MINUTE STARTER
+             * ==================================================
+             */
+
+            composable(
+                route =
+                    Screen.FiveMinuteStarter.route
+            ) {
+
+                FiveMinuteStarterScreen(
+
+                    onBackClick = {
+
+                        navController.popBackStack()
+                    },
+
+                    onExerciseCompleted = {
+                            task,
+                            firstStep ->
+
+                        navController.navigate(
+
+                            Screen.FiveMinuteStarterCompletion
+                                .createRoute(
+                                    task = task,
+                                    firstStep = firstStep
+                                )
+
+                        ) {
+
+                            launchSingleTop =
+                                true
+                        }
+                    }
+                )
+            }
+
+
+            /*
+             * ==================================================
+             * FIVE-MINUTE STARTER — COMPLETION
+             * ==================================================
+             */
+
+            composable(
+
+                route =
+                    Screen.FiveMinuteStarterCompletion.route,
+
+                arguments =
+                    listOf(
+
+                        navArgument("task") {
+
+                            type =
+                                NavType.StringType
+
+                            defaultValue =
+                                ""
+                        },
+
+                        navArgument("firstStep") {
+
+                            type =
+                                NavType.StringType
+
+                            defaultValue =
+                                ""
+                        }
+                    )
+
+            ) { backStackEntry ->
+
+                val task =
+                    backStackEntry.arguments
+                        ?.getString("task")
+                        .orEmpty()
+
+                val firstStep =
+                    backStackEntry.arguments
+                        ?.getString("firstStep")
+                        .orEmpty()
+
+
+                FiveMinuteStarterCompletionScreen(
+
+                    task =
+                        task,
+
+                    firstStep =
+                        firstStep,
+
+                    onBackClick = {
+
+                        navController.popBackStack()
+                    },
+
+                    onCompleted = {
+
+                        navController.navigate(
+                            Screen.CBTHome.route
+                        ) {
+
+                            popUpTo(
+                                Screen.FiveMinuteStarter.route
+                            ) {
+
+                                inclusive =
+                                    true
+                            }
+
+                            launchSingleTop =
+                                true
+                        }
+                    }
+                )
+            }
+
+
+            /*
+             * ==================================================
+             * MINDFUL MEDITATION
+             * ==================================================
+             *
+             * MindfulMeditationScreen requires:
+             *
+             * onBackClick
+             * onComplete
+             *
+             * The onComplete callback is handled here,
+             * not inside Screen.kt.
+             * ==================================================
+             */
+
+            composable(
+                route =
+                    Screen.MindfulMeditation.route
+            ) {
+
+                MindfulMeditationScreen(
+
+                    onBackClick = {
+
+                        navController.popBackStack()
+                    },
+
+                    onComplete = {
+
+                        navController.navigate(
+                            Screen.CBTHome.route
+                        ) {
+
+                            popUpTo(
+                                Screen.MindfulMeditation.route
+                            ) {
+
+                                inclusive =
+                                    true
+                            }
+
+                            launchSingleTop =
+                                true
+                        }
+                    }
+                )
+            }
+
+
+            /*
+             * ==================================================
+             * HISTORY
+             * ==================================================
+             */
+
+            composable(
+                route =
+                    Screen.History.route
             ) {
 
                 MoodHistoryScreen()
             }
 
+
             /*
-             * --------------------------------------------------
-             * Analytics
-             * --------------------------------------------------
+             * ==================================================
+             * ANALYTICS
+             * ==================================================
              */
 
             composable(
-                route = Screen.Graph.route
+                route =
+                    Screen.Graph.route
             ) {
 
                 MoodGraphScreen()
             }
 
+
             /*
-             * --------------------------------------------------
-             * Journal
-             * --------------------------------------------------
+             * ==================================================
+             * JOURNAL
+             * ==================================================
              */
 
             composable(
-                route = Screen.Journal.route
+                route =
+                    Screen.Journal.route
             ) {
 
                 JournalScreen(
@@ -495,14 +960,16 @@ fun AppNavHost(
                 )
             }
 
+
             /*
-             * --------------------------------------------------
-             * Journal Editor
-             * --------------------------------------------------
+             * ==================================================
+             * JOURNAL EDITOR
+             * ==================================================
              */
 
             composable(
-                route = Screen.JournalEditor.route
+                route =
+                    Screen.JournalEditor.route
             ) {
 
                 JournalEditorScreen(

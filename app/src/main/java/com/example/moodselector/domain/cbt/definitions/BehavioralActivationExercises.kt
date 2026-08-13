@@ -12,18 +12,16 @@ import com.example.moodselector.domain.cbt.model.RecommendationTarget
  * techniques commonly used in Cognitive Behavioral Therapy (CBT).
  *
  * The metadata defined here describes each activity, while the
- * interactive worksheet experience will be implemented later
- * in the presentation layer.
+ * interactive worksheet experience is implemented in the presentation layer.
  */
 object BehavioralActivationExercises {
 
     /**
-     * All Behavioral Activation activities.
+     * All currently available Behavioral Activation activities.
      */
     val activities: List<CBTActivity>
         get() = listOf(
             activityScheduling,
-            pleasantActivities,
             fiveMinuteStarter
         )
 
@@ -72,52 +70,7 @@ object BehavioralActivationExercises {
             RecommendationTarget.MILD_DEPRESSION,
             RecommendationTarget.MODERATE_DEPRESSION,
             RecommendationTarget.LOW_MOTIVATION
-        ),
-    )
-
-    /**
-     * Encourages users to reconnect with enjoyable and meaningful
-     * experiences that improve wellbeing.
-     */
-    val pleasantActivities = CBTActivity(
-        id = "pleasant_activities",
-        title = "Pleasant Activities",
-        description = "Reconnect with enjoyable activities that can improve your mood and increase engagement with daily life.",
-        category = CBTCategory.BEHAVIORAL,
-        steps = listOf(
-            ActivityStep(
-                id = "pleasant_step_1",
-                instruction = "Think of activities you have enjoyed in the past."
-            ),
-            ActivityStep(
-                id = "pleasant_step_2",
-                instruction = "Choose one activity that feels realistic today."
-            ),
-            ActivityStep(
-                id = "pleasant_step_3",
-                instruction = "Spend time focusing on the experience without judging yourself."
-            ),
-            ActivityStep(
-                id = "pleasant_step_4",
-                instruction = "Notice your thoughts and emotions during the activity."
-            ),
-            ActivityStep(
-                id = "pleasant_step_5",
-                instruction = "Reflect on how the activity affected your mood."
-            )
-        ),
-        benefits = listOf(
-            "Increases positive experiences",
-            "Improves mood",
-            "Encourages engagement in daily life",
-            "Reduces social withdrawal"
-        ),
-        recommendedFor = listOf(
-            RecommendationTarget.MODERATE_DEPRESSION,
-            RecommendationTarget.STRESS,
-            RecommendationTarget.BURNOUT,
-            RecommendationTarget.SOCIAL_WITHDRAWAL
-        ),
+        )
     )
 
     /**
@@ -164,6 +117,6 @@ object BehavioralActivationExercises {
             RecommendationTarget.LOW_MOTIVATION,
             RecommendationTarget.PROCRASTINATION,
             RecommendationTarget.OVERWHELM
-        ),
+        )
     )
 }
