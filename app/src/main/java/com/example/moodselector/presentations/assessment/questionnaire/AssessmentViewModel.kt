@@ -9,6 +9,8 @@ import com.example.moodselector.domain.assessment.model.AssessmentType
 import com.example.moodselector.domain.assessment.utils.GAD7SeverityCalculator
 import com.example.moodselector.domain.assessment.utils.PHQ9SeverityCalculator
 import com.example.moodselector.domain.repository.AssessmentRepository
+import com.example.moodselector.domain.repository.AuthRepository
+import com.example.moodselector.domain.repository.CloudBackupRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -19,21 +21,52 @@ import javax.inject.Inject
 
 @HiltViewModel
 class AssessmentViewModel @Inject constructor(
-    private val assessmentDefinitionProvider: AssessmentDefinitionProvider,
-    private val assessmentRepository: AssessmentRepository,
-    private val userPreferencesRepository: UserPreferencesRepository
+    private val assessmentDefinitionProvider:
+    AssessmentDefinitionProvider,
+
+    private val assessmentRepository:
+    AssessmentRepository,
+
+    private val userPreferencesRepository:
+    UserPreferencesRepository,
+
+    private val authRepository:
+    AuthRepository,
+
+    private val cloudBackupRepository:
+    CloudBackupRepository
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(
-        AssessmentUiState()
-    )
+    private val _uiState =
+        MutableStateFlow(
+            AssessmentUiState()
+        )
 
-    val uiState: StateFlow<AssessmentUiState> =
+    val uiState:
+            StateFlow<AssessmentUiState> =
         _uiState.asStateFlow()
 
+
+    /*
+     * --------------------------------------------------
+     * CURRENT USER ID
+     * --------------------------------------------------
+     */
+
+    private val userId: String?
+        get() =
+            authRepository
+                .currentUser
+                ?.uid
+
+
     init {
-        loadAssessment(AssessmentType.PHQ9)
+
+        loadAssessment(
+            AssessmentType.PHQ9
+        )
     }
+
 
     private fun loadAssessment(
         type: AssessmentType
@@ -46,13 +79,22 @@ class AssessmentViewModel @Inject constructor(
         _uiState.update {
 
             it.copy(
-                assessment = definition,
-                currentAssessmentType = type,
-                currentQuestionIndex = 0,
-                selectedAnswers = emptyMap()
+
+                assessment =
+                    definition,
+
+                currentAssessmentType =
+                    type,
+
+                currentQuestionIndex =
+                    0,
+
+                selectedAnswers =
+                    emptyMap()
             )
         }
     }
+
 
     fun selectAnswer(
         questionId: Int,
@@ -60,32 +102,45 @@ class AssessmentViewModel @Inject constructor(
     ) {
 
         val updatedAnswers =
-            _uiState.value.selectedAnswers.toMutableMap()
+            _uiState.value
+                .selectedAnswers
+                .toMutableMap()
 
-        updatedAnswers[questionId] = score
+        updatedAnswers[
+            questionId
+        ] = score
 
         _uiState.update {
 
             it.copy(
-                selectedAnswers = updatedAnswers
+                selectedAnswers =
+                    updatedAnswers
             )
         }
     }
 
+
     fun nextQuestion() {
 
         val assessment =
-            _uiState.value.assessment ?: return
+            _uiState.value
+                .assessment
+                ?: return
 
         val currentIndex =
-            _uiState.value.currentQuestionIndex
+            _uiState.value
+                .currentQuestionIndex
 
-        if (currentIndex < assessment.questions.lastIndex) {
+        if (
+            currentIndex <
+            assessment.questions.lastIndex
+        ) {
 
             _uiState.update {
 
                 it.copy(
-                    currentQuestionIndex = currentIndex + 1
+                    currentQuestionIndex =
+                        currentIndex + 1
                 )
             }
 
@@ -95,43 +150,66 @@ class AssessmentViewModel @Inject constructor(
         }
     }
 
+
     fun previousQuestion() {
 
         val currentIndex =
-            _uiState.value.currentQuestionIndex
+            _uiState.value
+                .currentQuestionIndex
 
-        if (currentIndex > 0) {
+        if (
+            currentIndex > 0
+        ) {
 
             _uiState.update {
 
                 it.copy(
-                    currentQuestionIndex = currentIndex - 1
+                    currentQuestionIndex =
+                        currentIndex - 1
                 )
             }
         }
     }
 
+
     private fun completeCurrentAssessment() {
 
         val assessment =
-            _uiState.value.assessment ?: return
+            _uiState.value
+                .assessment
+                ?: return
 
         val score =
-            _uiState.value.selectedAnswers.values.sum()
+            _uiState.value
+                .selectedAnswers
+                .values
+                .sum()
 
-        when (assessment.type) {
+
+        when (
+            assessment.type
+        ) {
 
             AssessmentType.PHQ9 -> {
 
                 val severity =
-                    PHQ9SeverityCalculator.getSeverity(score)
+                    PHQ9SeverityCalculator
+                        .getSeverity(
+                            score
+                        )
 
                 _uiState.update {
 
                     it.copy(
-                        phq9Score = score,
-                        phq9Severity = severity,
-                        phq9Completed = true
+
+                        phq9Score =
+                            score,
+
+                        phq9Severity =
+                            severity,
+
+                        phq9Completed =
+                            true
                     )
                 }
 
@@ -140,46 +218,127 @@ class AssessmentViewModel @Inject constructor(
                 )
             }
 
+
             AssessmentType.GAD7 -> {
 
                 val severity =
-                    GAD7SeverityCalculator.getSeverity(score)
+                    GAD7SeverityCalculator
+                        .getSeverity(
+                            score
+                        )
 
-                val updatedState = _uiState.value.copy(
-                    gad7Score = score,
-                    gad7Severity = severity,
-                    gad7Completed = true,
-                    isCompleted = true
-                )
+                val updatedState =
+                    _uiState.value.copy(
 
-                _uiState.value = updatedState
+                        gad7Score =
+                            score,
+
+                        gad7Severity =
+                            severity,
+
+                        gad7Completed =
+                            true,
+
+                        isCompleted =
+                            true
+                    )
+
+                _uiState.value =
+                    updatedState
+
 
                 val diagnosisSummary =
                     "Depression: ${updatedState.phq9Severity}, Anxiety: ${updatedState.gad7Severity}"
 
+
                 viewModelScope.launch {
 
-                    assessmentRepository.saveResult(
+                    val currentUserId =
+                        userId
+                            ?: return@launch
 
-                        AssessmentResultEntity(
-                            timestamp = System.currentTimeMillis(),
-                            phq9Score = updatedState.phq9Score,
-                            phq9Severity = updatedState.phq9Severity,
-                            gad7Score = updatedState.gad7Score,
-                            gad7Severity = updatedState.gad7Severity,
-                            diagnosisSummary = diagnosisSummary
+
+                    /*
+                     * ----------------------------------------------
+                     * SAVE RESULT FOR CURRENT USER
+                     * ----------------------------------------------
+                     */
+
+                    assessmentRepository
+                        .saveResult(
+
+                            AssessmentResultEntity(
+
+                                userId =
+                                    currentUserId,
+
+                                timestamp =
+                                    System.currentTimeMillis(),
+
+                                phq9Score =
+                                    updatedState.phq9Score,
+
+                                phq9Severity =
+                                    updatedState.phq9Severity,
+
+                                gad7Score =
+                                    updatedState.gad7Score,
+
+                                gad7Severity =
+                                    updatedState.gad7Severity,
+
+                                diagnosisSummary =
+                                    diagnosisSummary
+                            )
                         )
-                    )
 
-                    userPreferencesRepository.setAssessmentCompleted(true)
+
+                    /*
+                     * ----------------------------------------------
+                     * MARK ASSESSMENT COMPLETE FOR CURRENT USER
+                     * ----------------------------------------------
+                     */
+
+                    userPreferencesRepository
+                        .setAssessmentCompleted(
+
+                            userId =
+                                currentUserId,
+
+                            completed =
+                                true
+                        )
+
+
+                    /*
+                     * ----------------------------------------------
+                     * BACK UP UPDATED USER DATA
+                     * ----------------------------------------------
+                     *
+                     * The assessment has already been saved
+                     * successfully to Room.
+                     *
+                     * Firestore backup is attempted afterward.
+                     * A cloud failure does not affect the local
+                     * assessment result or mark the assessment
+                     * as unsuccessful.
+                     */
+
+                    cloudBackupRepository
+                        .backupUserData(
+                            userId =
+                                currentUserId
+                        )
                 }
             }
         }
     }
 
+
     fun restartAssessment() {
 
-        _uiState.value = AssessmentUiState()
+        _uiState.value =
+            AssessmentUiState()
 
         loadAssessment(
             AssessmentType.PHQ9

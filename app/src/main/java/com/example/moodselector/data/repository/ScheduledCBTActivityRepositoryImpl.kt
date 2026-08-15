@@ -1,5 +1,6 @@
 package com.example.moodselector.data.repository
 
+import com.example.moodselector.data.local.dao.CBTActivityCompletionDao
 import com.example.moodselector.data.local.dao.ScheduledCBTActivityDao
 import com.example.moodselector.data.local.entity.CBTActivityCompletionEntity
 import com.example.moodselector.data.local.entity.ScheduledCBTActivityEntity
@@ -19,10 +20,14 @@ class ScheduledCBTActivityRepositoryImpl @Inject constructor(
      * --------------------------------------------------
      */
 
-    override fun getAllScheduledActivities():
+    override fun getAllScheduledActivities(
+        userId: String
+    ):
             Flow<List<ScheduledCBTActivityEntity>> {
 
-        return dao.getAllScheduledActivities()
+        return dao.getAllScheduledActivities(
+            userId
+        )
     }
 
 
@@ -32,10 +37,14 @@ class ScheduledCBTActivityRepositoryImpl @Inject constructor(
      * --------------------------------------------------
      */
 
-    override fun getScheduledActivityCount():
+    override fun getScheduledActivityCount(
+        userId: String
+    ):
             Flow<Int> {
 
-        return dao.getScheduledActivityCount()
+        return dao.getScheduledActivityCount(
+            userId
+        )
     }
 
 
@@ -46,10 +55,14 @@ class ScheduledCBTActivityRepositoryImpl @Inject constructor(
      */
 
     override suspend fun getScheduledActivityById(
-        id: Int
+        id: Int,
+        userId: String
     ): ScheduledCBTActivityEntity? {
 
-        return dao.getScheduledActivityById(id)
+        return dao.getScheduledActivityById(
+            id,
+            userId
+        )
     }
 
 
@@ -63,7 +76,9 @@ class ScheduledCBTActivityRepositoryImpl @Inject constructor(
         activity: ScheduledCBTActivityEntity
     ) {
 
-        dao.insertScheduledActivity(activity)
+        dao.insertScheduledActivity(
+            activity
+        )
     }
 
 
@@ -78,7 +93,7 @@ class ScheduledCBTActivityRepositoryImpl @Inject constructor(
      * The completion is then saved to CBT Progress.
      *
      * Finally, ONLY this scheduled database record is
-     * deleted using its unique database ID.
+     * deleted using its unique database ID and userId.
      *
      * Other scheduled instances of the same CBT
      * activity remain untouched.
@@ -90,6 +105,9 @@ class ScheduledCBTActivityRepositoryImpl @Inject constructor(
 
         val completion =
             CBTActivityCompletionEntity(
+
+                userId =
+                    activity.userId,
 
                 activityId =
                     activity.activityId,
@@ -144,7 +162,8 @@ class ScheduledCBTActivityRepositoryImpl @Inject constructor(
          */
 
         dao.deleteScheduledActivityById(
-            activity.id
+            activity.id,
+            activity.userId
         )
     }
 
@@ -156,10 +175,14 @@ class ScheduledCBTActivityRepositoryImpl @Inject constructor(
      */
 
     override suspend fun deleteScheduledActivityById(
-        id: Int
+        id: Int,
+        userId: String
     ) {
 
-        dao.deleteScheduledActivityById(id)
+        dao.deleteScheduledActivityById(
+            id,
+            userId
+        )
     }
 
 
@@ -170,11 +193,13 @@ class ScheduledCBTActivityRepositoryImpl @Inject constructor(
      */
 
     override suspend fun deleteScheduledActivityByActivityId(
-        activityId: String
+        activityId: String,
+        userId: String
     ) {
 
         dao.deleteScheduledActivityByActivityId(
-            activityId
+            activityId,
+            userId
         )
     }
 
@@ -189,7 +214,9 @@ class ScheduledCBTActivityRepositoryImpl @Inject constructor(
         activity: ScheduledCBTActivityEntity
     ) {
 
-        dao.deleteScheduledActivity(activity)
+        dao.deleteScheduledActivity(
+            activity
+        )
     }
 
 
@@ -199,8 +226,12 @@ class ScheduledCBTActivityRepositoryImpl @Inject constructor(
      * --------------------------------------------------
      */
 
-    override suspend fun deleteAllScheduledActivities() {
+    override suspend fun deleteAllScheduledActivities(
+        userId: String
+    ) {
 
-        dao.deleteAllScheduledActivities()
+        dao.deleteAllScheduledActivities(
+            userId
+        )
     }
 }

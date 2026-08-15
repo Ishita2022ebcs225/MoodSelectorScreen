@@ -64,20 +64,6 @@ fun CBTHomeScreen(
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    /*
-     * --------------------------------------------------
-     * COMBINED COMPLETION COUNT
-     * --------------------------------------------------
-     *
-     * Counts unique completed CBT exercises.
-     *
-     * The ProgressViewModel now includes:
-     *
-     * 1. General CBT completions
-     * 2. Five-Minute Starter completions
-     * 3. Mindful Meditation completions
-     */
-
     val completedCount by progressViewModel
         .uniqueCompletedExerciseCount
         .collectAsStateWithLifecycle(
@@ -182,8 +168,13 @@ fun CBTHomeScreen(
 
                     CBTActivityCard(
                         activity = activity,
-
                         onClick = {
+                            /*
+                             * Always forward the complete CBTActivity.
+                             *
+                             * AppNavHost is responsible for deciding
+                             * which screen belongs to this activity ID.
+                             */
                             onActivityClick(activity)
                         }
                     )
@@ -218,8 +209,10 @@ fun CBTHomeScreen(
 
             CBTActivityCard(
                 activity = activity,
-
                 onClick = {
+                    /*
+                     * Same navigation path as personalized activities.
+                     */
                     onActivityClick(activity)
                 }
             )
@@ -445,11 +438,8 @@ private fun ProgressCard(
                 Text(
                     text =
                         if (completedCount == 0) {
-
                             "Your journey starts when you are ready."
-
                         } else {
-
                             "$completedCount " +
                                     if (completedCount == 1)
                                         "activity completed"
@@ -586,11 +576,8 @@ private fun ProgressTimelineCard(
                 Text(
                     text =
                         if (completedCount == 0) {
-
                             "Complete an activity to start your timeline."
-
                         } else {
-
                             "View your completed activities and reflections."
                         },
 
@@ -712,23 +699,25 @@ private fun CBTActivityCard(
     ) {
 
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(18.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(18.dp),
 
             verticalAlignment =
                 Alignment.CenterVertically
         ) {
 
             Box(
-                modifier = Modifier
-                    .size(52.dp)
-                    .clip(
-                        RoundedCornerShape(17.dp)
-                    )
-                    .background(
-                        categoryColor
-                    ),
+                modifier =
+                    Modifier
+                        .size(52.dp)
+                        .clip(
+                            RoundedCornerShape(17.dp)
+                        )
+                        .background(
+                            categoryColor
+                        ),
 
                 contentAlignment =
                     Alignment.Center

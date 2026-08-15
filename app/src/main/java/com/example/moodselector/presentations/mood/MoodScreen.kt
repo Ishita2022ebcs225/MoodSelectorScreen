@@ -12,7 +12,9 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 
 @Composable
-fun MoodScreen() {
+fun MoodScreen(
+    onLogout: () -> Unit = {}
+) {
 
     val background = Brush.verticalGradient(
         colors = listOf(
@@ -34,7 +36,9 @@ fun MoodScreen() {
                 .statusBarsPadding()
         ) {
 
-            MoodInsightsScreen()
+            MoodInsightsScreen(
+                onLogout = onLogout
+            )
         }
     }
 }

@@ -12,6 +12,11 @@ data class FiveMinuteStarterCompletionEntity(
     val id: Int = 0,
 
     /*
+     * Firebase UID of the user who owns this completion.
+     */
+    val userId: String,
+
+    /*
      * The larger task the user had been avoiding.
      */
     val task: String,
@@ -42,3 +47,4 @@ data class FiveMinuteStarterCompletionEntity(
      */
     val completedAt: Long
 )
+

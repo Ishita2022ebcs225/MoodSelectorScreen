@@ -6,57 +6,62 @@ import com.example.moodselector.domain.cbt.model.CBTCategory
 import com.example.moodselector.domain.cbt.model.RecommendationTarget
 
 /**
- * Collection of Rational Emotive Behavior Therapy (REBT) activities.
+ * Collection of Cognitive CBT activities.
  *
- * These activities help users identify irrational beliefs,
- * challenge unhelpful thinking patterns, and replace them
- * with healthier, more balanced alternatives.
+ * These activities help users understand the relationship between
+ * situations, thoughts, beliefs, emotions and behaviours, while
+ * developing more balanced and compassionate ways of thinking.
  *
- * The guided worksheet experience will be implemented
- * later in the presentation layer.
+ * The guided exercise experiences are implemented in the
+ * presentation layer.
  */
 object REBTExercises {
 
     /**
-     * All REBT activities.
+     * All Cognitive CBT activities.
      */
     val activities: List<CBTActivity>
         get() = listOf(
             abcModel,
-            disputingBeliefs,
             balancedThinking,
             selfCompassionReflection
         )
 
     /**
-     * The ABC Model helps users understand the relationship
-     * between situations, beliefs and emotional consequences.
+     * The ABC Model helps users understand how their beliefs
+     * influence their emotional and behavioural responses.
      */
     val abcModel = CBTActivity(
         id = "abc_model",
         title = "ABC Model",
-        description = "Understand how your beliefs influence your emotional reactions.",
+        description =
+            "Understand how your thoughts and beliefs influence your emotional reactions.",
         category = CBTCategory.COGNITIVE,
         steps = listOf(
             ActivityStep(
                 id = "abc_step_1",
-                instruction = "Think of a recent situation that caused emotional distress."
+                instruction =
+                    "Think of a recent situation that caused emotional distress."
             ),
             ActivityStep(
                 id = "abc_step_2",
-                instruction = "Describe the activating event as objectively as possible."
+                instruction =
+                    "Describe what happened as objectively as possible."
             ),
             ActivityStep(
                 id = "abc_step_3",
-                instruction = "Identify the thoughts or beliefs you had about the event."
+                instruction =
+                    "Identify the thoughts or beliefs you had about the situation."
             ),
             ActivityStep(
                 id = "abc_step_4",
-                instruction = "Notice the emotional and behavioural consequences of those beliefs."
+                instruction =
+                    "Notice the emotions and behaviours that followed those beliefs."
             ),
             ActivityStep(
                 id = "abc_step_5",
-                instruction = "Reflect on how different beliefs might have changed the outcome."
+                instruction =
+                    "Reflect on how a different belief or perspective might have changed your response."
             )
         ),
         benefits = listOf(
@@ -74,44 +79,52 @@ object REBTExercises {
     )
 
     /**
-     * Encourages users to question irrational beliefs
-     * using evidence and logical thinking.
+     * Helps users examine negative automatic thoughts and develop
+     * more realistic and balanced alternatives.
      */
-    val disputingBeliefs = CBTActivity(
-        id = "disputing_beliefs",
-        title = "Disputing Irrational Beliefs",
-        description = "Challenge thoughts that may not be accurate, helpful or realistic.",
+    val balancedThinking = CBTActivity(
+        id = "balanced_thinking",
+        title = "Balanced Thinking",
+        description =
+            "Examine an unhelpful thought and develop a more realistic and balanced perspective.",
         category = CBTCategory.COGNITIVE,
         steps = listOf(
             ActivityStep(
-                id = "dispute_step_1",
-                instruction = "Choose one negative or irrational belief."
+                id = "balanced_step_1",
+                instruction =
+                    "Notice a negative or upsetting automatic thought."
             ),
             ActivityStep(
-                id = "dispute_step_2",
-                instruction = "Ask yourself whether there is evidence supporting this belief."
+                id = "balanced_step_2",
+                instruction =
+                    "Identify any thinking trap or cognitive distortion that may be influencing the thought."
             ),
             ActivityStep(
-                id = "dispute_step_3",
-                instruction = "Consider evidence that contradicts the belief."
+                id = "balanced_step_3",
+                instruction =
+                    "Look at the facts that support the thought and the facts that do not support it."
             ),
             ActivityStep(
-                id = "dispute_step_4",
-                instruction = "Think about what you would say to a close friend in the same situation."
+                id = "balanced_step_4",
+                instruction =
+                    "Write a more realistic, balanced and compassionate interpretation."
             ),
             ActivityStep(
-                id = "dispute_step_5",
-                instruction = "Create a more balanced and realistic belief."
+                id = "balanced_step_5",
+                instruction =
+                    "Reflect on how this new perspective changes how you feel or what you might do."
             )
         ),
         benefits = listOf(
-            "Challenges irrational thinking",
-            "Develops balanced thinking",
-            "Reduces emotional distress",
-            "Improves coping skills"
+            "Reduces negative thinking",
+            "Recognises cognitive distortions",
+            "Encourages realistic perspectives",
+            "Builds emotional resilience"
         ),
         recommendedFor = listOf(
+            RecommendationTarget.MILD_DEPRESSION,
             RecommendationTarget.MODERATE_DEPRESSION,
+            RecommendationTarget.MILD_ANXIETY,
             RecommendationTarget.MODERATE_ANXIETY,
             RecommendationTarget.STRESS,
             RecommendationTarget.OVERWHELM
@@ -119,90 +132,53 @@ object REBTExercises {
     )
 
     /**
-     * Helps users replace unhelpful automatic thoughts
-     * with healthier alternatives.
-     */
-    val balancedThinking = CBTActivity(
-        id = "balanced_thinking",
-        title = "Balanced Thinking",
-        description = "Replace negative thoughts with realistic and compassionate alternatives.",
-        category = CBTCategory.COGNITIVE,
-        steps = listOf(
-            ActivityStep(
-                id = "balanced_step_1",
-                instruction = "Notice a negative automatic thought."
-            ),
-            ActivityStep(
-                id = "balanced_step_2",
-                instruction = "Identify any thinking traps or cognitive distortions."
-            ),
-            ActivityStep(
-                id = "balanced_step_3",
-                instruction = "Look for facts that support and contradict the thought."
-            ),
-            ActivityStep(
-                id = "balanced_step_4",
-                instruction = "Write a more balanced interpretation of the situation."
-            ),
-            ActivityStep(
-                id = "balanced_step_5",
-                instruction = "Reflect on how this new perspective changes your emotions."
-            )
-        ),
-        benefits = listOf(
-            "Reduces negative thinking",
-            "Builds resilience",
-            "Encourages realistic perspectives",
-            "Improves emotional wellbeing"
-        ),
-        recommendedFor = listOf(
-            RecommendationTarget.MILD_DEPRESSION,
-            RecommendationTarget.MODERATE_DEPRESSION,
-            RecommendationTarget.STRESS,
-            RecommendationTarget.OVERWHELM
-        )
-    )
-
-    /**
-     * Encourages users to respond to themselves with
-     * kindness rather than self-criticism.
+     * Helps users replace harsh self-criticism with a more
+     * understanding and compassionate response to themselves.
      */
     val selfCompassionReflection = CBTActivity(
         id = "self_compassion_reflection",
         title = "Self-Compassion Reflection",
-        description = "Practice responding to yourself with understanding, kindness and encouragement.",
+        description =
+            "Practice responding to yourself with understanding, kindness and encouragement.",
         category = CBTCategory.COGNITIVE,
         steps = listOf(
             ActivityStep(
                 id = "compassion_step_1",
-                instruction = "Think about a recent mistake or difficult experience."
+                instruction =
+                    "Think about a recent mistake, setback or difficult experience."
             ),
             ActivityStep(
                 id = "compassion_step_2",
-                instruction = "Notice how you usually speak to yourself in situations like this."
+                instruction =
+                    "Notice how you usually speak to yourself when something goes wrong."
             ),
             ActivityStep(
                 id = "compassion_step_3",
-                instruction = "Imagine what you would say to someone you deeply care about."
+                instruction =
+                    "Imagine what you would say to someone you deeply care about in the same situation."
             ),
             ActivityStep(
                 id = "compassion_step_4",
-                instruction = "Offer yourself the same kindness and understanding."
+                instruction =
+                    "Offer yourself the same understanding, kindness and encouragement."
             ),
             ActivityStep(
                 id = "compassion_step_5",
-                instruction = "Finish by writing one encouraging statement for yourself."
+                instruction =
+                    "Write one supportive and encouraging statement you can carry forward."
             )
         ),
         benefits = listOf(
             "Reduces self-criticism",
             "Builds self-compassion",
-            "Supports emotional resilience",
-            "Encourages healthier self-talk"
+            "Encourages healthier self-talk",
+            "Supports emotional resilience"
         ),
         recommendedFor = listOf(
             RecommendationTarget.MILD_DEPRESSION,
             RecommendationTarget.MODERATE_DEPRESSION,
+            RecommendationTarget.MILD_ANXIETY,
+            RecommendationTarget.MODERATE_ANXIETY,
             RecommendationTarget.STRESS,
             RecommendationTarget.BURNOUT
         )

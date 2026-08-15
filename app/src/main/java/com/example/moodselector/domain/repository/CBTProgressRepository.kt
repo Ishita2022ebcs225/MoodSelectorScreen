@@ -13,11 +13,17 @@ interface CBTProgressRepository {
         completion: CBTActivityCompletionEntity
     )
 
-    fun getAllCompletions():
+    fun getAllCompletions(
+        userId: String
+    ):
             Flow<List<CBTActivityCompletionEntity>>
 
-    fun getCompletionCount():
+    fun getCompletionCount(
+        userId: String
+    ):
             Flow<Int>
 
-    suspend fun deleteAllCompletions()
+    suspend fun deleteAllCompletions(
+        userId: String
+    )
 }

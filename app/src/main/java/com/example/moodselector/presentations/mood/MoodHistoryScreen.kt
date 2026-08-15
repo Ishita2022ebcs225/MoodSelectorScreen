@@ -34,7 +34,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.moodselector.presentations.mood.components.EmptyMoodState
 import com.example.moodselector.presentations.mood.components.RecentMoodCard
-import com.example.moodselector.presentations.mood.MoodViewModel
 
 @Composable
 fun MoodHistoryScreen(
@@ -73,26 +72,31 @@ fun MoodHistoryScreen(
                 .navigationBarsPadding(),
 
             contentPadding = PaddingValues(
-                bottom = 120.dp
+                bottom = 110.dp
             ),
 
             verticalArrangement =
-                Arrangement.spacedBy(18.dp)
+                Arrangement.spacedBy(12.dp)
         ) {
 
-            // HEADER
+            /*
+             * ==================================================
+             * HEADER
+             * ==================================================
+             */
+
             item {
 
                 Box(
 
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(260.dp)
+                        .height(215.dp)
                         .clip(
 
                             RoundedCornerShape(
-                                bottomStart = 42.dp,
-                                bottomEnd = 42.dp
+                                bottomStart = 32.dp,
+                                bottomEnd = 32.dp
                             )
                         )
                         .background(
@@ -108,82 +112,131 @@ fun MoodHistoryScreen(
                         )
                 ) {
 
-                    // Decorative floating circles
+                    /*
+                     * --------------------------------------------------
+                     * DECORATIVE CIRCLES
+                     * --------------------------------------------------
+                     */
 
                     Box(
                         modifier = Modifier
-                            .size(180.dp)
+                            .size(125.dp)
                             .padding(
-                                top = 20.dp,
-                                start = 220.dp
+                                top = 18.dp,
+                                start = 245.dp
                             )
                             .clip(CircleShape)
                             .background(
-                                Color.White.copy(alpha = 0.08f)
+                                Color.White.copy(
+                                    alpha = 0.08f
+                                )
                             )
                     )
 
                     Box(
                         modifier = Modifier
-                            .size(120.dp)
+                            .size(85.dp)
                             .padding(
-                                top = 150.dp,
-                                start = 20.dp
+                                top = 135.dp,
+                                start = 24.dp
                             )
                             .clip(CircleShape)
                             .background(
-                                Color.White.copy(alpha = 0.06f)
+                                Color.White.copy(
+                                    alpha = 0.06f
+                                )
                             )
                     )
 
                     Column(
-                        modifier = Modifier.padding(24.dp)
+
+                        modifier =
+                            Modifier.padding(
+                                horizontal = 20.dp,
+                                vertical = 18.dp
+                            )
                     ) {
 
                         Spacer(
-                            modifier = Modifier.height(12.dp)
+                            modifier =
+                                Modifier.height(8.dp)
                         )
 
+                        /*
+                         * --------------------------------------------------
+                         * TITLE
+                         * --------------------------------------------------
+                         */
+
                         Text(
-                            text = "Mood History 🌸",
 
-                            style = MaterialTheme
-                                .typography
-                                .headlineLarge,
+                            text =
+                                "Mood History 🌸",
 
-                            fontWeight = FontWeight.ExtraBold,
+                            style =
+                                MaterialTheme
+                                    .typography
+                                    .headlineMedium,
 
-                            color = Color.White
+                            fontWeight =
+                                FontWeight.Bold,
+
+                            color =
+                                Color.White
                         )
 
                         Spacer(
-                            modifier = Modifier.height(14.dp)
+                            modifier =
+                                Modifier.height(8.dp)
                         )
 
+                        /*
+                         * --------------------------------------------------
+                         * DESCRIPTION
+                         * --------------------------------------------------
+                         */
+
                         Text(
+
                             text =
                                 "Review your emotional journey and understand how your moods evolve over time.",
 
-                            style = MaterialTheme
-                                .typography
-                                .bodyLarge,
+                            style =
+                                MaterialTheme
+                                    .typography
+                                    .bodyMedium,
 
                             color =
-                                Color.White.copy(alpha = 0.92f)
+                                Color.White.copy(
+                                    alpha = 0.92f
+                                )
                         )
 
                         Spacer(
-                            modifier = Modifier.height(30.dp)
+                            modifier =
+                                Modifier.height(18.dp)
                         )
+
+                        /*
+                         * --------------------------------------------------
+                         * ENTRY COUNT
+                         * --------------------------------------------------
+                         */
 
                         Card(
 
-                            shape = RoundedCornerShape(26.dp),
+                            shape =
+                                RoundedCornerShape(
+                                    20.dp
+                                ),
 
-                            colors = CardDefaults.cardColors(
-                                containerColor =
-                                    Color.White.copy(alpha = 0.18f)
-                            )
+                            colors =
+                                CardDefaults.cardColors(
+                                    containerColor =
+                                        Color.White.copy(
+                                            alpha = 0.18f
+                                        )
+                                )
                         ) {
 
                             Text(
@@ -191,29 +244,43 @@ fun MoodHistoryScreen(
                                 text =
                                     "${moods.size} mood entries recorded",
 
-                                modifier = Modifier.padding(
-                                    horizontal = 20.dp,
-                                    vertical = 14.dp
-                                ),
+                                modifier =
+                                    Modifier.padding(
+                                        horizontal = 16.dp,
+                                        vertical = 10.dp
+                                    ),
 
-                                color = Color.White,
+                                color =
+                                    Color.White,
 
-                                fontWeight = FontWeight.SemiBold
+                                style =
+                                    MaterialTheme
+                                        .typography
+                                        .bodyMedium,
+
+                                fontWeight =
+                                    FontWeight.SemiBold
                             )
                         }
                     }
                 }
             }
 
-            // EMPTY STATE
+            /*
+             * ==================================================
+             * EMPTY STATE
+             * ==================================================
+             */
+
             if (moods.isEmpty()) {
 
                 item {
 
                     Box(
-                        modifier = Modifier.padding(
-                            horizontal = 20.dp
-                        )
+                        modifier =
+                            Modifier.padding(
+                                horizontal = 18.dp
+                            )
                     ) {
 
                         EmptyMoodState()
@@ -222,13 +289,21 @@ fun MoodHistoryScreen(
 
             } else {
 
-                // MOOD ENTRIES
-                items(moods.reversed()) { mood ->
+                /*
+                 * ==================================================
+                 * MOOD ENTRIES
+                 * ==================================================
+                 */
+
+                items(
+                    moods.reversed()
+                ) { mood ->
 
                     Box(
-                        modifier = Modifier.padding(
-                            horizontal = 20.dp
-                        )
+                        modifier =
+                            Modifier.padding(
+                                horizontal = 18.dp
+                            )
                     ) {
 
                         RecentMoodCard(
@@ -241,9 +316,11 @@ fun MoodHistoryScreen(
             item {
 
                 Spacer(
-                    modifier = Modifier.height(24.dp)
+                    modifier =
+                        Modifier.height(20.dp)
                 )
             }
         }
     }
 }
+

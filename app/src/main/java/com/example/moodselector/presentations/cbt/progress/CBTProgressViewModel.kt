@@ -2,18 +2,23 @@ package com.example.moodselector.presentations.cbt.progress
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.moodselector.data.local.entity.ABCModelCompletionEntity
 import com.example.moodselector.data.local.entity.CBTActivityCompletionEntity
 import com.example.moodselector.data.local.entity.FiveMinuteStarterCompletionEntity
+import com.example.moodselector.data.local.entity.Grounding54321CompletionEntity
 import com.example.moodselector.data.local.entity.MindfulMeditationCompletionEntity
 import com.example.moodselector.data.local.entity.ScheduledCBTActivityEntity
+import com.example.moodselector.data.local.entity.SelfCompassionReflectionCompletionEntity
+import com.example.moodselector.domain.repository.ABCModelCompletionRepository
+import com.example.moodselector.domain.repository.AuthRepository
 import com.example.moodselector.domain.repository.CBTProgressRepository
 import com.example.moodselector.domain.repository.FiveMinuteStarterCompletionRepository
+import com.example.moodselector.domain.repository.Grounding54321CompletionRepository
 import com.example.moodselector.domain.repository.MindfulMeditationCompletionRepository
 import com.example.moodselector.domain.repository.ScheduledCBTActivityRepository
+import com.example.moodselector.domain.repository.SelfCompassionReflectionCompletionRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -26,8 +31,25 @@ class CBTProgressViewModel @Inject constructor(
     private val fiveMinuteStarterRepository:
     FiveMinuteStarterCompletionRepository,
     private val mindfulMeditationRepository:
-    MindfulMeditationCompletionRepository
+    MindfulMeditationCompletionRepository,
+    private val grounding54321Repository:
+    Grounding54321CompletionRepository,
+    private val abcModelRepository:
+    ABCModelCompletionRepository,
+    private val selfCompassionReflectionRepository:
+    SelfCompassionReflectionCompletionRepository,
+    private val authRepository: AuthRepository
 ) : ViewModel() {
+
+    /*
+     * ==================================================
+     * CURRENT USER ID
+     * ==================================================
+     */
+
+    private val userId: String?
+        get() = authRepository.currentUser?.uid
+
 
     /*
      * ==================================================
@@ -37,7 +59,9 @@ class CBTProgressViewModel @Inject constructor(
 
     val completions:
             Flow<List<CBTActivityCompletionEntity>> =
-        repository.getAllCompletions()
+        repository.getAllCompletions(
+            userId = userId ?: ""
+        )
 
 
     /*
@@ -48,7 +72,9 @@ class CBTProgressViewModel @Inject constructor(
 
     val fiveMinuteStarterCompletions:
             Flow<List<FiveMinuteStarterCompletionEntity>> =
-        fiveMinuteStarterRepository.getAllCompletions()
+        fiveMinuteStarterRepository.getAllCompletions(
+            userId = userId ?: ""
+        )
 
 
     /*
@@ -59,7 +85,61 @@ class CBTProgressViewModel @Inject constructor(
 
     val mindfulMeditationCompletions:
             Flow<List<MindfulMeditationCompletionEntity>> =
-        mindfulMeditationRepository.getAllCompletions()
+        mindfulMeditationRepository.getAllCompletions(
+            userId = userId ?: ""
+        )
+
+
+    /*
+     * ==================================================
+     * 5-4-3-2-1 GROUNDING COMPLETIONS
+     * ==================================================
+     */
+
+    val grounding54321Completions:
+            Flow<List<Grounding54321CompletionEntity>> =
+        grounding54321Repository.getAllCompletions(
+            userId = userId ?: ""
+        )
+
+
+    /*
+     * ==================================================
+     * ABC MODEL COMPLETIONS
+     * ==================================================
+     *
+     * Only fully completed ABC records are included.
+     *
+     * A = Activating Event
+     * B = Beliefs
+     * C = Consequences
+     */
+
+    val abcModelCompletions:
+            Flow<List<ABCModelCompletionEntity>> =
+        abcModelRepository
+            .getAllCompletions(
+                userId = userId ?: ""
+            )
+            .map { entries ->
+                entries.filter {
+                    it.isCompleted()
+                }
+            }
+
+
+    /*
+     * ==================================================
+     * SELF-COMPASSION REFLECTION COMPLETIONS
+     * ==================================================
+     */
+
+    val selfCompassionReflectionCompletions:
+            Flow<List<SelfCompassionReflectionCompletionEntity>> =
+        selfCompassionReflectionRepository
+            .getAllCompletions(
+                userId = userId ?: ""
+            )
 
 
     /*
@@ -67,26 +147,32 @@ class CBTProgressViewModel @Inject constructor(
      * COMBINED PROGRESS TIMELINE
      * ==================================================
      *
-     * Every completion remains visible.
+     * Every completed exercise remains visible.
      *
      * Repeating an exercise creates another timeline
-     * entry, which preserves the user's practice history.
+     * entry.
+     *
+     * Partial ABC entries are excluded.
      */
 
     val progressItems:
             Flow<List<CBTProgressItem>> =
+
         combine(
-            repository.getAllCompletions(),
-            fiveMinuteStarterRepository.getAllCompletions(),
-            mindfulMeditationRepository.getAllCompletions()
+            completions,
+            fiveMinuteStarterCompletions,
+            mindfulMeditationCompletions,
+            grounding54321Completions,
+            abcModelCompletions
         ) {
                 cbtCompletions,
                 starterCompletions,
-                meditationCompletions ->
+                meditationCompletions,
+                groundingCompletions,
+                abcCompletions ->
 
             val activitySchedulingItems =
                 cbtCompletions.map { completion ->
-
                     CBTProgressItem.ActivityCompletion(
                         completion = completion
                     )
@@ -94,7 +180,6 @@ class CBTProgressViewModel @Inject constructor(
 
             val fiveMinuteStarterItems =
                 starterCompletions.map { completion ->
-
                     CBTProgressItem.FiveMinuteStarterCompletion(
                         completion = completion
                     )
@@ -102,16 +187,45 @@ class CBTProgressViewModel @Inject constructor(
 
             val mindfulMeditationItems =
                 meditationCompletions.map { completion ->
-
                     CBTProgressItem.MindfulMeditationCompletion(
                         completion = completion
                     )
                 }
 
+            val grounding54321Items =
+                groundingCompletions.map { completion ->
+                    CBTProgressItem.Grounding54321Completion(
+                        completion = completion
+                    )
+                }
+
+            val abcModelItems =
+                abcCompletions.map { completion ->
+                    CBTProgressItem.ABCModelCompletion(
+                        completion = completion
+                    )
+                }
+
+            activitySchedulingItems +
+                    fiveMinuteStarterItems +
+                    mindfulMeditationItems +
+                    grounding54321Items +
+                    abcModelItems
+
+        }.combine(
+            selfCompassionReflectionCompletions
+        ) { existingItems, selfCompassionCompletions ->
+
+            val selfCompassionItems =
+                selfCompassionCompletions.map { completion ->
+                    CBTProgressItem.SelfCompassionReflectionCompletion(
+                        completion = completion
+                    )
+                }
+
             (
-                    activitySchedulingItems +
-                            fiveMinuteStarterItems +
-                            mindfulMeditationItems
+                    existingItems +
+                            selfCompassionItems
                     ).sortedByDescending {
                     it.completedAt
                 }
@@ -125,57 +239,36 @@ class CBTProgressViewModel @Inject constructor(
      *
      * Counts DIFFERENT exercises completed at least once.
      *
-     * Example:
-     *
-     * Activity Scheduling × 3
-     * Five-Minute Starter × 2
-     * Mindful Meditation × 4
-     *
-     * Result:
-     *
-     * 3 completed exercises
-     *
-     * Repeating an exercise never increases this count.
+     * Repeating the same exercise does not increase this
+     * number.
      */
 
     val uniqueCompletedExerciseCount:
             Flow<Int> =
+
         combine(
-            repository.getAllCompletions(),
-            fiveMinuteStarterRepository.getAllCompletions(),
-            mindfulMeditationRepository.getAllCompletions()
+            completions,
+            fiveMinuteStarterCompletions,
+            mindfulMeditationCompletions,
+            grounding54321Completions,
+            abcModelCompletions
         ) {
                 cbtCompletions,
                 starterCompletions,
-                meditationCompletions ->
-
-            /*
-             * ------------------------------------------
-             * GENERAL CBT EXERCISES
-             * ------------------------------------------
-             *
-             * Each activityId represents one exercise.
-             */
+                meditationCompletions,
+                groundingCompletions,
+                abcCompletions ->
 
             val uniqueCbtActivities =
                 cbtCompletions
-                    .map { completion ->
-                        completion.activityId
+                    .map {
+                        it.activityId
                     }
-                    .filter { activityId ->
-                        activityId.isNotBlank()
+                    .filter {
+                        it.isNotBlank()
                     }
                     .toSet()
                     .size
-
-
-            /*
-             * ------------------------------------------
-             * FIVE-MINUTE STARTER
-             * ------------------------------------------
-             *
-             * All records represent the same exercise.
-             */
 
             val fiveMinuteStarterCount =
                 if (starterCompletions.isNotEmpty()) {
@@ -184,15 +277,6 @@ class CBTProgressViewModel @Inject constructor(
                     0
                 }
 
-
-            /*
-             * ------------------------------------------
-             * MINDFUL MEDITATION
-             * ------------------------------------------
-             *
-             * All records represent the same exercise.
-             */
-
             val mindfulMeditationCount =
                 if (meditationCompletions.isNotEmpty()) {
                     1
@@ -200,16 +284,39 @@ class CBTProgressViewModel @Inject constructor(
                     0
                 }
 
+            val grounding54321Count =
+                if (groundingCompletions.isNotEmpty()) {
+                    1
+                } else {
+                    0
+                }
 
-            /*
-             * ------------------------------------------
-             * TOTAL UNIQUE EXERCISES
-             * ------------------------------------------
-             */
+            val abcModelCount =
+                if (abcCompletions.isNotEmpty()) {
+                    1
+                } else {
+                    0
+                }
 
             uniqueCbtActivities +
                     fiveMinuteStarterCount +
-                    mindfulMeditationCount
+                    mindfulMeditationCount +
+                    grounding54321Count +
+                    abcModelCount
+
+        }.combine(
+            selfCompassionReflectionCompletions
+        ) { existingCount, selfCompassionCompletions ->
+
+            val selfCompassionCount =
+                if (selfCompassionCompletions.isNotEmpty()) {
+                    1
+                } else {
+                    0
+                }
+
+            existingCount +
+                    selfCompassionCount
         }
 
 
@@ -217,22 +324,60 @@ class CBTProgressViewModel @Inject constructor(
      * ==================================================
      * INDIVIDUAL COMPLETION COUNTS
      * ==================================================
-     *
-     * These represent actual completion records,
-     * rather than unique exercises.
      */
 
     val completionCount:
             Flow<Int> =
-        repository.getCompletionCount()
+        repository.getCompletionCount(
+            userId = userId ?: ""
+        )
+
 
     val fiveMinuteStarterCompletionCount:
             Flow<Int> =
-        fiveMinuteStarterRepository.getCompletionCount()
+        fiveMinuteStarterRepository.getCompletionCount(
+            userId = userId ?: ""
+        )
+
 
     val mindfulMeditationCompletionCount:
             Flow<Int> =
-        mindfulMeditationRepository.getCompletionCount()
+        mindfulMeditationRepository.getCompletionCount(
+            userId = userId ?: ""
+        )
+
+
+    val grounding54321CompletionCount:
+            Flow<Int> =
+        grounding54321Repository.getCompletionCount(
+            userId = userId ?: ""
+        )
+
+
+    /*
+     * ==================================================
+     * ABC MODEL COMPLETION COUNT
+     * ==================================================
+     */
+
+    val abcModelCompletionCount:
+            Flow<Int> =
+        abcModelCompletions.map {
+            it.size
+        }
+
+
+    /*
+     * ==================================================
+     * SELF-COMPASSION REFLECTION COMPLETION COUNT
+     * ==================================================
+     */
+
+    val selfCompassionReflectionCompletionCount:
+            Flow<Int> =
+        selfCompassionReflectionCompletions.map {
+            it.size
+        }
 
 
     /*
@@ -243,11 +388,16 @@ class CBTProgressViewModel @Inject constructor(
 
     val scheduledActivities:
             Flow<List<ScheduledCBTActivityEntity>> =
-        scheduledRepository.getAllScheduledActivities()
+        scheduledRepository.getAllScheduledActivities(
+            userId = userId ?: ""
+        )
+
 
     val scheduledActivityCount:
             Flow<Int> =
-        scheduledRepository.getScheduledActivityCount()
+        scheduledRepository.getScheduledActivityCount(
+            userId = userId ?: ""
+        )
 
 
     /*
@@ -267,11 +417,15 @@ class CBTProgressViewModel @Inject constructor(
         onSaved: () -> Unit = {}
     ) {
 
+        val currentUserId =
+            userId ?: return
+
         viewModelScope.launch {
 
             val scheduledActivity =
                 ScheduledCBTActivityEntity(
                     id = 0,
+                    userId = currentUserId,
                     activityId = activityId,
                     activityTitle = activityTitle,
                     activityDescription = activityDescription,
@@ -279,7 +433,8 @@ class CBTProgressViewModel @Inject constructor(
                     activityType = activityType,
                     scheduledWhen = scheduledWhen,
                     scheduledWhere = scheduledWhere,
-                    createdAt = System.currentTimeMillis()
+                    createdAt =
+                        System.currentTimeMillis()
                 )
 
             scheduledRepository.saveScheduledActivity(
@@ -320,10 +475,16 @@ class CBTProgressViewModel @Inject constructor(
         id: Int
     ) {
 
+        val currentUserId =
+            userId ?: return
+
         viewModelScope.launch {
 
             scheduledRepository
-                .deleteScheduledActivityById(id)
+                .deleteScheduledActivityById(
+                    id = id,
+                    userId = currentUserId
+                )
         }
     }
 
@@ -338,11 +499,15 @@ class CBTProgressViewModel @Inject constructor(
         activityId: String
     ) {
 
+        val currentUserId =
+            userId ?: return
+
         viewModelScope.launch {
 
             scheduledRepository
                 .deleteScheduledActivityByActivityId(
-                    activityId
+                    activityId = activityId,
+                    userId = currentUserId
                 )
         }
     }
@@ -366,10 +531,14 @@ class CBTProgressViewModel @Inject constructor(
         onSaved: () -> Unit = {}
     ) {
 
+        val currentUserId =
+            userId ?: return
+
         viewModelScope.launch {
 
             val completion =
                 CBTActivityCompletionEntity(
+                    userId = currentUserId,
                     activityId = activityId,
                     activityTitle = activityTitle,
                     activityDescription = activityDescription,
@@ -378,7 +547,8 @@ class CBTProgressViewModel @Inject constructor(
                     scheduledWhen = scheduledWhen,
                     scheduledWhere = scheduledWhere,
                     reflection = reflection,
-                    completedAt = System.currentTimeMillis()
+                    completedAt =
+                        System.currentTimeMillis()
                 )
 
             repository.saveCompletion(
@@ -406,16 +576,35 @@ class CBTProgressViewModel @Inject constructor(
 
             val completion =
                 CBTActivityCompletionEntity(
-                    activityId = activity.activityId,
-                    activityTitle = activity.activityTitle,
+                    userId =
+                        activity.userId,
+
+                    activityId =
+                        activity.activityId,
+
+                    activityTitle =
+                        activity.activityTitle,
+
                     activityDescription =
                         activity.activityDescription,
-                    activityName = activity.activityName,
-                    activityType = activity.activityType,
-                    scheduledWhen = activity.scheduledWhen,
-                    scheduledWhere = activity.scheduledWhere,
-                    reflection = reflection,
-                    completedAt = System.currentTimeMillis()
+
+                    activityName =
+                        activity.activityName,
+
+                    activityType =
+                        activity.activityType,
+
+                    scheduledWhen =
+                        activity.scheduledWhen,
+
+                    scheduledWhere =
+                        activity.scheduledWhere,
+
+                    reflection =
+                        reflection,
+
+                    completedAt =
+                        System.currentTimeMillis()
                 )
 
             repository.saveCompletion(
@@ -424,7 +613,8 @@ class CBTProgressViewModel @Inject constructor(
 
             scheduledRepository
                 .deleteScheduledActivityById(
-                    activity.id
+                    id = activity.id,
+                    userId = activity.userId
                 )
 
             onCompleted()
@@ -459,9 +649,14 @@ class CBTProgressViewModel @Inject constructor(
 
     fun deleteAllCompletions() {
 
+        val currentUserId =
+            userId ?: return
+
         viewModelScope.launch {
 
-            repository.deleteAllCompletions()
+            repository.deleteAllCompletions(
+                userId = currentUserId
+            )
         }
     }
 
@@ -474,12 +669,115 @@ class CBTProgressViewModel @Inject constructor(
 
     fun deleteAllScheduledActivities() {
 
+        val currentUserId =
+            userId ?: return
+
         viewModelScope.launch {
 
             scheduledRepository
-                .deleteAllScheduledActivities()
+                .deleteAllScheduledActivities(
+                    userId = currentUserId
+                )
         }
     }
+
+
+    /*
+     * ==================================================
+     * DELETE ABC COMPLETION
+     * ==================================================
+     */
+
+    fun deleteABCModelCompletion(
+        completion: ABCModelCompletionEntity
+    ) {
+
+        viewModelScope.launch {
+
+            abcModelRepository.deleteCompletion(
+                completion
+            )
+        }
+    }
+
+
+    /*
+     * ==================================================
+     * DELETE ALL ABC COMPLETIONS
+     * ==================================================
+     */
+
+    fun deleteAllABCModelCompletions() {
+
+        val currentUserId =
+            userId ?: return
+
+        viewModelScope.launch {
+
+            abcModelRepository.deleteAllCompletions(
+                userId = currentUserId
+            )
+        }
+    }
+
+
+    /*
+     * ==================================================
+     * DELETE SELF-COMPASSION REFLECTION COMPLETION
+     * ==================================================
+     */
+
+    fun deleteSelfCompassionReflectionCompletion(
+        completion:
+        SelfCompassionReflectionCompletionEntity
+    ) {
+
+        viewModelScope.launch {
+
+            selfCompassionReflectionRepository
+                .deleteCompletion(
+                    completion
+                )
+        }
+    }
+
+
+    /*
+     * ==================================================
+     * DELETE ALL SELF-COMPASSION REFLECTION COMPLETIONS
+     * ==================================================
+     */
+
+    fun deleteAllSelfCompassionReflectionCompletions() {
+
+        val currentUserId =
+            userId ?: return
+
+        viewModelScope.launch {
+
+            selfCompassionReflectionRepository
+                .deleteAllCompletions(
+                    userId = currentUserId
+                )
+        }
+    }
+}
+
+
+/*
+ * ======================================================
+ * ABC COMPLETION CHECK
+ * ======================================================
+ *
+ * A record is considered complete only when all three
+ * ABC sections contain a non-blank response.
+ */
+
+private fun ABCModelCompletionEntity.isCompleted(): Boolean {
+
+    return activatingEvent.isNotBlank() &&
+            beliefs.isNotBlank() &&
+            consequences.isNotBlank()
 }
 
 
@@ -490,62 +788,76 @@ class CBTProgressViewModel @Inject constructor(
  *
  * Presentation-layer model used to combine the
  * independent CBT completion systems into one timeline.
- *
- * The database entities remain completely separate.
  */
 
 sealed class CBTProgressItem {
 
-    /*
-     * --------------------------------------------------
-     * ACTIVITY SCHEDULING / GENERAL CBT COMPLETION
-     * --------------------------------------------------
-     */
-
     data class ActivityCompletion(
-        val completion: CBTActivityCompletionEntity
+        val completion:
+        CBTActivityCompletionEntity
     ) : CBTProgressItem() {
 
         override val completedAt: Long
-            get() = completion.completedAt
+            get() =
+                completion.completedAt
     }
 
-
-    /*
-     * --------------------------------------------------
-     * FIVE-MINUTE STARTER COMPLETION
-     * --------------------------------------------------
-     */
 
     data class FiveMinuteStarterCompletion(
-        val completion: FiveMinuteStarterCompletionEntity
+        val completion:
+        FiveMinuteStarterCompletionEntity
     ) : CBTProgressItem() {
 
         override val completedAt: Long
-            get() = completion.completedAt
+            get() =
+                completion.completedAt
     }
 
-
-    /*
-     * --------------------------------------------------
-     * MINDFUL MEDITATION COMPLETION
-     * --------------------------------------------------
-     */
 
     data class MindfulMeditationCompletion(
-        val completion: MindfulMeditationCompletionEntity
+        val completion:
+        MindfulMeditationCompletionEntity
     ) : CBTProgressItem() {
 
         override val completedAt: Long
-            get() = completion.completedAt
+            get() =
+                completion.completedAt
     }
 
 
-    /*
-     * --------------------------------------------------
-     * COMPLETION TIMESTAMP
-     * --------------------------------------------------
-     */
+    data class Grounding54321Completion(
+        val completion:
+        Grounding54321CompletionEntity
+    ) : CBTProgressItem() {
+
+        override val completedAt: Long
+            get() =
+                completion.completedAt
+    }
+
+
+    data class ABCModelCompletion(
+        val completion:
+        ABCModelCompletionEntity
+    ) : CBTProgressItem() {
+
+        override val completedAt: Long
+            get() =
+                completion.completedAt
+    }
+
+
+    data class SelfCompassionReflectionCompletion(
+        val completion:
+        SelfCompassionReflectionCompletionEntity
+    ) : CBTProgressItem() {
+
+        override val completedAt: Long
+            get() =
+                completion.completedAt
+    }
+
 
     abstract val completedAt: Long
 }
+

@@ -11,7 +11,9 @@ interface ScheduledCBTActivityRepository {
      * --------------------------------------------------
      */
 
-    fun getAllScheduledActivities():
+    fun getAllScheduledActivities(
+        userId: String
+    ):
             Flow<List<ScheduledCBTActivityEntity>>
 
 
@@ -21,7 +23,9 @@ interface ScheduledCBTActivityRepository {
      * --------------------------------------------------
      */
 
-    fun getScheduledActivityCount():
+    fun getScheduledActivityCount(
+        userId: String
+    ):
             Flow<Int>
 
 
@@ -32,7 +36,8 @@ interface ScheduledCBTActivityRepository {
      */
 
     suspend fun getScheduledActivityById(
-        id: Int
+        id: Int,
+        userId: String
     ): ScheduledCBTActivityEntity?
 
 
@@ -82,7 +87,8 @@ interface ScheduledCBTActivityRepository {
      */
 
     suspend fun deleteScheduledActivityById(
-        id: Int
+        id: Int,
+        userId: String
     )
 
 
@@ -98,7 +104,8 @@ interface ScheduledCBTActivityRepository {
      */
 
     suspend fun deleteScheduledActivityByActivityId(
-        activityId: String
+        activityId: String,
+        userId: String
     )
 
 
@@ -119,5 +126,7 @@ interface ScheduledCBTActivityRepository {
      * --------------------------------------------------
      */
 
-    suspend fun deleteAllScheduledActivities()
+    suspend fun deleteAllScheduledActivities(
+        userId: String
+    )
 }

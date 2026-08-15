@@ -6,6 +6,7 @@ import com.example.moodselector.domain.cbt.definitions.CBTActivityProvider
 import com.example.moodselector.domain.cbt.engine.CBTRecommendationEngine
 import com.example.moodselector.domain.cbt.model.CBTActivity
 import com.example.moodselector.domain.repository.AssessmentRepository
+import com.example.moodselector.domain.repository.AuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -36,7 +37,8 @@ data class CBTUiState(
 
 @HiltViewModel
 class CBTViewModel @Inject constructor(
-    private val assessmentRepository: AssessmentRepository
+    private val assessmentRepository: AssessmentRepository,
+    private val authRepository: AuthRepository
 ) : ViewModel() {
 
     private val _uiState =
@@ -47,6 +49,15 @@ class CBTViewModel @Inject constructor(
     val uiState: StateFlow<CBTUiState> =
         _uiState.asStateFlow()
 
+    /*
+     * --------------------------------------------------
+     * CURRENT USER ID
+     * --------------------------------------------------
+     */
+
+    private val userId: String?
+        get() = authRepository.currentUser?.uid
+
     init {
         observeAssessmentResult()
     }
@@ -56,7 +67,9 @@ class CBTViewModel @Inject constructor(
         viewModelScope.launch {
 
             assessmentRepository
-                .getLatestResult()
+                .getLatestResult(
+                    userId = userId ?: ""
+                )
                 .collectLatest { result ->
 
                     if (result == null) {

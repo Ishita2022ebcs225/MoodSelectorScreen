@@ -14,27 +14,81 @@ class UserPreferencesRepository @Inject constructor(
     private val dataStore: DataStore<Preferences>
 ) {
 
-    companion object {
-        private val HAS_COMPLETED_ASSESSMENT =
-            booleanPreferencesKey("has_completed_assessment")
-    }
+    /*
+     * --------------------------------------------------
+     * ASSESSMENT COMPLETION KEY
+     * --------------------------------------------------
+     *
+     * A separate key is created for every Firebase user.
+     *
+     * Example:
+     *
+     * has_completed_assessment_userA
+     * has_completed_assessment_userB
+     *
+     * This prevents one user's assessment state from
+     * affecting another user's account.
+     */
 
-    val hasCompletedAssessment: Flow<Boolean> =
+    private fun assessmentCompletedKey(
+        userId: String
+    ) = booleanPreferencesKey(
+        "has_completed_assessment_$userId"
+    )
+
+
+    /*
+     * --------------------------------------------------
+     * GET ASSESSMENT COMPLETION FOR USER
+     * --------------------------------------------------
+     */
+
+    fun hasCompletedAssessment(
+        userId: String
+    ): Flow<Boolean> =
         dataStore.data.map { preferences ->
-            preferences[HAS_COMPLETED_ASSESSMENT] ?: false
+
+            preferences[
+                assessmentCompletedKey(userId)
+            ] ?: false
         }
+
+
+    /*
+     * --------------------------------------------------
+     * SET ASSESSMENT COMPLETION FOR USER
+     * --------------------------------------------------
+     */
 
     suspend fun setAssessmentCompleted(
+        userId: String,
         completed: Boolean
     ) {
+
         dataStore.edit { preferences ->
-            preferences[HAS_COMPLETED_ASSESSMENT] = completed
+
+            preferences[
+                assessmentCompletedKey(userId)
+            ] = completed
         }
     }
 
-    suspend fun clearAssessmentCompleted() {
+
+    /*
+     * --------------------------------------------------
+     * CLEAR ASSESSMENT COMPLETION FOR USER
+     * --------------------------------------------------
+     */
+
+    suspend fun clearAssessmentCompleted(
+        userId: String
+    ) {
+
         dataStore.edit { preferences ->
-            preferences[HAS_COMPLETED_ASSESSMENT] = false
+
+            preferences.remove(
+                assessmentCompletedKey(userId)
+            )
         }
     }
 }

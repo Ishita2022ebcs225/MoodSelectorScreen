@@ -17,6 +17,16 @@ interface MoodDao {
     @Delete
     suspend fun deleteMood(mood: MoodEntry)
 
-    @Query("SELECT * FROM mood_entries ORDER BY id DESC")
-    fun getAllMoods(): Flow<List<MoodEntry>>
+    @Query(
+        """
+        SELECT *
+        FROM mood_entries
+        WHERE userId = :userId
+        ORDER BY id DESC
+        """
+    )
+    fun getAllMoods(
+        userId: String
+    ): Flow<List<MoodEntry>>
 }
+

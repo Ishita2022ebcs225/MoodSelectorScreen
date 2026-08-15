@@ -3,6 +3,8 @@ package com.example.moodselector.presentations.mood
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.moodselector.data.local.entity.MoodEntry
+import com.example.moodselector.domain.repository.AuthRepository
+import com.example.moodselector.domain.repository.CloudBackupRepository
 import com.example.moodselector.domain.repository.MoodRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
@@ -15,22 +17,54 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MoodViewModel @Inject constructor(
-    private val repository: MoodRepository
+    private val repository: MoodRepository,
+    private val authRepository: AuthRepository,
+    private val cloudBackupRepository: CloudBackupRepository
 ) : ViewModel() {
 
-    // Observe all moods
-    val moodList = repository.getAllMoods()
+    /*
+     * --------------------------------------------------
+     * CURRENT USER ID
+     * --------------------------------------------------
+     */
+
+    private val userId: String?
+        get() = authRepository.currentUser?.uid
+
+
+    /*
+     * --------------------------------------------------
+     * MOOD LIST
+     * --------------------------------------------------
+     *
+     * Only moods belonging to the currently
+     * authenticated user are loaded.
+     */
+
+    val moodList = repository
+        .getAllMoods(
+            userId = userId ?: ""
+        )
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList()
         )
 
-    // Add mood entry
+
+    /*
+     * --------------------------------------------------
+     * ADD MOOD ENTRY
+     * --------------------------------------------------
+     */
+
     fun addMood(
         mood: String,
         emoji: String
     ) {
+
+        val currentUserId = userId
+            ?: return
 
         val timestamp = SimpleDateFormat(
             "dd MMM yyyy • hh:mm a",
@@ -41,21 +75,52 @@ class MoodViewModel @Inject constructor(
 
             repository.insertMood(
                 MoodEntry(
+                    userId = currentUserId,
                     mood = mood,
                     emoji = emoji,
                     timestamp = timestamp
                 )
             )
+
+            cloudBackupRepository
+                .backupUserData(
+                    userId = currentUserId
+                )
         }
     }
 
-    // Optional (good to have later)
+
+    /*
+     * --------------------------------------------------
+     * DELETE MOOD ENTRY
+     * --------------------------------------------------
+     */
+
     fun deleteMood(
         mood: MoodEntry
     ) {
 
+        /*
+         * The entity already contains its userId.
+         *
+         * The repository/DAO therefore receives the
+         * complete entity for deletion.
+         */
+
+        val currentUserId =
+            userId ?: return
+
         viewModelScope.launch {
-            repository.deleteMood(mood)
+
+            repository.deleteMood(
+                mood
+            )
+
+            cloudBackupRepository
+                .backupUserData(
+                    userId = currentUserId
+                )
         }
     }
 }
+

@@ -35,13 +35,19 @@ import com.example.moodselector.domain.cbt.definitions.BehavioralActivationExerc
 import com.example.moodselector.presentations.assessment.onboarding.AssessmentOnboardingScreen
 import com.example.moodselector.presentations.assessment.questionnaire.AssessmentQuestionnaireScreen
 import com.example.moodselector.presentations.assessment.results.AssessmentResultsScreen
+import com.example.moodselector.presentations.auth.AuthViewModel
+import com.example.moodselector.presentations.auth.LoginScreen
+import com.example.moodselector.presentations.auth.RegisterScreen
+import com.example.moodselector.presentations.cbt.exercises.ABCModelScreen
 import com.example.moodselector.presentations.cbt.exercises.ActivitySchedulingScreen
 import com.example.moodselector.presentations.cbt.exercises.FiveMinuteStarterCompletionScreen
 import com.example.moodselector.presentations.cbt.exercises.FiveMinuteStarterScreen
+import com.example.moodselector.presentations.cbt.exercises.Grounding54321Screen
 import com.example.moodselector.presentations.cbt.exercises.MindfulMeditationScreen
 import com.example.moodselector.presentations.cbt.exercises.ScheduledActivitiesScreen
 import com.example.moodselector.presentations.cbt.exercises.ScheduledActivityCompletionScreen
 import com.example.moodselector.presentations.cbt.exercises.ScheduledCBTActivityViewModel
+import com.example.moodselector.presentations.cbt.exercises.SelfCompassionReflectionScreen
 import com.example.moodselector.presentations.cbt.home.CBTHomeScreen
 import com.example.moodselector.presentations.cbt.progress.CBTProgressScreen
 import com.example.moodselector.presentations.journal.JournalEditorScreen
@@ -55,6 +61,16 @@ fun AppNavHost(
     navController: NavHostController,
     startDestination: String
 ) {
+
+    /*
+     * ==================================================
+     * AUTH VIEWMODEL
+     * ==================================================
+     */
+
+    val authViewModel: AuthViewModel =
+        hiltViewModel()
+
 
     /*
      * ==================================================
@@ -213,7 +229,10 @@ fun AppNavHost(
                                         item.icon,
 
                                     contentDescription =
-                                        item.label
+                                        item.label,
+
+                                    tint =
+                                        Color.Unspecified
                                 )
                             },
 
@@ -252,13 +271,6 @@ fun AppNavHost(
 
     ) { paddingValues ->
 
-
-        /*
-         * ==================================================
-         * NAVIGATION HOST
-         * ==================================================
-         */
-
         NavHost(
 
             navController =
@@ -274,10 +286,113 @@ fun AppNavHost(
 
         ) {
 
+            /*
+             * ==================================================
+             * LOGIN
+             * ==================================================
+             *
+             * Authentication success is intentionally not
+             * handled by navigation here.
+             *
+             * MainActivity observes Firebase authentication
+             * state through StartupViewModel and recreates
+             * the appropriate navigation flow.
+             */
+
+            composable(
+                route =
+                    Screen.Login.route
+            ) {
+
+                LoginScreen(
+
+                    onLoginSuccess = {
+                        /*
+                         * No direct navigation.
+                         *
+                         * StartupViewModel observes the Firebase
+                         * authentication state and determines the
+                         * correct startup destination after cloud
+                         * synchronization.
+                         */
+                    },
+
+                    onRegisterClick = {
+
+                        navController.navigate(
+                            Screen.Register.route
+                        ) {
+
+                            launchSingleTop =
+                                true
+                        }
+                    }
+                )
+            }
+
 
             /*
              * ==================================================
-             * ASSESSMENT
+             * REGISTER
+             * ==================================================
+             *
+             * Registration success is intentionally not
+             * navigated directly to assessment.
+             *
+             * MainActivity observes the newly authenticated
+             * Firebase user through StartupViewModel.
+             *
+             * A new user will therefore reach the assessment
+             * onboarding after synchronization.
+             */
+
+            composable(
+                route =
+                    Screen.Register.route
+            ) {
+
+                RegisterScreen(
+
+                    onBackClick = {
+
+                        navController.popBackStack()
+                    },
+
+                    onRegistrationSuccess = {
+                        /*
+                         * No direct navigation.
+                         *
+                         * StartupViewModel observes the Firebase
+                         * authentication state and determines the
+                         * correct startup destination.
+                         */
+                    },
+
+                    onLoginClick = {
+
+                        navController.navigate(
+                            Screen.Login.route
+                        ) {
+
+                            popUpTo(
+                                Screen.Register.route
+                            ) {
+
+                                inclusive =
+                                    true
+                            }
+
+                            launchSingleTop =
+                                true
+                        }
+                    }
+                )
+            }
+
+
+            /*
+             * ==================================================
+             * ASSESSMENT ONBOARDING
              * ==================================================
              */
 
@@ -298,6 +413,12 @@ fun AppNavHost(
             }
 
 
+            /*
+             * ==================================================
+             * ASSESSMENT QUESTIONNAIRE
+             * ==================================================
+             */
+
             composable(
                 route =
                     Screen.AssessmentQuestionnaire.route
@@ -315,6 +436,12 @@ fun AppNavHost(
                 )
             }
 
+
+            /*
+             * ==================================================
+             * ASSESSMENT RESULTS
+             * ==================================================
+             */
 
             composable(
                 route =
@@ -356,7 +483,40 @@ fun AppNavHost(
                     Screen.Insights.route
             ) {
 
-                MoodInsightsScreen()
+                MoodInsightsScreen(
+
+                    onLogout = {
+
+                        /*
+                         * Sign out from Firebase first.
+                         *
+                         * Room data is NOT deleted.
+                         * It remains associated with the
+                         * user's Firebase UID.
+                         */
+
+                        authViewModel.signOut()
+
+                        /*
+                         * Return to Login and clear the
+                         * authenticated navigation stack.
+                         */
+
+                        navController.navigate(
+                            Screen.Login.route
+                        ) {
+
+                            popUpTo(0) {
+
+                                inclusive =
+                                    true
+                            }
+
+                            launchSingleTop =
+                                true
+                        }
+                    }
+                )
             }
 
 
@@ -377,12 +537,6 @@ fun AppNavHost(
 
                         when (activity.id) {
 
-                            /*
-                             * ----------------------------------
-                             * ACTIVITY SCHEDULING
-                             * ----------------------------------
-                             */
-
                             "activity_scheduling" -> {
 
                                 navController.navigate(
@@ -393,13 +547,6 @@ fun AppNavHost(
                                         true
                                 }
                             }
-
-
-                            /*
-                             * ----------------------------------
-                             * FIVE-MINUTE STARTER
-                             * ----------------------------------
-                             */
 
                             "five_minute_starter" -> {
 
@@ -412,17 +559,43 @@ fun AppNavHost(
                                 }
                             }
 
-
-                            /*
-                             * ----------------------------------
-                             * MINDFUL MEDITATION
-                             * ----------------------------------
-                             */
-
                             "mindful_meditation" -> {
 
                                 navController.navigate(
                                     Screen.MindfulMeditation.route
+                                ) {
+
+                                    launchSingleTop =
+                                        true
+                                }
+                            }
+
+                            "grounding_54321" -> {
+
+                                navController.navigate(
+                                    Screen.Grounding54321.route
+                                ) {
+
+                                    launchSingleTop =
+                                        true
+                                }
+                            }
+
+                            "abc_model" -> {
+
+                                navController.navigate(
+                                    Screen.ABCModel.route
+                                ) {
+
+                                    launchSingleTop =
+                                        true
+                                }
+                            }
+
+                            "self_compassion_reflection" -> {
+
+                                navController.navigate(
+                                    Screen.SelfCompassionReflection.route
                                 ) {
 
                                     launchSingleTop =
@@ -462,6 +635,86 @@ fun AppNavHost(
                     onBackClick = {
 
                         navController.popBackStack()
+                    }
+                )
+            }
+
+
+            /*
+             * ==================================================
+             * ABC MODEL
+             * ==================================================
+             */
+
+            composable(
+                route =
+                    Screen.ABCModel.route
+            ) {
+
+                ABCModelScreen(
+
+                    onBackClick = {
+
+                        navController.popBackStack()
+                    },
+
+                    onComplete = {
+
+                        navController.navigate(
+                            Screen.CBTHome.route
+                        ) {
+
+                            popUpTo(
+                                Screen.ABCModel.route
+                            ) {
+
+                                inclusive =
+                                    true
+                            }
+
+                            launchSingleTop =
+                                true
+                        }
+                    }
+                )
+            }
+
+
+            /*
+             * ==================================================
+             * SELF-COMPASSION REFLECTION
+             * ==================================================
+             */
+
+            composable(
+                route =
+                    Screen.SelfCompassionReflection.route
+            ) {
+
+                SelfCompassionReflectionScreen(
+
+                    onBackClick = {
+
+                        navController.popBackStack()
+                    },
+
+                    onCompleted = {
+
+                        navController.navigate(
+                            Screen.CBTHome.route
+                        ) {
+
+                            popUpTo(
+                                Screen.SelfCompassionReflection.route
+                            ) {
+
+                                inclusive =
+                                    true
+                            }
+
+                            launchSingleTop =
+                                true
+                        }
                     }
                 )
             }
@@ -527,7 +780,7 @@ fun AppNavHost(
 
             /*
              * ==================================================
-             * ACTIVITY SCHEDULING — EDIT EXISTING PLAN
+             * ACTIVITY SCHEDULING — EDIT
              * ==================================================
              */
 
@@ -823,7 +1076,6 @@ fun AppNavHost(
                         ?.getString("firstStep")
                         .orEmpty()
 
-
                 FiveMinuteStarterCompletionScreen(
 
                     task =
@@ -863,15 +1115,6 @@ fun AppNavHost(
              * ==================================================
              * MINDFUL MEDITATION
              * ==================================================
-             *
-             * MindfulMeditationScreen requires:
-             *
-             * onBackClick
-             * onComplete
-             *
-             * The onComplete callback is handled here,
-             * not inside Screen.kt.
-             * ==================================================
              */
 
             composable(
@@ -894,6 +1137,46 @@ fun AppNavHost(
 
                             popUpTo(
                                 Screen.MindfulMeditation.route
+                            ) {
+
+                                inclusive =
+                                    true
+                            }
+
+                            launchSingleTop =
+                                true
+                        }
+                    }
+                )
+            }
+
+
+            /*
+             * ==================================================
+             * 5-4-3-2-1 GROUNDING
+             * ==================================================
+             */
+
+            composable(
+                route =
+                    Screen.Grounding54321.route
+            ) {
+
+                Grounding54321Screen(
+
+                    onBackClick = {
+
+                        navController.popBackStack()
+                    },
+
+                    onComplete = {
+
+                        navController.navigate(
+                            Screen.CBTHome.route
+                        ) {
+
+                            popUpTo(
+                                Screen.Grounding54321.route
                             ) {
 
                                 inclusive =

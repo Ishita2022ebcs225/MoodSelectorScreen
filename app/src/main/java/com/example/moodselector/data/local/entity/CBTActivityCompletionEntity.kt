@@ -11,6 +11,11 @@ data class CBTActivityCompletionEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
 
+    /*
+     * Firebase UID of the user who owns this CBT completion.
+     */
+    val userId: String,
+
     val activityId: String,
 
     val activityTitle: String,
@@ -29,3 +34,4 @@ data class CBTActivityCompletionEntity(
 
     val completedAt: Long
 )
+

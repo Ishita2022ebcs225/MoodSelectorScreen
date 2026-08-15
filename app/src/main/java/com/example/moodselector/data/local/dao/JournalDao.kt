@@ -21,20 +21,25 @@ interface JournalDao {
         journal: JournalEntity
     )
 
-    @Query("DELETE FROM journal_entries")
-    suspend fun deleteAllJournals()
-
     @Query(
-        "SELECT * FROM journal_entries ORDER BY timestamp DESC"
+        "DELETE FROM journal_entries WHERE userId = :userId"
     )
-    fun getAllJournals():
-            Flow<List<JournalEntity>>
+    suspend fun deleteAllJournals(
+        userId: String
+    )
 
-    // ✅ MISSING FUNCTION
     @Query(
-        "SELECT * FROM journal_entries WHERE id = :id"
+        "SELECT * FROM journal_entries WHERE userId = :userId ORDER BY timestamp DESC"
+    )
+    fun getAllJournals(
+        userId: String
+    ): Flow<List<JournalEntity>>
+
+    @Query(
+        "SELECT * FROM journal_entries WHERE id = :id AND userId = :userId"
     )
     suspend fun getJournalById(
-        id: Int
+        id: Int,
+        userId: String
     ): JournalEntity?
 }

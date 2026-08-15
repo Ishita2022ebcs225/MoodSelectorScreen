@@ -35,10 +35,13 @@ interface ScheduledCBTActivityDao {
         """
         SELECT *
         FROM scheduled_cbt_activities
+        WHERE userId = :userId
         ORDER BY createdAt DESC
         """
     )
-    fun getAllScheduledActivities():
+    fun getAllScheduledActivities(
+        userId: String
+    ):
             Flow<List<ScheduledCBTActivityEntity>>
 
 
@@ -53,11 +56,13 @@ interface ScheduledCBTActivityDao {
         SELECT *
         FROM scheduled_cbt_activities
         WHERE id = :id
+        AND userId = :userId
         LIMIT 1
         """
     )
     suspend fun getScheduledActivityById(
-        id: Int
+        id: Int,
+        userId: String
     ): ScheduledCBTActivityEntity?
 
 
@@ -71,9 +76,12 @@ interface ScheduledCBTActivityDao {
         """
         SELECT COUNT(*)
         FROM scheduled_cbt_activities
+        WHERE userId = :userId
         """
     )
-    fun getScheduledActivityCount(): Flow<Int>
+    fun getScheduledActivityCount(
+        userId: String
+    ): Flow<Int>
 
 
     /*
@@ -81,17 +89,20 @@ interface ScheduledCBTActivityDao {
      * DELETE BY DATABASE ID
      * --------------------------------------------------
      *
-     * Deletes ONLY one scheduled instance.
+     * Deletes ONLY one scheduled instance
+     * belonging to this user.
      */
 
     @Query(
         """
         DELETE FROM scheduled_cbt_activities
         WHERE id = :id
+        AND userId = :userId
         """
     )
     suspend fun deleteScheduledActivityById(
-        id: Int
+        id: Int,
+        userId: String
     )
 
 
@@ -100,7 +111,8 @@ interface ScheduledCBTActivityDao {
      * DELETE BY CBT ACTIVITY ID
      * --------------------------------------------------
      *
-     * Deletes ALL schedules for this activityId.
+     * Deletes ALL schedules for this activityId
+     * belonging to this user.
      *
      * This is intentionally different from deleting
      * by database ID.
@@ -110,10 +122,12 @@ interface ScheduledCBTActivityDao {
         """
         DELETE FROM scheduled_cbt_activities
         WHERE activityId = :activityId
+        AND userId = :userId
         """
     )
     suspend fun deleteScheduledActivityByActivityId(
-        activityId: String
+        activityId: String,
+        userId: String
     )
 
 
@@ -138,7 +152,10 @@ interface ScheduledCBTActivityDao {
     @Query(
         """
         DELETE FROM scheduled_cbt_activities
+        WHERE userId = :userId
         """
     )
-    suspend fun deleteAllScheduledActivities()
+    suspend fun deleteAllScheduledActivities(
+        userId: String
+    )
 }

@@ -3,6 +3,8 @@ package com.example.moodselector.presentations.cbt.exercises
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.moodselector.data.local.entity.ScheduledCBTActivityEntity
+import com.example.moodselector.domain.repository.AuthRepository
+import com.example.moodselector.domain.repository.CloudBackupRepository
 import com.example.moodselector.domain.repository.ScheduledCBTActivityRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
@@ -11,8 +13,20 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ScheduledCBTActivityViewModel @Inject constructor(
-    private val repository: ScheduledCBTActivityRepository
+    private val repository: ScheduledCBTActivityRepository,
+    private val authRepository: AuthRepository,
+    private val cloudBackupRepository: CloudBackupRepository
 ) : ViewModel() {
+
+    /*
+     * --------------------------------------------------
+     * CURRENT USER ID
+     * --------------------------------------------------
+     */
+
+    private val userId: String?
+        get() = authRepository.currentUser?.uid
+
 
     /*
      * --------------------------------------------------
@@ -22,7 +36,9 @@ class ScheduledCBTActivityViewModel @Inject constructor(
 
     val scheduledActivities:
             Flow<List<ScheduledCBTActivityEntity>> =
-        repository.getAllScheduledActivities()
+        repository.getAllScheduledActivities(
+            userId = userId ?: ""
+        )
 
 
     /*
@@ -33,7 +49,9 @@ class ScheduledCBTActivityViewModel @Inject constructor(
 
     val scheduledActivityCount:
             Flow<Int> =
-        repository.getScheduledActivityCount()
+        repository.getScheduledActivityCount(
+            userId = userId ?: ""
+        )
 
 
     /*
@@ -48,8 +66,12 @@ class ScheduledCBTActivityViewModel @Inject constructor(
         id: Int
     ): ScheduledCBTActivityEntity? {
 
+        val currentUserId =
+            userId ?: return null
+
         return repository.getScheduledActivityById(
-            id
+            id = id,
+            userId = currentUserId
         )
     }
 
@@ -78,6 +100,9 @@ class ScheduledCBTActivityViewModel @Inject constructor(
         onSaved: () -> Unit = {}
     ) {
 
+        val currentUserId =
+            userId ?: return
+
         viewModelScope.launch {
 
             /*
@@ -89,7 +114,8 @@ class ScheduledCBTActivityViewModel @Inject constructor(
                 if (id != 0) {
 
                     repository.getScheduledActivityById(
-                        id
+                        id = id,
+                        userId = currentUserId
                     )
 
                 } else {
@@ -101,6 +127,9 @@ class ScheduledCBTActivityViewModel @Inject constructor(
                 ScheduledCBTActivityEntity(
 
                     id = id,
+
+                    userId =
+                        currentUserId,
 
                     activityId =
                         activityId,
@@ -133,6 +162,11 @@ class ScheduledCBTActivityViewModel @Inject constructor(
                 activity
             )
 
+            cloudBackupRepository
+                .backupUserData(
+                    userId = currentUserId
+                )
+
 
             onSaved()
         }
@@ -160,11 +194,19 @@ class ScheduledCBTActivityViewModel @Inject constructor(
         onCompleted: () -> Unit = {}
     ) {
 
+        val currentUserId =
+            userId ?: return
+
         viewModelScope.launch {
 
             repository.completeScheduledActivity(
                 activity
             )
+
+            cloudBackupRepository
+                .backupUserData(
+                    userId = currentUserId
+                )
 
             onCompleted()
         }
@@ -181,11 +223,19 @@ class ScheduledCBTActivityViewModel @Inject constructor(
         activity: ScheduledCBTActivityEntity
     ) {
 
+        val currentUserId =
+            userId ?: return
+
         viewModelScope.launch {
 
             repository.deleteScheduledActivity(
                 activity
             )
+
+            cloudBackupRepository
+                .backupUserData(
+                    userId = currentUserId
+                )
         }
     }
 
@@ -200,11 +250,20 @@ class ScheduledCBTActivityViewModel @Inject constructor(
         id: Int
     ) {
 
+        val currentUserId =
+            userId ?: return
+
         viewModelScope.launch {
 
             repository.deleteScheduledActivityById(
-                id
+                id = id,
+                userId = currentUserId
             )
+
+            cloudBackupRepository
+                .backupUserData(
+                    userId = currentUserId
+                )
         }
     }
 
@@ -219,11 +278,20 @@ class ScheduledCBTActivityViewModel @Inject constructor(
         activityId: String
     ) {
 
+        val currentUserId =
+            userId ?: return
+
         viewModelScope.launch {
 
             repository.deleteScheduledActivityByActivityId(
-                activityId
+                activityId = activityId,
+                userId = currentUserId
             )
+
+            cloudBackupRepository
+                .backupUserData(
+                    userId = currentUserId
+                )
         }
     }
 
@@ -236,9 +304,20 @@ class ScheduledCBTActivityViewModel @Inject constructor(
 
     fun deleteAllScheduledActivities() {
 
+        val currentUserId =
+            userId ?: return
+
         viewModelScope.launch {
 
-            repository.deleteAllScheduledActivities()
+            repository.deleteAllScheduledActivities(
+                currentUserId
+            )
+
+            cloudBackupRepository
+                .backupUserData(
+                    userId = currentUserId
+                )
         }
     }
 }
+

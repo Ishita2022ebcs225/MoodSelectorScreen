@@ -4,20 +4,26 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.example.moodselector.data.local.converter.AssessmentSeverityConverter
+import com.example.moodselector.data.local.dao.ABCModelCompletionDao
 import com.example.moodselector.data.local.dao.AssessmentResultDao
 import com.example.moodselector.data.local.dao.CBTActivityCompletionDao
 import com.example.moodselector.data.local.dao.FiveMinuteStarterCompletionDao
+import com.example.moodselector.data.local.dao.Grounding54321CompletionDao
 import com.example.moodselector.data.local.dao.JournalDao
 import com.example.moodselector.data.local.dao.MindfulMeditationCompletionDao
 import com.example.moodselector.data.local.dao.MoodDao
 import com.example.moodselector.data.local.dao.ScheduledCBTActivityDao
+import com.example.moodselector.data.local.dao.SelfCompassionReflectionCompletionDao
+import com.example.moodselector.data.local.entity.ABCModelCompletionEntity
 import com.example.moodselector.data.local.entity.AssessmentResultEntity
 import com.example.moodselector.data.local.entity.CBTActivityCompletionEntity
 import com.example.moodselector.data.local.entity.FiveMinuteStarterCompletionEntity
+import com.example.moodselector.data.local.entity.Grounding54321CompletionEntity
 import com.example.moodselector.data.local.entity.JournalEntity
 import com.example.moodselector.data.local.entity.MindfulMeditationCompletionEntity
 import com.example.moodselector.data.local.entity.MoodEntry
 import com.example.moodselector.data.local.entity.ScheduledCBTActivityEntity
+import com.example.moodselector.data.local.entity.SelfCompassionReflectionCompletionEntity
 
 @Database(
     entities = [
@@ -27,9 +33,12 @@ import com.example.moodselector.data.local.entity.ScheduledCBTActivityEntity
         CBTActivityCompletionEntity::class,
         ScheduledCBTActivityEntity::class,
         FiveMinuteStarterCompletionEntity::class,
-        MindfulMeditationCompletionEntity::class
+        MindfulMeditationCompletionEntity::class,
+        Grounding54321CompletionEntity::class,
+        ABCModelCompletionEntity::class,
+        SelfCompassionReflectionCompletionEntity::class
     ],
-    version = 8,
+    version = 11,
     exportSchema = false
 )
 @TypeConverters(
@@ -45,6 +54,7 @@ abstract class AppDatabase : RoomDatabase() {
 
     abstract fun moodDao(): MoodDao
 
+
     /*
      * --------------------------------------------------
      * JOURNAL
@@ -52,6 +62,7 @@ abstract class AppDatabase : RoomDatabase() {
      */
 
     abstract fun journalDao(): JournalDao
+
 
     /*
      * --------------------------------------------------
@@ -62,6 +73,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun assessmentResultDao():
             AssessmentResultDao
 
+
     /*
      * --------------------------------------------------
      * GENERAL CBT COMPLETIONS
@@ -70,6 +82,7 @@ abstract class AppDatabase : RoomDatabase() {
 
     abstract fun cbtActivityCompletionDao():
             CBTActivityCompletionDao
+
 
     /*
      * --------------------------------------------------
@@ -80,6 +93,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun scheduledCBTActivityDao():
             ScheduledCBTActivityDao
 
+
     /*
      * --------------------------------------------------
      * FIVE-MINUTE STARTER
@@ -89,6 +103,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun fiveMinuteStarterCompletionDao():
             FiveMinuteStarterCompletionDao
 
+
     /*
      * --------------------------------------------------
      * MINDFUL MEDITATION
@@ -97,4 +112,34 @@ abstract class AppDatabase : RoomDatabase() {
 
     abstract fun mindfulMeditationCompletionDao():
             MindfulMeditationCompletionDao
+
+
+    /*
+     * --------------------------------------------------
+     * 5-4-3-2-1 GROUNDING
+     * --------------------------------------------------
+     */
+
+    abstract fun grounding54321CompletionDao():
+            Grounding54321CompletionDao
+
+
+    /*
+     * --------------------------------------------------
+     * ABC MODEL
+     * --------------------------------------------------
+     */
+
+    abstract fun abcModelCompletionDao():
+            ABCModelCompletionDao
+
+
+    /*
+     * --------------------------------------------------
+     * SELF-COMPASSION REFLECTION
+     * --------------------------------------------------
+     */
+
+    abstract fun selfCompassionReflectionCompletionDao():
+            SelfCompassionReflectionCompletionDao
 }

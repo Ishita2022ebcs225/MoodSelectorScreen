@@ -9,7 +9,11 @@ interface AssessmentRepository {
         result: AssessmentResultEntity
     )
 
-    fun getLatestResult(): Flow<AssessmentResultEntity?>
+    fun getLatestResult(
+        userId: String
+    ): Flow<AssessmentResultEntity?>
 
-    fun getAllResults(): Flow<List<AssessmentResultEntity>>
+    fun getAllResults(
+        userId: String
+    ): Flow<List<AssessmentResultEntity>>
 }

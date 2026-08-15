@@ -11,6 +11,11 @@ data class ScheduledCBTActivityEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
 
+    /*
+     * Firebase UID of the user who owns this scheduled activity.
+     */
+    val userId: String,
+
     val activityId: String,
 
     val activityTitle: String,
@@ -27,3 +32,4 @@ data class ScheduledCBTActivityEntity(
 
     val createdAt: Long = System.currentTimeMillis()
 )
+

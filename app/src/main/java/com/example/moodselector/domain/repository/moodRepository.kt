@@ -5,9 +5,15 @@ import kotlinx.coroutines.flow.Flow
 
 interface MoodRepository {
 
-    suspend fun insertMood(mood: MoodEntry)
+    suspend fun insertMood(
+        mood: MoodEntry
+    )
 
-    suspend fun deleteMood(mood: MoodEntry)
+    suspend fun deleteMood(
+        mood: MoodEntry
+    )
 
-    fun getAllMoods(): Flow<List<MoodEntry>>
+    fun getAllMoods(
+        userId: String
+    ): Flow<List<MoodEntry>>
 }

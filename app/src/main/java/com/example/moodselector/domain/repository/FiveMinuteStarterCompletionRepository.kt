@@ -22,7 +22,9 @@ interface FiveMinuteStarterCompletionRepository {
      * --------------------------------------------------
      */
 
-    fun getAllCompletions():
+    fun getAllCompletions(
+        userId: String
+    ):
             Flow<List<FiveMinuteStarterCompletionEntity>>
 
 
@@ -32,7 +34,9 @@ interface FiveMinuteStarterCompletionRepository {
      * --------------------------------------------------
      */
 
-    fun getCompletionCount():
+    fun getCompletionCount(
+        userId: String
+    ):
             Flow<Int>
 
 
@@ -53,5 +57,7 @@ interface FiveMinuteStarterCompletionRepository {
      * --------------------------------------------------
      */
 
-    suspend fun deleteAllCompletions()
+    suspend fun deleteAllCompletions(
+        userId: String
+    )
 }

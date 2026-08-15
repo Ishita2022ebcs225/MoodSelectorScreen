@@ -16,11 +16,15 @@ class AssessmentRepositoryImpl @Inject constructor(
         dao.insertResult(result)
     }
 
-    override fun getLatestResult(): Flow<AssessmentResultEntity?> {
-        return dao.getLatestResult()
+    override fun getLatestResult(
+        userId: String
+    ): Flow<AssessmentResultEntity?> {
+        return dao.getLatestResult(userId)
     }
 
-    override fun getAllResults(): Flow<List<AssessmentResultEntity>> {
-        return dao.getAllResults()
+    override fun getAllResults(
+        userId: String
+    ): Flow<List<AssessmentResultEntity>> {
+        return dao.getAllResults(userId)
     }
 }

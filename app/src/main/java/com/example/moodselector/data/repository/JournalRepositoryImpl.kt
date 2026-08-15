@@ -18,16 +18,22 @@ class JournalRepositoryImpl @Inject constructor(
         dao.deleteJournal(journal)
     }
 
-    override fun getAllJournals(): Flow<List<JournalEntity>> {
-        return dao.getAllJournals()
+    override fun getAllJournals(
+        userId: String
+    ): Flow<List<JournalEntity>> {
+        return dao.getAllJournals(userId)
     }
 
-    override suspend fun getJournalById(id: Int): JournalEntity? {
-        return dao.getJournalById(id)
+    override suspend fun getJournalById(
+        id: Int,
+        userId: String
+    ): JournalEntity? {
+        return dao.getJournalById(id, userId)
     }
 
-    // ✅ THIS FIXES YOUR ERROR
-    override suspend fun deleteAllJournals() {
-        dao.deleteAllJournals()
+    override suspend fun deleteAllJournals(
+        userId: String
+    ) {
+        dao.deleteAllJournals(userId)
     }
 }

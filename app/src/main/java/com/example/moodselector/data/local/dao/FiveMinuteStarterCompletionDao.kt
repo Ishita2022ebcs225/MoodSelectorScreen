@@ -37,11 +37,13 @@ interface FiveMinuteStarterCompletionDao {
         """
         SELECT *
         FROM five_minute_starter_completions
+        WHERE userId = :userId
         ORDER BY completedAt DESC
         """
     )
-    fun getAllCompletions():
-            Flow<List<FiveMinuteStarterCompletionEntity>>
+    fun getAllCompletions(
+        userId: String
+    ): Flow<List<FiveMinuteStarterCompletionEntity>>
 
 
     /*
@@ -54,10 +56,12 @@ interface FiveMinuteStarterCompletionDao {
         """
         SELECT COUNT(*)
         FROM five_minute_starter_completions
+        WHERE userId = :userId
         """
     )
-    fun getCompletionCount():
-            Flow<Int>
+    fun getCompletionCount(
+        userId: String
+    ): Flow<Int>
 
 
     /*
@@ -81,7 +85,10 @@ interface FiveMinuteStarterCompletionDao {
     @Query(
         """
         DELETE FROM five_minute_starter_completions
+        WHERE userId = :userId
         """
     )
-    suspend fun deleteAllCompletions()
+    suspend fun deleteAllCompletions(
+        userId: String
+    )
 }

@@ -10,6 +10,11 @@ data class AssessmentResultEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
 
+    /*
+     * Firebase UID of the user who owns this assessment result.
+     */
+    val userId: String,
+
     val timestamp: Long,
 
     val phq9Score: Int,
@@ -22,3 +27,4 @@ data class AssessmentResultEntity(
 
     val diagnosisSummary: String
 )
+

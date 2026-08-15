@@ -26,23 +26,29 @@ class CBTProgressRepositoryImpl @Inject constructor(
         )
     }
 
-    override fun getAllCompletions():
+    override fun getAllCompletions(
+        userId: String
+    ):
             Flow<List<CBTActivityCompletionEntity>> {
 
         return cbtActivityCompletionDao
-            .getAllCompletions()
+            .getAllCompletions(userId)
     }
 
-    override fun getCompletionCount():
+    override fun getCompletionCount(
+        userId: String
+    ):
             Flow<Int> {
 
         return cbtActivityCompletionDao
-            .getCompletionCount()
+            .getCompletionCount(userId)
     }
 
-    override suspend fun deleteAllCompletions() {
+    override suspend fun deleteAllCompletions(
+        userId: String
+    ) {
 
         cbtActivityCompletionDao
-            .deleteAllCompletions()
+            .deleteAllCompletions(userId)
     }
 }

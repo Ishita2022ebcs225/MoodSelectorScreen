@@ -2,13 +2,16 @@ package com.example.moodselector.di
 
 import android.content.Context
 import androidx.room.Room
+import com.example.moodselector.data.local.dao.ABCModelCompletionDao
 import com.example.moodselector.data.local.dao.AssessmentResultDao
 import com.example.moodselector.data.local.dao.CBTActivityCompletionDao
 import com.example.moodselector.data.local.dao.FiveMinuteStarterCompletionDao
+import com.example.moodselector.data.local.dao.Grounding54321CompletionDao
 import com.example.moodselector.data.local.dao.JournalDao
 import com.example.moodselector.data.local.dao.MindfulMeditationCompletionDao
 import com.example.moodselector.data.local.dao.MoodDao
 import com.example.moodselector.data.local.dao.ScheduledCBTActivityDao
+import com.example.moodselector.data.local.dao.SelfCompassionReflectionCompletionDao
 import com.example.moodselector.data.local.database.AppDatabase
 import dagger.Module
 import dagger.Provides
@@ -42,6 +45,7 @@ object DatabaseModule {
             .build()
     }
 
+
     /*
      * --------------------------------------------------
      * MOOD DAO
@@ -55,6 +59,7 @@ object DatabaseModule {
 
         return database.moodDao()
     }
+
 
     /*
      * --------------------------------------------------
@@ -70,6 +75,7 @@ object DatabaseModule {
         return database.journalDao()
     }
 
+
     /*
      * --------------------------------------------------
      * ASSESSMENT RESULT DAO
@@ -84,12 +90,11 @@ object DatabaseModule {
         return database.assessmentResultDao()
     }
 
+
     /*
      * --------------------------------------------------
      * CBT ACTIVITY COMPLETION DAO
      * --------------------------------------------------
-     *
-     * Existing CBT completion infrastructure.
      */
 
     @Provides
@@ -100,12 +105,11 @@ object DatabaseModule {
         return database.cbtActivityCompletionDao()
     }
 
+
     /*
      * --------------------------------------------------
      * SCHEDULED CBT ACTIVITY DAO
      * --------------------------------------------------
-     *
-     * Used specifically by Activity Scheduling.
      */
 
     @Provides
@@ -116,13 +120,11 @@ object DatabaseModule {
         return database.scheduledCBTActivityDao()
     }
 
+
     /*
      * --------------------------------------------------
      * FIVE-MINUTE STARTER COMPLETION DAO
      * --------------------------------------------------
-     *
-     * Used specifically by the Five-Minute Starter
-     * exercise.
      */
 
     @Provides
@@ -133,13 +135,11 @@ object DatabaseModule {
         return database.fiveMinuteStarterCompletionDao()
     }
 
+
     /*
      * --------------------------------------------------
      * MINDFUL MEDITATION COMPLETION DAO
      * --------------------------------------------------
-     *
-     * Used specifically by the Mindful Meditation
-     * exercise.
      */
 
     @Provides
@@ -148,5 +148,50 @@ object DatabaseModule {
     ): MindfulMeditationCompletionDao {
 
         return database.mindfulMeditationCompletionDao()
+    }
+
+
+    /*
+     * --------------------------------------------------
+     * 5-4-3-2-1 GROUNDING
+     * --------------------------------------------------
+     */
+
+    @Provides
+    fun provideGrounding54321CompletionDao(
+        database: AppDatabase
+    ): Grounding54321CompletionDao {
+
+        return database.grounding54321CompletionDao()
+    }
+
+
+    /*
+     * --------------------------------------------------
+     * ABC MODEL
+     * --------------------------------------------------
+     */
+
+    @Provides
+    fun provideABCModelCompletionDao(
+        database: AppDatabase
+    ): ABCModelCompletionDao {
+
+        return database.abcModelCompletionDao()
+    }
+
+
+    /*
+     * --------------------------------------------------
+     * SELF-COMPASSION REFLECTION
+     * --------------------------------------------------
+     */
+
+    @Provides
+    fun provideSelfCompassionReflectionCompletionDao(
+        database: AppDatabase
+    ): SelfCompassionReflectionCompletionDao {
+
+        return database.selfCompassionReflectionCompletionDao()
     }
 }

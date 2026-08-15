@@ -22,9 +22,13 @@ import dagger.hilt.android.AndroidEntryPoint
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
-    override fun onCreate(savedInstanceState: Bundle?) {
+    override fun onCreate(
+        savedInstanceState: Bundle?
+    ) {
 
-        super.onCreate(savedInstanceState)
+        super.onCreate(
+            savedInstanceState
+        )
 
         enableEdgeToEdge()
 
@@ -32,25 +36,85 @@ class MainActivity : ComponentActivity() {
 
             MoodselectorTheme {
 
-                val startupViewModel: StartupViewModel =
+                val startupViewModel:
+                        StartupViewModel =
                     hiltViewModel()
+
+
+                /*
+                 * --------------------------------------------------
+                 * AUTHENTICATION STATE
+                 * --------------------------------------------------
+                 */
+
+                val currentUser by
+                startupViewModel
+                    .currentUser
+                    .collectAsStateWithLifecycle()
+
+
+                /*
+                 * --------------------------------------------------
+                 * ASSESSMENT STATE
+                 * --------------------------------------------------
+                 */
 
                 val hasCompletedAssessment by
                 startupViewModel
                     .hasCompletedAssessment
                     .collectAsStateWithLifecycle()
 
-                when (hasCompletedAssessment) {
 
-                    null -> {
+                when {
+
+                    /*
+                     * ----------------------------------------------
+                     * USER NOT SIGNED IN
+                     * ----------------------------------------------
+                     */
+
+                    currentUser == null -> {
+
+                        val navController =
+                            rememberNavController()
+
+                        AppNavHost(
+
+                            navController =
+                                navController,
+
+                            startDestination =
+                                Screen.Login.route
+                        )
+                    }
+
+
+                    /*
+                     * ----------------------------------------------
+                     * ASSESSMENT STATE LOADING
+                     * ----------------------------------------------
+                     */
+
+                    hasCompletedAssessment == null -> {
 
                         Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
+                            modifier =
+                                Modifier.fillMaxSize(),
+
+                            contentAlignment =
+                                Alignment.Center
                         ) {
+
                             CircularProgressIndicator()
                         }
                     }
+
+
+                    /*
+                     * ----------------------------------------------
+                     * SIGNED-IN USER
+                     * ----------------------------------------------
+                     */
 
                     else -> {
 
@@ -58,15 +122,35 @@ class MainActivity : ComponentActivity() {
                             rememberNavController()
 
                         val startDestination =
-                            if (hasCompletedAssessment == true) {
+                            if (
+                                hasCompletedAssessment == true
+                            ) {
+
+                                /*
+                                 * Existing user who already
+                                 * completed the assessment.
+                                 */
+
                                 Screen.Insights.route
+
                             } else {
+
+                                /*
+                                 * New user who has not yet
+                                 * completed the assessment.
+                                 */
+
                                 Screen.AssessmentOnboarding.route
                             }
 
+
                         AppNavHost(
-                            navController = navController,
-                            startDestination = startDestination
+
+                            navController =
+                                navController,
+
+                            startDestination =
+                                startDestination
                         )
                     }
                 }

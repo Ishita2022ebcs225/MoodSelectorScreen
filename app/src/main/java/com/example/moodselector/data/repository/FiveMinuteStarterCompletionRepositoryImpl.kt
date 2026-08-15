@@ -32,10 +32,14 @@ class FiveMinuteStarterCompletionRepositoryImpl @Inject constructor(
      * --------------------------------------------------
      */
 
-    override fun getAllCompletions():
+    override fun getAllCompletions(
+        userId: String
+    ):
             Flow<List<FiveMinuteStarterCompletionEntity>> {
 
-        return dao.getAllCompletions()
+        return dao.getAllCompletions(
+            userId
+        )
     }
 
 
@@ -45,10 +49,14 @@ class FiveMinuteStarterCompletionRepositoryImpl @Inject constructor(
      * --------------------------------------------------
      */
 
-    override fun getCompletionCount():
+    override fun getCompletionCount(
+        userId: String
+    ):
             Flow<Int> {
 
-        return dao.getCompletionCount()
+        return dao.getCompletionCount(
+            userId
+        )
     }
 
 
@@ -74,8 +82,12 @@ class FiveMinuteStarterCompletionRepositoryImpl @Inject constructor(
      * --------------------------------------------------
      */
 
-    override suspend fun deleteAllCompletions() {
+    override suspend fun deleteAllCompletions(
+        userId: String
+    ) {
 
-        dao.deleteAllCompletions()
+        dao.deleteAllCompletions(
+            userId
+        )
     }
 }

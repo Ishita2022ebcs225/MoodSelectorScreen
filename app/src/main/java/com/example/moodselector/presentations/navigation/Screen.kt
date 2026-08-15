@@ -6,6 +6,21 @@ sealed class Screen(
 
     /*
      * ----------------------------------------------------------
+     * Authentication
+     * ----------------------------------------------------------
+     */
+
+    data object Login : Screen(
+        "login"
+    )
+
+    data object Register : Screen(
+        "register"
+    )
+
+
+    /*
+     * ----------------------------------------------------------
      * Main / Bottom Navigation
      * ----------------------------------------------------------
      */
@@ -140,15 +155,6 @@ sealed class Screen(
      * ----------------------------------------------------------
      * Five-Minute Starter Completion
      * ----------------------------------------------------------
-     *
-     * The task and firstStep are passed through the
-     * navigation route so the completion screen knows
-     * exactly what the user worked on.
-     *
-     * Uri encoding is used so spaces and special
-     * characters inside the user's text do not break
-     * the navigation route.
-     * ----------------------------------------------------------
      */
 
     data object FiveMinuteStarterCompletion : Screen(
@@ -171,17 +177,43 @@ sealed class Screen(
      * ----------------------------------------------------------
      * Mindful Meditation
      * ----------------------------------------------------------
-     *
-     * This is only the navigation route.
-     *
-     * onBackClick and onComplete are callbacks supplied
-     * by AppNavHost to MindfulMeditationScreen.
-     * They do NOT belong in this route.
-     * ----------------------------------------------------------
      */
 
     data object MindfulMeditation : Screen(
         "mindful_meditation"
+    )
+
+
+    /*
+     * ----------------------------------------------------------
+     * 5-4-3-2-1 Grounding
+     * ----------------------------------------------------------
+     */
+
+    data object Grounding54321 : Screen(
+        "grounding_54321"
+    )
+
+
+    /*
+     * ----------------------------------------------------------
+     * ABC Model
+     * ----------------------------------------------------------
+     */
+
+    data object ABCModel : Screen(
+        "abc_model"
+    )
+
+
+    /*
+     * ----------------------------------------------------------
+     * Self-Compassion Reflection
+     * ----------------------------------------------------------
+     */
+
+    data object SelfCompassionReflection : Screen(
+        "self_compassion_reflection"
     )
 }
 

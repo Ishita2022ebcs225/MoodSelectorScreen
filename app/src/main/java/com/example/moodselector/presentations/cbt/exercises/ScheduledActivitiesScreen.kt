@@ -83,14 +83,7 @@ fun ScheduledActivitiesScreen(
     onBackClick: () -> Unit,
     onScheduleActivityClick: () -> Unit,
     onEditActivity: (ScheduledCBTActivityEntity) -> Unit,
-
-    /*
-     * The selected scheduled activity is passed to
-     * navigation so that AppNavHost can open the
-     * dedicated completion screen for that activity.
-     */
     onCompleteActivity: (ScheduledCBTActivityEntity) -> Unit,
-
     viewModel: ScheduledCBTActivityViewModel = hiltViewModel()
 ) {
 
@@ -98,6 +91,12 @@ fun ScheduledActivitiesScreen(
      * ----------------------------------------------------------
      * SCHEDULED ACTIVITIES
      * ----------------------------------------------------------
+     *
+     * This screen observes scheduled activities only.
+     *
+     * Completing an activity is handled by the dedicated
+     * completion screen. This screen only passes the selected
+     * scheduled activity to that flow.
      */
 
     val scheduledActivities by viewModel
@@ -105,6 +104,7 @@ fun ScheduledActivitiesScreen(
         .collectAsStateWithLifecycle(
             initialValue = emptyList()
         )
+
 
     /*
      * ----------------------------------------------------------
@@ -156,19 +156,15 @@ fun ScheduledActivitiesScreen(
                     ) {
 
                         Icon(
-                            imageVector =
-                                Icons.Default.ArrowBack,
-
-                            contentDescription =
-                                "Back"
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Back"
                         )
                     }
                 },
 
-                colors =
-                    TopAppBarDefaults.topAppBarColors(
-                        containerColor = Background
-                    )
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Background
+                )
             )
         }
 
@@ -178,8 +174,7 @@ fun ScheduledActivitiesScreen(
 
             EmptyScheduledActivitiesState(
 
-                paddingValues =
-                    paddingValues,
+                paddingValues = paddingValues,
 
                 onScheduleActivityClick =
                     onScheduleActivityClick
@@ -189,39 +184,24 @@ fun ScheduledActivitiesScreen(
 
             ScheduledActivitiesContent(
 
-                paddingValues =
-                    paddingValues,
+                paddingValues = paddingValues,
 
-                activities =
-                    scheduledActivities,
+                activities = scheduledActivities,
 
-                onEditActivity =
-                    onEditActivity,
+                onEditActivity = onEditActivity,
 
                 onDeleteActivity = {
-
-                    activityToDelete =
-                        it
+                    activityToDelete = it
                 },
 
                 /*
-                 * --------------------------------------------------
-                 * OPEN COMPLETION SCREEN
-                 * --------------------------------------------------
+                 * The selected activity is passed to the
+                 * dedicated completion flow.
                  *
-                 * There is no confirmation dialog here anymore.
-                 *
-                 * The dedicated ScheduledActivityCompletionScreen
-                 * handles:
-                 *
-                 * 1. Activity details
-                 * 2. Completion checkbox
-                 * 3. Reflection
-                 * 4. Final completion
+                 * No completion is persisted here.
                  */
 
-                onCompleteActivity =
-                    onCompleteActivity,
+                onCompleteActivity = onCompleteActivity,
 
                 onScheduleActivityClick =
                     onScheduleActivityClick
@@ -240,11 +220,9 @@ fun ScheduledActivitiesScreen(
 
         DeleteScheduledActivityDialog(
 
-            activity =
-                activity,
+            activity = activity,
 
             onDismiss = {
-
                 activityToDelete = null
             },
 
@@ -318,28 +296,18 @@ private fun ScheduledActivitiesContent(
 
             ScheduledActivityCard(
 
-                activity =
-                    activity,
+                activity = activity,
 
                 onEdit = {
-
-                    onEditActivity(
-                        activity
-                    )
+                    onEditActivity(activity)
                 },
 
                 onDelete = {
-
-                    onDeleteActivity(
-                        activity
-                    )
+                    onDeleteActivity(activity)
                 },
 
                 onComplete = {
-
-                    onCompleteActivity(
-                        activity
-                    )
+                    onCompleteActivity(activity)
                 }
             )
         }
@@ -348,8 +316,7 @@ private fun ScheduledActivitiesContent(
         item {
 
             Spacer(
-                modifier =
-                    Modifier.height(4.dp)
+                modifier = Modifier.height(4.dp)
             )
 
             ScheduleAnotherActivityCard(
@@ -374,8 +341,7 @@ private fun ScheduledActivitiesHeader(
 ) {
 
     Column(
-        modifier =
-            Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth()
     ) {
 
         Row(
@@ -389,9 +355,7 @@ private fun ScheduledActivitiesHeader(
                     Modifier
                         .size(48.dp)
                         .clip(CircleShape)
-                        .background(
-                            SoftLavender
-                        ),
+                        .background(SoftLavender),
 
                 contentAlignment =
                     Alignment.Center
@@ -402,11 +366,9 @@ private fun ScheduledActivitiesHeader(
                     imageVector =
                         Icons.Default.CalendarToday,
 
-                    contentDescription =
-                        null,
+                    contentDescription = null,
 
-                    tint =
-                        Lavender,
+                    tint = Lavender,
 
                     modifier =
                         Modifier.size(25.dp)
@@ -592,7 +554,6 @@ private fun ScheduledActivityCard(
                 Modifier.padding(18.dp)
         ) {
 
-
             /*
              * --------------------------------------------------
              * ACTIVITY TITLE
@@ -756,8 +717,7 @@ private fun ScheduledActivityCard(
 
                         ScheduledTypeTag(
 
-                            text =
-                                "Pleasure",
+                            text = "Pleasure",
 
                             backgroundColor =
                                 SoftRose,
@@ -774,8 +734,7 @@ private fun ScheduledActivityCard(
 
                         ScheduledTypeTag(
 
-                            text =
-                                "Mastery",
+                            text = "Mastery",
 
                             backgroundColor =
                                 SoftTeal,
@@ -799,18 +758,19 @@ private fun ScheduledActivityCard(
 
             /*
              * --------------------------------------------------
-             * COMPLETE / REFLECT BUTTON
+             * COMPLETE & REFLECT
              * --------------------------------------------------
              *
-             * Opens the dedicated completion screen.
+             * This button does NOT complete the activity itself.
              *
-             * The activity is NOT marked complete here.
+             * It opens the dedicated completion screen, which
+             * collects the user's reflection and then calls the
+             * completion repository flow.
              */
 
             Button(
 
-                onClick =
-                    onComplete,
+                onClick = onComplete,
 
                 modifier =
                     Modifier.fillMaxWidth(),
@@ -880,8 +840,7 @@ private fun ScheduledActivityCard(
 
                 Button(
 
-                    onClick =
-                        onEdit,
+                    onClick = onEdit,
 
                     modifier =
                         Modifier.weight(1f),
@@ -925,8 +884,7 @@ private fun ScheduledActivityCard(
 
                 Button(
 
-                    onClick =
-                        onDelete,
+                    onClick = onDelete,
 
                     modifier =
                         Modifier.weight(1f),
@@ -997,9 +955,7 @@ private fun ScheduledDetailRow(
                 Modifier
                     .size(34.dp)
                     .clip(CircleShape)
-                    .background(
-                        PaleLavender
-                    ),
+                    .background(PaleLavender),
 
             contentAlignment =
                 Alignment.Center
@@ -1157,9 +1113,7 @@ private fun EmptyScheduledActivitiesState(
                 .background(Background)
                 .padding(paddingValues)
                 .navigationBarsPadding()
-                .padding(
-                    horizontal = 24.dp
-                ),
+                .padding(horizontal = 24.dp),
 
         horizontalAlignment =
             Alignment.CenterHorizontally,
@@ -1174,9 +1128,7 @@ private fun EmptyScheduledActivitiesState(
                 Modifier
                     .size(78.dp)
                     .clip(CircleShape)
-                    .background(
-                        SoftLavender
-                    ),
+                    .background(SoftLavender),
 
             contentAlignment =
                 Alignment.Center
@@ -1485,3 +1437,4 @@ private fun DeleteScheduledActivityDialog(
             RoundedCornerShape(24.dp)
     )
 }
+

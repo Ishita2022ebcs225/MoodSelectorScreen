@@ -19,18 +19,24 @@ interface AssessmentResultDao {
         """
         SELECT *
         FROM assessment_results
+        WHERE userId = :userId
         ORDER BY timestamp DESC
         LIMIT 1
         """
     )
-    fun getLatestResult(): Flow<AssessmentResultEntity?>
+    fun getLatestResult(
+        userId: String
+    ): Flow<AssessmentResultEntity?>
 
     @Query(
         """
         SELECT *
         FROM assessment_results
+        WHERE userId = :userId
         ORDER BY timestamp DESC
         """
     )
-    fun getAllResults(): Flow<List<AssessmentResultEntity>>
+    fun getAllResults(
+        userId: String
+    ): Flow<List<AssessmentResultEntity>>
 }

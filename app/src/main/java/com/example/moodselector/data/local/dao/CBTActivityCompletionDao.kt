@@ -22,25 +22,34 @@ interface CBTActivityCompletionDao {
 
     @Query(
         """
-        SELECT * 
+        SELECT *
         FROM cbt_activity_completions
+        WHERE userId = :userId
         ORDER BY completedAt DESC
         """
     )
-    fun getAllCompletions(): Flow<List<CBTActivityCompletionEntity>>
+    fun getAllCompletions(
+        userId: String
+    ): Flow<List<CBTActivityCompletionEntity>>
 
     @Query(
         """
-        SELECT COUNT(*) 
+        SELECT COUNT(*)
         FROM cbt_activity_completions
+        WHERE userId = :userId
         """
     )
-    fun getCompletionCount(): Flow<Int>
+    fun getCompletionCount(
+        userId: String
+    ): Flow<Int>
 
     @Query(
         """
         DELETE FROM cbt_activity_completions
+        WHERE userId = :userId
         """
     )
-    suspend fun deleteAllCompletions()
+    suspend fun deleteAllCompletions(
+        userId: String
+    )
 }

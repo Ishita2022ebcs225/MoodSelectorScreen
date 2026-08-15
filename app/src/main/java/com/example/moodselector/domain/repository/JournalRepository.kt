@@ -9,9 +9,12 @@ interface JournalRepository {
 
     suspend fun deleteJournal(journal: JournalEntity)
 
-    fun getAllJournals(): Flow<List<JournalEntity>>
+    fun getAllJournals(userId: String): Flow<List<JournalEntity>>
 
-    suspend fun getJournalById(id: Int): JournalEntity?
+    suspend fun getJournalById(
+        id: Int,
+        userId: String
+    ): JournalEntity?
 
-    suspend fun deleteAllJournals()   // ✅ REQUIRED
+    suspend fun deleteAllJournals(userId: String)
 }

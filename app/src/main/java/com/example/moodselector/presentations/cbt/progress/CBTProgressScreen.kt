@@ -22,10 +22,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.EmojiEvents
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.SelfImprovement
 import androidx.compose.material.icons.filled.Spa
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.TaskAlt
+import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -46,9 +48,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.moodselector.data.local.entity.ABCModelCompletionEntity
 import com.example.moodselector.data.local.entity.CBTActivityCompletionEntity
 import com.example.moodselector.data.local.entity.FiveMinuteStarterCompletionEntity
+import com.example.moodselector.data.local.entity.Grounding54321CompletionEntity
 import com.example.moodselector.data.local.entity.MindfulMeditationCompletionEntity
+import com.example.moodselector.data.local.entity.SelfCompassionReflectionCompletionEntity
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -69,12 +74,20 @@ private val TextSecondary = Color(0xFF777282)
 private val Background = Color(0xFFFAF9FD)
 private val SurfaceWhite = Color.White
 
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CBTProgressScreen(
     onBackClick: () -> Unit,
-    viewModel: CBTProgressViewModel = hiltViewModel()
+    viewModel: CBTProgressViewModel =
+        hiltViewModel()
 ) {
+
+    /*
+     * ==================================================
+     * COMBINED PROGRESS TIMELINE
+     * ==================================================
+     */
 
     val progressItems by
     viewModel.progressItems
@@ -82,21 +95,24 @@ fun CBTProgressScreen(
             initialValue = emptyList()
         )
 
+
     /*
-     * IMPORTANT:
-     *
-     * This is the number of UNIQUE exercises completed,
-     * not the number of completion records.
+     * ==================================================
+     * UNIQUE COMPLETED EXERCISE COUNT
+     * ==================================================
      */
+
     val completionCount by
     viewModel.uniqueCompletedExerciseCount
         .collectAsStateWithLifecycle(
             initialValue = 0
         )
 
+
     Scaffold(
 
-        containerColor = Background,
+        containerColor =
+            Background,
 
         topBar = {
 
@@ -107,16 +123,28 @@ fun CBTProgressScreen(
                     Column {
 
                         Text(
-                            text = "Your Progress",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 19.sp,
-                            color = TextPrimary
+                            text =
+                                "Your Progress",
+
+                            fontWeight =
+                                FontWeight.Bold,
+
+                            fontSize =
+                                19.sp,
+
+                            color =
+                                TextPrimary
                         )
 
                         Text(
-                            text = "Your CBT journey",
-                            color = TextSecondary,
-                            fontSize = 12.sp
+                            text =
+                                "Your CBT journey",
+
+                            color =
+                                TextSecondary,
+
+                            fontSize =
+                                12.sp
                         )
                     }
                 },
@@ -124,7 +152,8 @@ fun CBTProgressScreen(
                 navigationIcon = {
 
                     IconButton(
-                        onClick = onBackClick
+                        onClick =
+                            onBackClick
                     ) {
 
                         Icon(
@@ -142,7 +171,8 @@ fun CBTProgressScreen(
 
                 colors =
                     TopAppBarDefaults.topAppBarColors(
-                        containerColor = Background
+                        containerColor =
+                            Background
                     )
             )
         }
@@ -152,18 +182,24 @@ fun CBTProgressScreen(
         if (progressItems.isEmpty()) {
 
             EmptyProgressState(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .padding(
+                            paddingValues
+                        )
             )
 
         } else {
 
             LazyColumn(
 
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .padding(
+                            paddingValues
+                        ),
 
                 contentPadding =
                     PaddingValues(
@@ -172,7 +208,9 @@ fun CBTProgressScreen(
                     ),
 
                 verticalArrangement =
-                    Arrangement.spacedBy(18.dp)
+                    Arrangement.spacedBy(
+                        18.dp
+                    )
             ) {
 
                 /*
@@ -199,10 +237,17 @@ fun CBTProgressScreen(
                 item {
 
                     Text(
-                        text = "Your Journey",
-                        color = TextPrimary,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp
+                        text =
+                            "Your Journey",
+
+                        color =
+                            TextPrimary,
+
+                        fontWeight =
+                            FontWeight.Bold,
+
+                        fontSize =
+                            18.sp
                     )
                 }
 
@@ -215,7 +260,8 @@ fun CBTProgressScreen(
 
                 items(
 
-                    items = progressItems,
+                    items =
+                        progressItems,
 
                     key = { item ->
 
@@ -224,17 +270,32 @@ fun CBTProgressScreen(
                             is CBTProgressItem.ActivityCompletion ->
                                 "activity_${item.completion.id}"
 
+                            is CBTProgressItem.ABCModelCompletion ->
+                                "abc_${item.completion.id}"
+
                             is CBTProgressItem.FiveMinuteStarterCompletion ->
                                 "starter_${item.completion.id}"
 
                             is CBTProgressItem.MindfulMeditationCompletion ->
                                 "meditation_${item.completion.id}"
+
+                            is CBTProgressItem.Grounding54321Completion ->
+                                "grounding54321_${item.completion.id}"
+
+                            is CBTProgressItem.SelfCompassionReflectionCompletion ->
+                                "self_compassion_${item.completion.id}"
                         }
                     }
 
                 ) { item ->
 
                     when (item) {
+
+                        /*
+                         * ----------------------------------
+                         * ACTIVITY SCHEDULING
+                         * ----------------------------------
+                         */
 
                         is CBTProgressItem.ActivityCompletion -> {
 
@@ -244,6 +305,28 @@ fun CBTProgressScreen(
                             )
                         }
 
+
+                        /*
+                         * ----------------------------------
+                         * ABC MODEL
+                         * ----------------------------------
+                         */
+
+                        is CBTProgressItem.ABCModelCompletion -> {
+
+                            ABCModelTimelineItem(
+                                completion =
+                                    item.completion
+                            )
+                        }
+
+
+                        /*
+                         * ----------------------------------
+                         * FIVE-MINUTE STARTER
+                         * ----------------------------------
+                         */
+
                         is CBTProgressItem.FiveMinuteStarterCompletion -> {
 
                             FiveMinuteStarterTimelineItem(
@@ -252,9 +335,46 @@ fun CBTProgressScreen(
                             )
                         }
 
+
+                        /*
+                         * ----------------------------------
+                         * MINDFUL MEDITATION
+                         * ----------------------------------
+                         */
+
                         is CBTProgressItem.MindfulMeditationCompletion -> {
 
                             MindfulMeditationTimelineItem(
+                                completion =
+                                    item.completion
+                            )
+                        }
+
+
+                        /*
+                         * ----------------------------------
+                         * 5-4-3-2-1 GROUNDING
+                         * ----------------------------------
+                         */
+
+                        is CBTProgressItem.Grounding54321Completion -> {
+
+                            Grounding54321TimelineItem(
+                                completion =
+                                    item.completion
+                            )
+                        }
+
+
+                        /*
+                         * ----------------------------------
+                         * SELF-COMPASSION REFLECTION
+                         * ----------------------------------
+                         */
+
+                        is CBTProgressItem.SelfCompassionReflectionCompletion -> {
+
+                            SelfCompassionReflectionTimelineItem(
                                 completion =
                                     item.completion
                             )
@@ -305,7 +425,8 @@ private fun ProgressSummaryCard(
 
         colors =
             CardDefaults.cardColors(
-                containerColor = PaleLavender
+                containerColor =
+                    PaleLavender
             )
     ) {
 
@@ -320,12 +441,13 @@ private fun ProgressSummaryCard(
 
             Box(
 
-                modifier = Modifier
-                    .size(58.dp)
-                    .clip(CircleShape)
-                    .background(
-                        SoftLavender
-                    ),
+                modifier =
+                    Modifier
+                        .size(58.dp)
+                        .clip(CircleShape)
+                        .background(
+                            SoftLavender
+                        ),
 
                 contentAlignment =
                     Alignment.Center
@@ -358,10 +480,13 @@ private fun ProgressSummaryCard(
 
                     text =
                         "$completionCount " +
-                                if (completionCount == 1)
+                                if (
+                                    completionCount == 1
+                                ) {
                                     "activity completed"
-                                else
-                                    "activities completed",
+                                } else {
+                                    "activities completed"
+                                },
 
                     color =
                         TextPrimary,
@@ -403,14 +528,43 @@ private fun ProgressSummaryCard(
 
 @Composable
 private fun ActivityCompletionTimelineItem(
-    completion: CBTActivityCompletionEntity
+    completion:
+    CBTActivityCompletionEntity
 ) {
 
     TimelineContainer {
 
         CompletionCard(
-            completion = completion,
-            modifier = Modifier.weight(1f)
+            completion =
+                completion,
+
+            modifier =
+                Modifier.weight(1f)
+        )
+    }
+}
+
+
+/*
+ * ======================================================
+ * ABC MODEL TIMELINE ITEM
+ * ======================================================
+ */
+
+@Composable
+private fun ABCModelTimelineItem(
+    completion:
+    ABCModelCompletionEntity
+) {
+
+    TimelineContainer {
+
+        ABCModelCompletionCard(
+            completion =
+                completion,
+
+            modifier =
+                Modifier.weight(1f)
         )
     }
 }
@@ -424,14 +578,18 @@ private fun ActivityCompletionTimelineItem(
 
 @Composable
 private fun FiveMinuteStarterTimelineItem(
-    completion: FiveMinuteStarterCompletionEntity
+    completion:
+    FiveMinuteStarterCompletionEntity
 ) {
 
     TimelineContainer {
 
         FiveMinuteStarterCompletionCard(
-            completion = completion,
-            modifier = Modifier.weight(1f)
+            completion =
+                completion,
+
+            modifier =
+                Modifier.weight(1f)
         )
     }
 }
@@ -445,14 +603,68 @@ private fun FiveMinuteStarterTimelineItem(
 
 @Composable
 private fun MindfulMeditationTimelineItem(
-    completion: MindfulMeditationCompletionEntity
+    completion:
+    MindfulMeditationCompletionEntity
 ) {
 
     TimelineContainer {
 
         MindfulMeditationCompletionCard(
-            completion = completion,
-            modifier = Modifier.weight(1f)
+            completion =
+                completion,
+
+            modifier =
+                Modifier.weight(1f)
+        )
+    }
+}
+
+
+/*
+ * ======================================================
+ * 5-4-3-2-1 GROUNDING TIMELINE ITEM
+ * ======================================================
+ */
+
+@Composable
+private fun Grounding54321TimelineItem(
+    completion:
+    Grounding54321CompletionEntity
+) {
+
+    TimelineContainer {
+
+        Grounding54321CompletionCard(
+            completion =
+                completion,
+
+            modifier =
+                Modifier.weight(1f)
+        )
+    }
+}
+
+
+/*
+ * ======================================================
+ * SELF-COMPASSION REFLECTION TIMELINE ITEM
+ * ======================================================
+ */
+
+@Composable
+private fun SelfCompassionReflectionTimelineItem(
+    completion:
+    SelfCompassionReflectionCompletionEntity
+) {
+
+    TimelineContainer {
+
+        SelfCompassionReflectionCompletionCard(
+            completion =
+                completion,
+
+            modifier =
+                Modifier.weight(1f)
         )
     }
 }
@@ -466,7 +678,8 @@ private fun MindfulMeditationTimelineItem(
 
 @Composable
 private fun TimelineContainer(
-    content: @Composable RowScope.() -> Unit
+    content:
+    @Composable RowScope.() -> Unit
 ) {
 
     Row(
@@ -486,12 +699,13 @@ private fun TimelineContainer(
 
             Box(
 
-                modifier = Modifier
-                    .size(38.dp)
-                    .clip(CircleShape)
-                    .background(
-                        SoftLavender
-                    ),
+                modifier =
+                    Modifier
+                        .size(38.dp)
+                        .clip(CircleShape)
+                        .background(
+                            SoftLavender
+                        ),
 
                 contentAlignment =
                     Alignment.Center
@@ -520,12 +734,13 @@ private fun TimelineContainer(
 
             Box(
 
-                modifier = Modifier
-                    .width(2.dp)
-                    .height(190.dp)
-                    .background(
-                        SoftLavender
-                    )
+                modifier =
+                    Modifier
+                        .width(2.dp)
+                        .height(190.dp)
+                        .background(
+                            SoftLavender
+                        )
             )
         }
 
@@ -547,13 +762,17 @@ private fun TimelineContainer(
 
 @Composable
 private fun CompletionCard(
-    completion: CBTActivityCompletionEntity,
-    modifier: Modifier = Modifier
+    completion:
+    CBTActivityCompletionEntity,
+
+    modifier:
+    Modifier = Modifier
 ) {
 
     Card(
 
-        modifier = modifier,
+        modifier =
+            modifier,
 
         shape =
             RoundedCornerShape(20.dp),
@@ -650,7 +869,8 @@ private fun CompletionCard(
 
             TimelineDetailRow(
                 icon =
-                    androidx.compose.material.icons.Icons.Default.TaskAlt,
+                    Icons.Default.TaskAlt,
+
                 text =
                     completion.scheduledWhen
             )
@@ -662,7 +882,8 @@ private fun CompletionCard(
 
             TimelineDetailRow(
                 icon =
-                    androidx.compose.material.icons.Icons.Default.TaskAlt,
+                    Icons.Default.TaskAlt,
+
                 text =
                     completion.scheduledWhere
             )
@@ -688,19 +909,228 @@ private fun CompletionCard(
 
 /*
  * ======================================================
+ * ABC MODEL COMPLETION CARD
+ * ======================================================
+ */
+
+@Composable
+private fun ABCModelCompletionCard(
+    completion:
+    ABCModelCompletionEntity,
+
+    modifier:
+    Modifier = Modifier
+) {
+
+    Card(
+
+        modifier =
+            modifier,
+
+        shape =
+            RoundedCornerShape(20.dp),
+
+        colors =
+            CardDefaults.cardColors(
+                containerColor =
+                    SurfaceWhite
+            ),
+
+        elevation =
+            CardDefaults.cardElevation(
+                defaultElevation = 2.dp
+            )
+    ) {
+
+        Column(
+
+            modifier =
+                Modifier.padding(17.dp)
+        ) {
+
+            Text(
+
+                text =
+                    formatDate(
+                        completion.completedAt
+                    ),
+
+                color =
+                    Lavender,
+
+                fontWeight =
+                    FontWeight.Bold,
+
+                fontSize =
+                    12.sp
+            )
+
+            Spacer(
+                modifier =
+                    Modifier.height(7.dp)
+            )
+
+            Text(
+
+                text =
+                    "ABC Model",
+
+                color =
+                    TextPrimary,
+
+                fontWeight =
+                    FontWeight.Bold,
+
+                fontSize =
+                    17.sp
+            )
+
+            Spacer(
+                modifier =
+                    Modifier.height(4.dp)
+            )
+
+            Text(
+
+                text =
+                    "Cognitive",
+
+                color =
+                    TextSecondary,
+
+                fontSize =
+                    14.sp,
+
+                fontWeight =
+                    FontWeight.SemiBold
+            )
+
+            Spacer(
+                modifier =
+                    Modifier.height(12.dp)
+            )
+
+            Box(
+
+                modifier =
+                    Modifier
+                        .clip(
+                            RoundedCornerShape(50)
+                        )
+                        .background(
+                            SoftLavender
+                        )
+                        .padding(
+                            horizontal = 11.dp,
+                            vertical = 6.dp
+                        )
+            ) {
+
+                Row(
+
+                    verticalAlignment =
+                        Alignment.CenterVertically
+                ) {
+
+                    Icon(
+
+                        imageVector =
+                            Icons.Default.Visibility,
+
+                        contentDescription =
+                            null,
+
+                        tint =
+                            Lavender,
+
+                        modifier =
+                            Modifier.size(15.dp)
+                    )
+
+                    Spacer(
+                        modifier =
+                            Modifier.width(5.dp)
+                    )
+
+                    Text(
+
+                        text =
+                            "ABC Model",
+
+                        color =
+                            Lavender,
+
+                        fontWeight =
+                            FontWeight.SemiBold,
+
+                        fontSize =
+                            11.sp
+                    )
+                }
+            }
+
+            Spacer(
+                modifier =
+                    Modifier.height(15.dp)
+            )
+
+            ResponseSummary(
+                label =
+                    "A — Activating Event",
+
+                response =
+                    completion.activatingEvent
+            )
+
+            Spacer(
+                modifier =
+                    Modifier.height(12.dp)
+            )
+
+            ResponseSummary(
+                label =
+                    "B — Beliefs",
+
+                response =
+                    completion.beliefs
+            )
+
+            Spacer(
+                modifier =
+                    Modifier.height(12.dp)
+            )
+
+            ResponseSummary(
+                label =
+                    "C — Consequences",
+
+                response =
+                    completion.consequences
+            )
+        }
+    }
+}
+
+
+/*
+ * ======================================================
  * FIVE-MINUTE STARTER COMPLETION CARD
  * ======================================================
  */
 
 @Composable
 private fun FiveMinuteStarterCompletionCard(
-    completion: FiveMinuteStarterCompletionEntity,
-    modifier: Modifier = Modifier
+    completion:
+    FiveMinuteStarterCompletionEntity,
+
+    modifier:
+    Modifier = Modifier
 ) {
 
     Card(
 
-        modifier = modifier,
+        modifier =
+            modifier,
 
         shape =
             RoundedCornerShape(20.dp),
@@ -787,17 +1217,18 @@ private fun FiveMinuteStarterCompletionCard(
 
             Box(
 
-                modifier = Modifier
-                    .clip(
-                        RoundedCornerShape(50)
-                    )
-                    .background(
-                        SoftTeal
-                    )
-                    .padding(
-                        horizontal = 11.dp,
-                        vertical = 6.dp
-                    )
+                modifier =
+                    Modifier
+                        .clip(
+                            RoundedCornerShape(50)
+                        )
+                        .background(
+                            SoftTeal
+                        )
+                        .padding(
+                            horizontal = 11.dp,
+                            vertical = 6.dp
+                        )
             ) {
 
                 Row(
@@ -919,13 +1350,17 @@ private fun FiveMinuteStarterCompletionCard(
 
 @Composable
 private fun MindfulMeditationCompletionCard(
-    completion: MindfulMeditationCompletionEntity,
-    modifier: Modifier = Modifier
+    completion:
+    MindfulMeditationCompletionEntity,
+
+    modifier:
+    Modifier = Modifier
 ) {
 
     Card(
 
-        modifier = modifier,
+        modifier =
+            modifier,
 
         shape =
             RoundedCornerShape(20.dp),
@@ -1010,23 +1445,20 @@ private fun MindfulMeditationCompletionCard(
                     Modifier.height(12.dp)
             )
 
-            /*
-             * Mindfulness category tag
-             */
-
             Box(
 
-                modifier = Modifier
-                    .clip(
-                        RoundedCornerShape(50)
-                    )
-                    .background(
-                        SoftLavender
-                    )
-                    .padding(
-                        horizontal = 11.dp,
-                        vertical = 6.dp
-                    )
+                modifier =
+                    Modifier
+                        .clip(
+                            RoundedCornerShape(50)
+                        )
+                        .background(
+                            SoftLavender
+                        )
+                        .padding(
+                            horizontal = 11.dp,
+                            vertical = 6.dp
+                        )
             ) {
 
                 Row(
@@ -1072,10 +1504,6 @@ private fun MindfulMeditationCompletionCard(
                 }
             }
 
-            /*
-             * Reflection
-             */
-
             if (
                 completion.reflection.isNotBlank()
             ) {
@@ -1097,6 +1525,509 @@ private fun MindfulMeditationCompletionCard(
 
 /*
  * ======================================================
+ * 5-4-3-2-1 GROUNDING COMPLETION CARD
+ * ======================================================
+ */
+
+@Composable
+private fun Grounding54321CompletionCard(
+    completion:
+    Grounding54321CompletionEntity,
+
+    modifier:
+    Modifier = Modifier
+) {
+
+    Card(
+
+        modifier =
+            modifier,
+
+        shape =
+            RoundedCornerShape(20.dp),
+
+        colors =
+            CardDefaults.cardColors(
+                containerColor =
+                    SurfaceWhite
+            ),
+
+        elevation =
+            CardDefaults.cardElevation(
+                defaultElevation = 2.dp
+            )
+    ) {
+
+        Column(
+
+            modifier =
+                Modifier.padding(17.dp)
+        ) {
+
+            Text(
+
+                text =
+                    formatDate(
+                        completion.completedAt
+                    ),
+
+                color =
+                    Lavender,
+
+                fontWeight =
+                    FontWeight.Bold,
+
+                fontSize =
+                    12.sp
+            )
+
+            Spacer(
+                modifier =
+                    Modifier.height(7.dp)
+            )
+
+            Text(
+
+                text =
+                    "5-4-3-2-1 Grounding",
+
+                color =
+                    TextPrimary,
+
+                fontWeight =
+                    FontWeight.Bold,
+
+                fontSize =
+                    17.sp
+            )
+
+            Spacer(
+                modifier =
+                    Modifier.height(4.dp)
+            )
+
+            Text(
+
+                text =
+                    "Mindfulness",
+
+                color =
+                    TextSecondary,
+
+                fontSize =
+                    14.sp,
+
+                fontWeight =
+                    FontWeight.SemiBold
+            )
+
+            Spacer(
+                modifier =
+                    Modifier.height(12.dp)
+            )
+
+            Box(
+
+                modifier =
+                    Modifier
+                        .clip(
+                            RoundedCornerShape(50)
+                        )
+                        .background(
+                            SoftLavender
+                        )
+                        .padding(
+                            horizontal = 11.dp,
+                            vertical = 6.dp
+                        )
+            ) {
+
+                Row(
+
+                    verticalAlignment =
+                        Alignment.CenterVertically
+                ) {
+
+                    Icon(
+
+                        imageVector =
+                            Icons.Default.Visibility,
+
+                        contentDescription =
+                            null,
+
+                        tint =
+                            Lavender,
+
+                        modifier =
+                            Modifier.size(15.dp)
+                    )
+
+                    Spacer(
+                        modifier =
+                            Modifier.width(5.dp)
+                    )
+
+                    Text(
+
+                        text =
+                            "Grounding",
+
+                        color =
+                            Lavender,
+
+                        fontWeight =
+                            FontWeight.SemiBold,
+
+                        fontSize =
+                            11.sp
+                    )
+                }
+            }
+
+            Spacer(
+                modifier =
+                    Modifier.height(14.dp)
+            )
+
+            if (
+                completion.reflection.isNotBlank()
+            ) {
+
+                ReflectionBox(
+                    reflection =
+                        completion.reflection
+                )
+            }
+        }
+    }
+}
+
+
+/*
+ * ======================================================
+ * SELF-COMPASSION REFLECTION COMPLETION CARD
+ * ======================================================
+ */
+
+@Composable
+private fun SelfCompassionReflectionCompletionCard(
+    completion:
+    SelfCompassionReflectionCompletionEntity,
+
+    modifier:
+    Modifier = Modifier
+) {
+
+    Card(
+
+        modifier =
+            modifier,
+
+        shape =
+            RoundedCornerShape(20.dp),
+
+        colors =
+            CardDefaults.cardColors(
+                containerColor =
+                    SurfaceWhite
+            ),
+
+        elevation =
+            CardDefaults.cardElevation(
+                defaultElevation = 2.dp
+            )
+    ) {
+
+        Column(
+
+            modifier =
+                Modifier.padding(17.dp)
+        ) {
+
+            /*
+             * ------------------------------------------
+             * DATE
+             * ------------------------------------------
+             */
+
+            Text(
+
+                text =
+                    formatDate(
+                        completion.completedAt
+                    ),
+
+                color =
+                    Lavender,
+
+                fontWeight =
+                    FontWeight.Bold,
+
+                fontSize =
+                    12.sp
+            )
+
+            Spacer(
+                modifier =
+                    Modifier.height(7.dp)
+            )
+
+
+            /*
+             * ------------------------------------------
+             * TITLE
+             * ------------------------------------------
+             */
+
+            Text(
+
+                text =
+                    "Self-Compassion Reflection",
+
+                color =
+                    TextPrimary,
+
+                fontWeight =
+                    FontWeight.Bold,
+
+                fontSize =
+                    17.sp
+            )
+
+            Spacer(
+                modifier =
+                    Modifier.height(4.dp)
+            )
+
+            Text(
+
+                text =
+                    "Mindfulness",
+
+                color =
+                    TextSecondary,
+
+                fontSize =
+                    14.sp,
+
+                fontWeight =
+                    FontWeight.SemiBold
+            )
+
+            Spacer(
+                modifier =
+                    Modifier.height(12.dp)
+            )
+
+
+            /*
+             * ------------------------------------------
+             * CATEGORY TAG
+             * ------------------------------------------
+             */
+
+            Box(
+
+                modifier =
+                    Modifier
+                        .clip(
+                            RoundedCornerShape(50)
+                        )
+                        .background(
+                            SoftRose
+                        )
+                        .padding(
+                            horizontal = 11.dp,
+                            vertical = 6.dp
+                        )
+            ) {
+
+                Row(
+
+                    verticalAlignment =
+                        Alignment.CenterVertically
+                ) {
+
+                    Icon(
+
+                        imageVector =
+                            Icons.Default.Favorite,
+
+                        contentDescription =
+                            null,
+
+                        tint =
+                            Rose,
+
+                        modifier =
+                            Modifier.size(15.dp)
+                    )
+
+                    Spacer(
+                        modifier =
+                            Modifier.width(5.dp)
+                    )
+
+                    Text(
+
+                        text =
+                            "Self-Compassion",
+
+                        color =
+                            Rose,
+
+                        fontWeight =
+                            FontWeight.SemiBold,
+
+                        fontSize =
+                            11.sp
+                    )
+                }
+            }
+
+            Spacer(
+                modifier =
+                    Modifier.height(15.dp)
+            )
+
+
+            /*
+             * ------------------------------------------
+             * SITUATION
+             * ------------------------------------------
+             */
+
+            ResponseSummary(
+
+                label =
+                    "Situation",
+
+                response =
+                    completion.situation
+            )
+
+            Spacer(
+                modifier =
+                    Modifier.height(12.dp)
+            )
+
+
+            /*
+             * ------------------------------------------
+             * FRIEND RESPONSE
+             * ------------------------------------------
+             */
+
+            ResponseSummary(
+
+                label =
+                    "What I would say to a friend",
+
+                response =
+                    completion.friendResponse
+            )
+
+            Spacer(
+                modifier =
+                    Modifier.height(12.dp)
+            )
+
+
+            /*
+             * ------------------------------------------
+             * SELF-COMPASSION RESPONSE
+             * ------------------------------------------
+             */
+
+            ResponseSummary(
+
+                label =
+                    "What I can say to myself",
+
+                response =
+                    completion.selfCompassionResponse
+            )
+        }
+    }
+}
+
+
+/*
+ * ======================================================
+ * RESPONSE SUMMARY
+ * ======================================================
+ *
+ * Shared by ABC and Self-Compassion reflections.
+ */
+
+@Composable
+private fun ResponseSummary(
+    label: String,
+    response: String
+) {
+
+    Column {
+
+        Text(
+
+            text =
+                label,
+
+            color =
+                Lavender,
+
+            fontWeight =
+                FontWeight.SemiBold,
+
+            fontSize =
+                12.sp
+        )
+
+        Spacer(
+            modifier =
+                Modifier.height(5.dp)
+        )
+
+        Box(
+
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .clip(
+                        RoundedCornerShape(14.dp)
+                    )
+                    .background(
+                        PaleLavender
+                    )
+                    .padding(12.dp)
+        ) {
+
+            Text(
+
+                text =
+                    if (response.isBlank()) {
+                        "No response recorded."
+                    } else {
+                        response
+                    },
+
+                color =
+                    TextSecondary,
+
+                fontSize =
+                    13.sp,
+
+                lineHeight =
+                    19.sp
+            )
+        }
+    }
+}
+
+
+/*
+ * ======================================================
  * REFLECTION BOX
  * ======================================================
  */
@@ -1108,15 +2039,16 @@ private fun ReflectionBox(
 
     Box(
 
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(
-                RoundedCornerShape(14.dp)
-            )
-            .background(
-                PaleLavender
-            )
-            .padding(13.dp)
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .clip(
+                    RoundedCornerShape(14.dp)
+                )
+                .background(
+                    PaleLavender
+                )
+                .padding(13.dp)
     ) {
 
         Row(
@@ -1176,7 +2108,8 @@ private fun SmallLabel(
 
     Text(
 
-        text = text,
+        text =
+            text,
 
         color =
             Lavender,
@@ -1223,17 +2156,18 @@ private fun ActivityTypeTag(
 
     Box(
 
-        modifier = Modifier
-            .clip(
-                RoundedCornerShape(50)
-            )
-            .background(
-                backgroundColor
-            )
-            .padding(
-                horizontal = 11.dp,
-                vertical = 6.dp
-            )
+        modifier =
+            Modifier
+                .clip(
+                    RoundedCornerShape(50)
+                )
+                .background(
+                    backgroundColor
+                )
+                .padding(
+                    horizontal = 11.dp,
+                    vertical = 6.dp
+                )
     ) {
 
         Row(
@@ -1295,6 +2229,7 @@ private fun ActivityTypeTag(
 private fun TimelineDetailRow(
     icon:
     androidx.compose.ui.graphics.vector.ImageVector,
+
     text: String
 ) {
 
@@ -1347,7 +2282,8 @@ private fun TimelineDetailRow(
 
 @Composable
 private fun EmptyProgressState(
-    modifier: Modifier = Modifier
+    modifier:
+    Modifier = Modifier
 ) {
 
     Column(
@@ -1364,12 +2300,13 @@ private fun EmptyProgressState(
 
         Box(
 
-            modifier = Modifier
-                .size(82.dp)
-                .clip(CircleShape)
-                .background(
-                    SoftLavender
-                ),
+            modifier =
+                Modifier
+                    .size(82.dp)
+                    .clip(CircleShape)
+                    .background(
+                        SoftLavender
+                    ),
 
             contentAlignment =
                 Alignment.Center

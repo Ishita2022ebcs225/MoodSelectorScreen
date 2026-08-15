@@ -3,6 +3,8 @@ package com.example.moodselector.presentations.cbt.exercises
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.moodselector.data.local.entity.FiveMinuteStarterCompletionEntity
+import com.example.moodselector.domain.repository.AuthRepository
+import com.example.moodselector.domain.repository.CloudBackupRepository
 import com.example.moodselector.domain.repository.FiveMinuteStarterCompletionRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
@@ -11,8 +13,20 @@ import javax.inject.Inject
 
 @HiltViewModel
 class FiveMinuteStarterViewModel @Inject constructor(
-    private val repository: FiveMinuteStarterCompletionRepository
+    private val repository: FiveMinuteStarterCompletionRepository,
+    private val authRepository: AuthRepository,
+    private val cloudBackupRepository: CloudBackupRepository
 ) : ViewModel() {
+
+    /*
+     * --------------------------------------------------
+     * CURRENT USER ID
+     * --------------------------------------------------
+     */
+
+    private val userId: String?
+        get() = authRepository.currentUser?.uid
+
 
     /*
      * --------------------------------------------------
@@ -22,7 +36,9 @@ class FiveMinuteStarterViewModel @Inject constructor(
 
     val completions:
             Flow<List<FiveMinuteStarterCompletionEntity>> =
-        repository.getAllCompletions()
+        repository.getAllCompletions(
+            userId = userId ?: ""
+        )
 
 
     /*
@@ -33,7 +49,9 @@ class FiveMinuteStarterViewModel @Inject constructor(
 
     val completionCount:
             Flow<Int> =
-        repository.getCompletionCount()
+        repository.getCompletionCount(
+            userId = userId ?: ""
+        )
 
 
     /*
@@ -56,10 +74,16 @@ class FiveMinuteStarterViewModel @Inject constructor(
         onCompleted: () -> Unit = {}
     ) {
 
+        val currentUserId =
+            userId ?: return
+
         viewModelScope.launch {
 
             val completion =
                 FiveMinuteStarterCompletionEntity(
+
+                    userId =
+                        currentUserId,
 
                     task = task,
 
@@ -76,6 +100,22 @@ class FiveMinuteStarterViewModel @Inject constructor(
             repository.saveCompletion(
                 completion
             )
+
+            /*
+             * --------------------------------------------------
+             * CLOUD BACKUP
+             * --------------------------------------------------
+             *
+             * The completion has already been saved locally.
+             * Cloud backup is therefore best-effort and does
+             * not prevent the exercise from being considered
+             * completed if Firestore is temporarily unavailable.
+             */
+
+            cloudBackupRepository
+                .backupUserData(
+                    userId = currentUserId
+                )
 
             onCompleted()
         }
@@ -109,9 +149,15 @@ class FiveMinuteStarterViewModel @Inject constructor(
 
     fun deleteAllCompletions() {
 
+        val currentUserId =
+            userId ?: return
+
         viewModelScope.launch {
 
-            repository.deleteAllCompletions()
+            repository.deleteAllCompletions(
+                currentUserId
+            )
         }
     }
 }
+
