@@ -5,16 +5,29 @@ import kotlinx.coroutines.flow.Flow
 
 interface JournalRepository {
 
-    suspend fun insertJournal(journal: JournalEntity)
+    suspend fun insertJournal(
+        journal: JournalEntity
+    )
 
-    suspend fun deleteJournal(journal: JournalEntity)
+    suspend fun updateJournal(
+        journal: JournalEntity
+    )
 
-    fun getAllJournals(userId: String): Flow<List<JournalEntity>>
+    suspend fun deleteJournal(
+        journalId: Int,
+        userId: String
+    )
+
+    fun getAllJournals(
+        userId: String
+    ): Flow<List<JournalEntity>>
 
     suspend fun getJournalById(
         id: Int,
         userId: String
     ): JournalEntity?
 
-    suspend fun deleteAllJournals(userId: String)
+    suspend fun deleteAllJournals(
+        userId: String
+    )
 }

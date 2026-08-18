@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -41,6 +40,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -64,20 +64,8 @@ import java.util.Locale
  * ==========================================================
  * TIMESTAMP HELPERS
  * ==========================================================
- *
- * MoodEntry stores timestamps as:
- *
- * dd MMM yyyy • hh:mm a
- *
- * Example:
- *
- * 15 Aug 2026 • 01:42 PM
  */
 
-
-/*
- * Convert the stored timestamp into a date string.
- */
 private fun getMoodDate(
     timestamp: String
 ): String {
@@ -113,11 +101,6 @@ private fun getMoodDate(
 }
 
 
-/*
- * Convert the stored timestamp into a time string.
- *
- * The graph X-axis displays ONLY this value.
- */
 private fun getMoodTime(
     timestamp: String
 ): String {
@@ -153,10 +136,6 @@ private fun getMoodTime(
 }
 
 
-/*
- * Convert the DatePicker value into the same
- * date format used by MoodEntry.
- */
 private fun formatSelectedDate(
     millis: Long
 ): String {
@@ -230,24 +209,30 @@ fun MoodGraphScreen(
 
     /*
      * ======================================================
-     * COLORS
+     * THEME COLORS
      * ======================================================
      */
 
     val background =
-        Color(0xFFF8F5FF)
+        MaterialTheme.colorScheme.background
+
+    val surface =
+        MaterialTheme.colorScheme.surface
 
     val textDark =
-        Color(0xFF292638)
+        MaterialTheme.colorScheme.onBackground
 
     val textSecondary =
-        Color(0xFF777282)
+        MaterialTheme.colorScheme.onSurfaceVariant
 
     val lavender =
-        Color(0xFF6C63FF)
+        MaterialTheme.colorScheme.primary
 
     val softLavender =
-        Color(0xFFEDE7FF)
+        MaterialTheme.colorScheme.secondaryContainer
+
+    val onSoftLavender =
+        MaterialTheme.colorScheme.onSecondaryContainer
 
 
     /*
@@ -287,10 +272,6 @@ fun MoodGraphScreen(
      * ======================================================
      * FILTER MOODS
      * ======================================================
-     *
-     * The selected date is chosen by the user.
-     *
-     * Only entries from that date are displayed.
      */
 
     val selectedDayMoods: List<MoodEntry> =
@@ -308,10 +289,6 @@ fun MoodGraphScreen(
      * ======================================================
      * GRAPH ENTRIES
      * ======================================================
-     *
-     * Entries are chronological:
-     *
-     * oldest -> newest
      */
 
     val entries =
@@ -330,12 +307,6 @@ fun MoodGraphScreen(
      * ======================================================
      * TIME LABELS
      * ======================================================
-     *
-     * IMPORTANT:
-     *
-     * The date has already been selected above the graph.
-     *
-     * Therefore the X-axis displays ONLY time.
      */
 
     val timeLabels =
@@ -425,15 +396,47 @@ fun MoodGraphScreen(
 
     /*
      * ======================================================
+     * ANDROID CHART COLORS
+     * ======================================================
+     */
+
+    val chartPrimary =
+        AndroidColor.argb(
+            (lavender.alpha * 255).toInt(),
+            (lavender.red * 255).toInt(),
+            (lavender.green * 255).toInt(),
+            (lavender.blue * 255).toInt()
+        )
+
+    val chartSecondary =
+        AndroidColor.argb(
+            (MaterialTheme.colorScheme.secondary.alpha * 255).toInt(),
+            (MaterialTheme.colorScheme.secondary.red * 255).toInt(),
+            (MaterialTheme.colorScheme.secondary.green * 255).toInt(),
+            (MaterialTheme.colorScheme.secondary.blue * 255).toInt()
+        )
+
+    val chartText =
+        AndroidColor.argb(
+            (textSecondary.alpha * 255).toInt(),
+            (textSecondary.red * 255).toInt(),
+            (textSecondary.green * 255).toInt(),
+            (textSecondary.blue * 255).toInt()
+        )
+
+    val chartGrid =
+        AndroidColor.argb(
+            (MaterialTheme.colorScheme.outlineVariant.alpha * 255).toInt(),
+            (MaterialTheme.colorScheme.outlineVariant.red * 255).toInt(),
+            (MaterialTheme.colorScheme.outlineVariant.green * 255).toInt(),
+            (MaterialTheme.colorScheme.outlineVariant.blue * 255).toInt()
+        )
+
+
+    /*
+     * ======================================================
      * SCREEN
      * ======================================================
-     *
-     * IMPORTANT:
-     *
-     * The complete screen is vertically scrollable.
-     *
-     * This guarantees that the Mood scale remains accessible
-     * below the graph even on smaller screens.
      */
 
     Scaffold(
@@ -454,14 +457,9 @@ fun MoodGraphScreen(
                     .padding(
                         paddingValues
                     )
-                    .statusBarsPadding()
                     .navigationBarsPadding()
                     .verticalScroll(
                         rememberScrollState()
-                    )
-                    .padding(
-                        horizontal = 18.dp,
-                        vertical = 12.dp
                     ),
 
             verticalArrangement =
@@ -475,730 +473,673 @@ fun MoodGraphScreen(
              * ==================================================
              */
 
-            Column {
-
-                Text(
-
-                    text =
-                        "Mood Analytics 📈",
-
-                    style =
-                        MaterialTheme
-                            .typography
-                            .headlineSmall,
-
-                    fontWeight =
-                        FontWeight.Bold,
-
-                    color =
-                        textDark
-                )
-
-                Text(
-
-                    text =
-                        "View your mood changes for a specific day.",
-
-                    style =
-                        MaterialTheme
-                            .typography
-                            .bodySmall,
-
-                    color =
-                        textSecondary,
-
-                    modifier =
-                        Modifier.padding(
-                            top = 3.dp
-                        )
-                )
-            }
-
-
-            /*
-             * ==================================================
-             * DATE SELECTOR
-             * ==================================================
-             */
-
             Card(
 
                 modifier =
                     Modifier.fillMaxWidth(),
 
                 shape =
-                    RoundedCornerShape(18.dp),
+                    RoundedCornerShape(
+                        bottomStart = 28.dp,
+                        bottomEnd = 28.dp,
+                        topStart = 22.dp,
+                        topEnd = 22.dp
+                    ),
 
                 colors =
                     CardDefaults.cardColors(
                         containerColor =
-                            Color.White
+                            Color.Transparent
                     ),
 
                 elevation =
                     CardDefaults.cardElevation(
-                        defaultElevation = 2.dp
-                    )
-            ) {
-
-                Row(
-
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(
-                                horizontal = 14.dp,
-                                vertical = 10.dp
-                            ),
-
-                    verticalAlignment =
-                        Alignment.CenterVertically,
-
-                    horizontalArrangement =
-                        Arrangement.SpaceBetween
-                ) {
-
-                    Column {
-
-                        Text(
-
-                            text =
-                                "Selected date",
-
-                            style =
-                                MaterialTheme
-                                    .typography
-                                    .labelMedium,
-
-                            color =
-                                textSecondary
-                        )
-
-                        Text(
-
-                            text =
-                                selectedDate,
-
-                            style =
-                                MaterialTheme
-                                    .typography
-                                    .titleMedium,
-
-                            fontWeight =
-                                FontWeight.SemiBold,
-
-                            color =
-                                textDark
-                        )
-                    }
-
-                    Button(
-
-                        onClick = {
-
-                            showDatePicker =
-                                true
-                        },
-
-                        modifier =
-                            Modifier.height(42.dp),
-
-                        shape =
-                            RoundedCornerShape(14.dp),
-
-                        contentPadding =
-                            PaddingValues(
-                                horizontal = 14.dp
-                            ),
-
-                        colors =
-                            ButtonDefaults.buttonColors(
-                                containerColor =
-                                    softLavender,
-
-                                contentColor =
-                                    lavender
-                            )
-                    ) {
-
-                        Icon(
-
-                            imageVector =
-                                Icons.Default.CalendarMonth,
-
-                            contentDescription =
-                                "Choose date",
-
-                            modifier =
-                                Modifier.size(18.dp)
-                        )
-
-                        Spacer(
-                            modifier =
-                                Modifier.width(6.dp)
-                        )
-
-                        Text(
-                            text =
-                                "Change"
-                        )
-                    }
-                }
-            }
-
-
-            /*
-             * ==================================================
-             * GRAPH CARD
-             * ==================================================
-             */
-
-            Card(
-
-                modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .height(350.dp),
-
-                shape =
-                    RoundedCornerShape(24.dp),
-
-                colors =
-                    CardDefaults.cardColors(
-                        containerColor =
-                            Color.White
-                    ),
-
-                elevation =
-                    CardDefaults.cardElevation(
-                        defaultElevation = 4.dp
-                    )
-            ) {
-
-                if (entries.isEmpty()) {
-
-                    /*
-                     * ------------------------------------------
-                     * EMPTY STATE
-                     * ------------------------------------------
-                     */
-
-                    Column(
-
-                        modifier =
-                            Modifier
-                                .fillMaxSize()
-                                .padding(24.dp),
-
-                        verticalArrangement =
-                            Arrangement.Center,
-
-                        horizontalAlignment =
-                            Alignment.CenterHorizontally
-                    ) {
-
-                        Text(
-
-                            text =
-                                "No mood entries",
-
-                            style =
-                                MaterialTheme
-                                    .typography
-                                    .titleMedium,
-
-                            fontWeight =
-                                FontWeight.SemiBold,
-
-                            color =
-                                textDark
-                        )
-
-                        Text(
-
-                            text =
-                                "There are no mood entries recorded for $selectedDate.",
-
-                            modifier =
-                                Modifier.padding(
-                                    top = 6.dp
-                                ),
-
-                            style =
-                                MaterialTheme
-                                    .typography
-                                    .bodySmall,
-
-                            color =
-                                textSecondary
-                        )
-                    }
-
-                } else {
-
-                    /*
-                     * ------------------------------------------
-                     * LINE CHART
-                     * ------------------------------------------
-                     */
-
-                    AndroidView(
-
-                        modifier =
-                            Modifier
-                                .fillMaxSize()
-                                .padding(12.dp),
-
-                        factory = { context ->
-
-                            LineChart(
-                                context
-                            )
-
-                        },
-
-                        update = { chart ->
-
-
-                            /*
-                             * ----------------------------------
-                             * DATASET
-                             * ----------------------------------
-                             */
-
-                            val dataSet =
-                                LineDataSet(
-                                    entries,
-                                    "Mood"
-                                ).apply {
-
-                                    color =
-                                        AndroidColor.rgb(
-                                            108,
-                                            99,
-                                            255
-                                        )
-
-                                    valueTextColor =
-                                        AndroidColor.rgb(
-                                            90,
-                                            86,
-                                            105
-                                        )
-
-                                    valueTextSize =
-                                        8f
-
-                                    lineWidth =
-                                        2.5f
-
-                                    circleRadius =
-                                        4.5f
-
-                                    setCircleColor(
-                                        AndroidColor.rgb(
-                                            142,
-                                            124,
-                                            255
-                                        )
-                                    )
-
-                                    /*
-                                     * Do not show numeric values
-                                     * over the graph points.
-                                     */
-                                    setDrawValues(
-                                        false
-                                    )
-
-                                    setDrawFilled(
-                                        true
-                                    )
-
-                                    fillColor =
-                                        AndroidColor.rgb(
-                                            232,
-                                            225,
-                                            245
-                                        )
-
-                                    fillAlpha =
-                                        70
-
-                                    mode =
-                                        LineDataSet.Mode
-                                            .CUBIC_BEZIER
-                                }
-
-
-                            chart.data =
-                                LineData(
-                                    dataSet
-                                )
-
-
-                            /*
-                             * ----------------------------------
-                             * DESCRIPTION
-                             * ----------------------------------
-                             */
-
-                            chart.description =
-                                Description().apply {
-
-                                    text = ""
-                                }
-
-
-                            /*
-                             * ----------------------------------
-                             * X-AXIS
-                             * ----------------------------------
-                             *
-                             * TIME ONLY.
-                             */
-
-                            chart.xAxis.apply {
-
-                                position =
-                                    XAxis.XAxisPosition.BOTTOM
-
-                                setDrawGridLines(
-                                    false
-                                )
-
-                                setDrawAxisLine(
-                                    true
-                                )
-
-                                textColor =
-                                    AndroidColor.rgb(
-                                        100,
-                                        96,
-                                        112
-                                    )
-
-                                textSize =
-                                    8f
-
-                                granularity =
-                                    1f
-
-                                labelCount =
-                                    minOf(
-                                        timeLabels.size,
-                                        5
-                                    )
-
-                                spaceMin =
-                                    0.2f
-
-                                spaceMax =
-                                    0.2f
-
-                                valueFormatter =
-                                    object :
-                                        ValueFormatter() {
-
-                                        override fun
-                                                getFormattedValue(
-                                            value: Float
-                                        ): String {
-
-                                            val index =
-                                                value.toInt()
-
-                                            return if (
-                                                index >= 0 &&
-                                                index <
-                                                timeLabels.size
-                                            ) {
-
-                                                timeLabels[
-                                                    index
-                                                ]
-
-                                            } else {
-
-                                                ""
-                                            }
-                                        }
-                                    }
-                            }
-
-
-                            /*
-                             * ----------------------------------
-                             * LEFT Y-AXIS
-                             * ----------------------------------
-                             *
-                             * 1 = 😡
-                             * 2 = 😔
-                             * 3 = 😐
-                             * 4 = 😌
-                             * 5 = 😊
-                             */
-
-                            chart.axisLeft.apply {
-
-                                setDrawGridLines(
-                                    true
-                                )
-
-                                gridColor =
-                                    AndroidColor.rgb(
-                                        235,
-                                        231,
-                                        242
-                                    )
-
-                                textColor =
-                                    AndroidColor.rgb(
-                                        100,
-                                        96,
-                                        112
-                                    )
-
-                                textSize =
-                                    13f
-
-                                axisMinimum =
-                                    1f
-
-                                axisMaximum =
-                                    5f
-
-                                granularity =
-                                    1f
-
-                                labelCount =
-                                    5
-
-                                valueFormatter =
-                                    object :
-                                        ValueFormatter() {
-
-                                        override fun
-                                                getFormattedValue(
-                                            value: Float
-                                        ): String {
-
-                                            return when (
-                                                value.toInt()
-                                            ) {
-
-                                                1 ->
-                                                    "😡"
-
-                                                2 ->
-                                                    "😔"
-
-                                                3 ->
-                                                    "😐"
-
-                                                4 ->
-                                                    "😌"
-
-                                                5 ->
-                                                    "😊"
-
-                                                else ->
-                                                    ""
-                                            }
-                                        }
-                                    }
-                            }
-
-
-                            /*
-                             * ----------------------------------
-                             * RIGHT Y-AXIS
-                             * ----------------------------------
-                             */
-
-                            chart.axisRight.isEnabled =
-                                false
-
-
-                            /*
-                             * ----------------------------------
-                             * LEGEND
-                             * ----------------------------------
-                             *
-                             * "Mood" is hidden because the
-                             * graph is already self-explanatory.
-                             */
-
-                            chart.legend.isEnabled =
-                                false
-
-
-                            /*
-                             * ----------------------------------
-                             * INTERACTION
-                             * ----------------------------------
-                             *
-                             * Pinch zoom is disabled.
-                             *
-                             * IMPORTANT:
-                             *
-                             * Do NOT use setScaleEnabled().
-                             * That method is unavailable in the
-                             * MPAndroidChart version being used.
-                             */
-
-                            chart.setTouchEnabled(
-                                true
-                            )
-
-                            chart.setPinchZoom(
-                                false
-                            )
-
-
-                            /*
-                             * ----------------------------------
-                             * ANIMATION
-                             * ----------------------------------
-                             */
-
-                            chart.animateX(
-                                500
-                            )
-
-
-                            /*
-                             * ----------------------------------
-                             * REFRESH
-                             * ----------------------------------
-                             */
-
-                            chart.invalidate()
-                        }
-                    )
-                }
-            }
-
-
-            /*
-             * ==================================================
-             * MOOD SCALE
-             * ==================================================
-             *
-             * THIS IS DEFINITELY PRESERVED.
-             *
-             * It appears directly below the graph.
-             */
-
-            Card(
-
-                modifier =
-                    Modifier
-                        .fillMaxWidth(),
-
-                shape =
-                    RoundedCornerShape(20.dp),
-
-                colors =
-                    CardDefaults.cardColors(
-                        containerColor =
-                            softLavender
-                    ),
-
-                elevation =
-                    CardDefaults.cardElevation(
-                        defaultElevation = 2.dp
+                        defaultElevation = 3.dp
                     )
             ) {
 
                 Column(
 
                     modifier =
-                        Modifier.padding(
-                            horizontal = 14.dp,
-                            vertical = 11.dp
-                        ),
+                        Modifier
+                            .fillMaxWidth()
+                            .background(
 
-                    verticalArrangement =
-                        Arrangement.spacedBy(7.dp)
+                                Brush.verticalGradient(
+
+                                    listOf(
+
+                                        MaterialTheme
+                                            .colorScheme
+                                            .primary
+                                            .copy(
+                                                alpha = 0.82f
+                                            ),
+
+                                        MaterialTheme
+                                            .colorScheme
+                                            .primary
+                                            .copy(
+                                                alpha = 0.58f
+                                            ),
+
+                                        MaterialTheme
+                                            .colorScheme
+                                            .secondary
+                                            .copy(
+                                                alpha = 0.42f
+                                            )
+                                    )
+                                )
+                            )
+                            .padding(
+                                horizontal = 20.dp,
+                                vertical = 20.dp
+                            )
                 ) {
 
                     Text(
 
                         text =
-                            "Mood scale",
+                            "Mood Analytics 📈",
 
                         style =
                             MaterialTheme
                                 .typography
-                                .titleSmall,
+                                .headlineSmall,
 
                         fontWeight =
-                            FontWeight.SemiBold,
+                            FontWeight.Bold,
 
                         color =
-                            textDark
+                            Color.White
                     )
 
-                    Row(
-
+                    Spacer(
                         modifier =
-                            Modifier.fillMaxWidth(),
+                            Modifier.height(5.dp)
+                    )
 
-                        horizontalArrangement =
-                            Arrangement.SpaceBetween,
+                    Text(
 
-                        verticalAlignment =
-                            Alignment.CenterVertically
-                    ) {
+                        text =
+                            "View your mood changes for a specific day.",
 
-                        MoodScaleItem(
-                            score = "1",
-                            emoji = "😡",
-                            label = "Angry"
-                        )
+                        style =
+                            MaterialTheme
+                                .typography
+                                .bodySmall,
 
-                        MoodScaleItem(
-                            score = "2",
-                            emoji = "😔",
-                            label = "Sad"
-                        )
-
-                        MoodScaleItem(
-                            score = "3",
-                            emoji = "😐",
-                            label = "Neutral"
-                        )
-
-                        MoodScaleItem(
-                            score = "4",
-                            emoji = "😌",
-                            label = "Calm"
-                        )
-
-                        MoodScaleItem(
-                            score = "5",
-                            emoji = "😊",
-                            label = "Happy"
-                        )
-                    }
+                        color =
+                            Color.White.copy(
+                                alpha = 0.88f
+                            )
+                    )
                 }
             }
 
 
             /*
              * ==================================================
-             * BOTTOM SPACING
+             * CONTENT
              * ==================================================
-             *
-             * Gives the Mood scale some breathing room above
-             * the bottom navigation bar.
              */
 
-            Spacer(
+            Column(
+
                 modifier =
-                    Modifier.height(90.dp)
-            )
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(
+                            horizontal = 18.dp
+                        ),
+
+                verticalArrangement =
+                    Arrangement.spacedBy(12.dp)
+            ) {
+
+                /*
+                 * ==================================================
+                 * DATE SELECTOR
+                 * ==================================================
+                 */
+
+                Card(
+
+                    modifier =
+                        Modifier.fillMaxWidth(),
+
+                    shape =
+                        RoundedCornerShape(18.dp),
+
+                    colors =
+                        CardDefaults.cardColors(
+                            containerColor =
+                                surface
+                        ),
+
+                    elevation =
+                        CardDefaults.cardElevation(
+                            defaultElevation = 2.dp
+                        )
+                ) {
+
+                    Row(
+
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(
+                                    horizontal = 14.dp,
+                                    vertical = 10.dp
+                                ),
+
+                        verticalAlignment =
+                            Alignment.CenterVertically,
+
+                        horizontalArrangement =
+                            Arrangement.SpaceBetween
+                    ) {
+
+                        Column {
+
+                            Text(
+
+                                text =
+                                    "Selected date",
+
+                                style =
+                                    MaterialTheme
+                                        .typography
+                                        .labelMedium,
+
+                                color =
+                                    textSecondary
+                            )
+
+                            Text(
+
+                                text =
+                                    selectedDate,
+
+                                style =
+                                    MaterialTheme
+                                        .typography
+                                        .titleMedium,
+
+                                fontWeight =
+                                    FontWeight.SemiBold,
+
+                                color =
+                                    textDark
+                            )
+                        }
+
+                        Button(
+
+                            onClick = {
+
+                                showDatePicker =
+                                    true
+                            },
+
+                            modifier =
+                                Modifier.height(42.dp),
+
+                            shape =
+                                RoundedCornerShape(14.dp),
+
+                            contentPadding =
+                                PaddingValues(
+                                    horizontal = 14.dp
+                                ),
+
+                            colors =
+                                ButtonDefaults.buttonColors(
+                                    containerColor =
+                                        softLavender,
+
+                                    contentColor =
+                                        onSoftLavender
+                                )
+                        ) {
+
+                            Icon(
+
+                                imageVector =
+                                    Icons.Default.CalendarMonth,
+
+                                contentDescription =
+                                    "Choose date",
+
+                                modifier =
+                                    Modifier.size(18.dp)
+                            )
+
+                            Spacer(
+                                modifier =
+                                    Modifier.width(6.dp)
+                            )
+
+                            Text(
+                                text =
+                                    "Change"
+                            )
+                        }
+                    }
+                }
+
+
+                /*
+                 * ==================================================
+                 * GRAPH CARD
+                 * ==================================================
+                 */
+
+                Card(
+
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .height(350.dp),
+
+                    shape =
+                        RoundedCornerShape(24.dp),
+
+                    colors =
+                        CardDefaults.cardColors(
+                            containerColor =
+                                surface
+                        ),
+
+                    elevation =
+                        CardDefaults.cardElevation(
+                            defaultElevation = 4.dp
+                        )
+                ) {
+
+                    if (entries.isEmpty()) {
+
+                        Column(
+
+                            modifier =
+                                Modifier
+                                    .fillMaxSize()
+                                    .padding(24.dp),
+
+                            verticalArrangement =
+                                Arrangement.Center,
+
+                            horizontalAlignment =
+                                Alignment.CenterHorizontally
+                        ) {
+
+                            Text(
+
+                                text =
+                                    "No mood entries",
+
+                                style =
+                                    MaterialTheme
+                                        .typography
+                                        .titleMedium,
+
+                                fontWeight =
+                                    FontWeight.SemiBold,
+
+                                color =
+                                    textDark
+                            )
+
+                            Text(
+
+                                text =
+                                    "There are no mood entries recorded for $selectedDate.",
+
+                                modifier =
+                                    Modifier.padding(
+                                        top = 6.dp
+                                    ),
+
+                                style =
+                                    MaterialTheme
+                                        .typography
+                                        .bodySmall,
+
+                                color =
+                                    textSecondary
+                            )
+                        }
+
+                    } else {
+
+                        AndroidView(
+
+                            modifier =
+                                Modifier
+                                    .fillMaxSize()
+                                    .padding(12.dp),
+
+                            factory = { context ->
+
+                                LineChart(
+                                    context
+                                )
+
+                            },
+
+                            update = { chart ->
+
+                                val dataSet =
+                                    LineDataSet(
+                                        entries,
+                                        "Mood"
+                                    ).apply {
+
+                                        color =
+                                            chartPrimary
+
+                                        valueTextColor =
+                                            chartText
+
+                                        valueTextSize =
+                                            8f
+
+                                        lineWidth =
+                                            2.5f
+
+                                        circleRadius =
+                                            4.5f
+
+                                        setCircleColor(
+                                            chartSecondary
+                                        )
+
+                                        setDrawValues(
+                                            false
+                                        )
+
+                                        setDrawFilled(
+                                            true
+                                        )
+
+                                        fillColor =
+                                            chartSecondary
+
+                                        fillAlpha =
+                                            70
+
+                                        mode =
+                                            LineDataSet.Mode
+                                                .CUBIC_BEZIER
+                                    }
+
+                                chart.data =
+                                    LineData(
+                                        dataSet
+                                    )
+
+                                chart.description =
+                                    Description().apply {
+                                        text = ""
+                                    }
+
+                                chart.xAxis.apply {
+
+                                    position =
+                                        XAxis.XAxisPosition.BOTTOM
+
+                                    setDrawGridLines(
+                                        false
+                                    )
+
+                                    setDrawAxisLine(
+                                        true
+                                    )
+
+                                    textColor =
+                                        chartText
+
+                                    textSize =
+                                        8f
+
+                                    granularity =
+                                        1f
+
+                                    labelCount =
+                                        minOf(
+                                            timeLabels.size,
+                                            5
+                                        )
+
+                                    spaceMin =
+                                        0.2f
+
+                                    spaceMax =
+                                        0.2f
+
+                                    valueFormatter =
+                                        object :
+                                            ValueFormatter() {
+
+                                            override fun
+                                                    getFormattedValue(
+                                                value: Float
+                                            ): String {
+
+                                                val index =
+                                                    value.toInt()
+
+                                                return if (
+                                                    index >= 0 &&
+                                                    index <
+                                                    timeLabels.size
+                                                ) {
+
+                                                    timeLabels[
+                                                        index
+                                                    ]
+
+                                                } else {
+
+                                                    ""
+                                                }
+                                            }
+                                        }
+                                }
+
+                                chart.axisLeft.apply {
+
+                                    setDrawGridLines(
+                                        true
+                                    )
+
+                                    gridColor =
+                                        chartGrid
+
+                                    textColor =
+                                        chartText
+
+                                    textSize =
+                                        13f
+
+                                    axisMinimum =
+                                        1f
+
+                                    axisMaximum =
+                                        5f
+
+                                    granularity =
+                                        1f
+
+                                    labelCount =
+                                        5
+
+                                    valueFormatter =
+                                        object :
+                                            ValueFormatter() {
+
+                                            override fun
+                                                    getFormattedValue(
+                                                value: Float
+                                            ): String {
+
+                                                return when (
+                                                    value.toInt()
+                                                ) {
+
+                                                    1 ->
+                                                        "😡"
+
+                                                    2 ->
+                                                        "😔"
+
+                                                    3 ->
+                                                        "😐"
+
+                                                    4 ->
+                                                        "😌"
+
+                                                    5 ->
+                                                        "😊"
+
+                                                    else ->
+                                                        ""
+                                                }
+                                            }
+                                        }
+                                }
+
+                                chart.axisRight.isEnabled =
+                                    false
+
+                                chart.legend.isEnabled =
+                                    false
+
+                                chart.setTouchEnabled(
+                                    true
+                                )
+
+                                chart.setPinchZoom(
+                                    false
+                                )
+
+                                chart.animateX(
+                                    500
+                                )
+
+                                chart.invalidate()
+                            }
+                        )
+                    }
+                }
+
+
+                /*
+                 * ==================================================
+                 * MOOD SCALE
+                 * ==================================================
+                 */
+
+                Card(
+
+                    modifier =
+                        Modifier.fillMaxWidth(),
+
+                    shape =
+                        RoundedCornerShape(20.dp),
+
+                    colors =
+                        CardDefaults.cardColors(
+                            containerColor =
+                                softLavender
+                        ),
+
+                    elevation =
+                        CardDefaults.cardElevation(
+                            defaultElevation = 2.dp
+                        )
+                ) {
+
+                    Column(
+
+                        modifier =
+                            Modifier.padding(
+                                horizontal = 14.dp,
+                                vertical = 11.dp
+                            ),
+
+                        verticalArrangement =
+                            Arrangement.spacedBy(7.dp)
+                    ) {
+
+                        Text(
+
+                            text =
+                                "Mood scale",
+
+                            style =
+                                MaterialTheme
+                                    .typography
+                                    .titleSmall,
+
+                            fontWeight =
+                                FontWeight.SemiBold,
+
+                            color =
+                                textDark
+                        )
+
+                        Row(
+
+                            modifier =
+                                Modifier.fillMaxWidth(),
+
+                            horizontalArrangement =
+                                Arrangement.SpaceBetween,
+
+                            verticalAlignment =
+                                Alignment.CenterVertically
+                        ) {
+
+                            MoodScaleItem(
+                                score = "1",
+                                emoji = "😡",
+                                label = "Angry"
+                            )
+
+                            MoodScaleItem(
+                                score = "2",
+                                emoji = "😔",
+                                label = "Sad"
+                            )
+
+                            MoodScaleItem(
+                                score = "3",
+                                emoji = "😐",
+                                label = "Neutral"
+                            )
+
+                            MoodScaleItem(
+                                score = "4",
+                                emoji = "😌",
+                                label = "Calm"
+                            )
+
+                            MoodScaleItem(
+                                score = "5",
+                                emoji = "😊",
+                                label = "Happy"
+                            )
+                        }
+                    }
+                }
+
+                Spacer(
+                    modifier =
+                        Modifier.height(90.dp)
+                )
+            }
         }
     }
 }
@@ -1216,6 +1157,12 @@ private fun MoodScaleItem(
     emoji: String,
     label: String
 ) {
+
+    val scoreColor =
+        MaterialTheme.colorScheme.primary
+
+    val labelColor =
+        MaterialTheme.colorScheme.onSurfaceVariant
 
     Column(
 
@@ -1247,7 +1194,7 @@ private fun MoodScaleItem(
                 FontWeight.Bold,
 
             color =
-                Color(0xFF6C63FF)
+                scoreColor
         )
 
         Text(
@@ -1259,8 +1206,7 @@ private fun MoodScaleItem(
                 9.sp,
 
             color =
-                Color(0xFF777282)
+                labelColor
         )
     }
 }
-

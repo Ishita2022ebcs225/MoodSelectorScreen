@@ -1,4 +1,3 @@
-
 package com.example.moodselector.presentations.assessment.results
 
 import androidx.compose.foundation.background
@@ -26,6 +25,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -38,6 +38,12 @@ private val DeepLavender = Color(0xFF765A86)
 private val TextPrimary = Color(0xFF443A48)
 private val TextSecondary = Color(0xFF766B7A)
 
+// Dark-mode accents.
+private val DarkSoftLavender = Color(0xFF342B3B)
+private val DarkDeepLavender = Color(0xFFD0B6D9)
+private val DarkTextPrimary = Color(0xFFE8DDEB)
+private val DarkTextSecondary = Color(0xFFC6B8CA)
+
 @Composable
 fun AssessmentResultsScreen(
     onContinueClicked: () -> Unit,
@@ -47,12 +53,57 @@ fun AssessmentResultsScreen(
 
     val result by viewModel.latestResult.collectAsStateWithLifecycle()
 
+    val isDarkTheme =
+        MaterialTheme.colorScheme.background.luminance() < 0.5f
+
+    val backgroundColor =
+        if (isDarkTheme) {
+            MaterialTheme.colorScheme.background
+        } else {
+            LavenderBackground
+        }
+
+    val surfaceColor =
+        if (isDarkTheme) {
+            MaterialTheme.colorScheme.surface
+        } else {
+            Color.White
+        }
+
+    val softLavenderColor =
+        if (isDarkTheme) {
+            DarkSoftLavender
+        } else {
+            SoftLavender
+        }
+
+    val primaryTextColor =
+        if (isDarkTheme) {
+            DarkTextPrimary
+        } else {
+            TextPrimary
+        }
+
+    val secondaryTextColor =
+        if (isDarkTheme) {
+            DarkTextSecondary
+        } else {
+            TextSecondary
+        }
+
+    val iconColor =
+        if (isDarkTheme) {
+            DarkDeepLavender
+        } else {
+            DeepLavender
+        }
+
     result?.let { assessment ->
 
         Column(
             modifier = modifier
                 .fillMaxSize()
-                .background(LavenderBackground)
+                .background(backgroundColor)
                 .verticalScroll(rememberScrollState())
                 .padding(24.dp),
 
@@ -63,153 +114,256 @@ fun AssessmentResultsScreen(
 
             Text(
                 text = "Assessment Complete",
-                style = MaterialTheme.typography.headlineLarge,
-                fontWeight = FontWeight.SemiBold,
-                color = TextPrimary,
-                textAlign = TextAlign.Center
+
+                style =
+                    MaterialTheme.typography.headlineLarge,
+
+                fontWeight =
+                    FontWeight.SemiBold,
+
+                color =
+                    primaryTextColor,
+
+                textAlign =
+                    TextAlign.Center
             )
 
             Spacer(
-                modifier = Modifier.height(24.dp)
+                modifier =
+                    Modifier.height(24.dp)
             )
 
+            /*
+             * ==================================================
+             * ASSESSMENT RESULTS
+             * ==================================================
+             */
+
             Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = Color.White
-                ),
-                shape = RoundedCornerShape(24.dp),
-                elevation = CardDefaults.cardElevation(
-                    defaultElevation = 1.dp
-                )
+                modifier =
+                    Modifier.fillMaxWidth(),
+
+                colors =
+                    CardDefaults.cardColors(
+                        containerColor =
+                            surfaceColor
+                    ),
+
+                shape =
+                    RoundedCornerShape(24.dp),
+
+                elevation =
+                    CardDefaults.cardElevation(
+                        defaultElevation = 1.dp
+                    )
             ) {
 
                 Column(
-                    modifier = Modifier.padding(24.dp)
+                    modifier =
+                        Modifier.padding(24.dp)
                 ) {
 
                     Text(
-                        text = "Depression Screening (PHQ-9)",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = TextPrimary
+                        text =
+                            "Depression Screening (PHQ-9)",
+
+                        style =
+                            MaterialTheme.typography.titleLarge,
+
+                        fontWeight =
+                            FontWeight.Bold,
+
+                        color =
+                            primaryTextColor
                     )
 
                     Spacer(
-                        modifier = Modifier.height(12.dp)
+                        modifier =
+                            Modifier.height(12.dp)
                     )
 
                     Text(
-                        text = "Score: ${assessment.phq9Score}",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = TextPrimary
+                        text =
+                            "Score: ${assessment.phq9Score}",
+
+                        style =
+                            MaterialTheme.typography.titleMedium,
+
+                        color =
+                            primaryTextColor
                     )
 
                     Text(
-                        text = "Severity: ${assessment.phq9Severity.displayName} depression",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = TextSecondary
+                        text =
+                            "Severity: ${assessment.phq9Severity.displayName} depression",
+
+                        style =
+                            MaterialTheme.typography.bodyLarge,
+
+                        color =
+                            secondaryTextColor
                     )
 
                     Spacer(
-                        modifier = Modifier.height(20.dp)
+                        modifier =
+                            Modifier.height(20.dp)
                     )
 
-                    Divider()
-
-                    Spacer(
-                        modifier = Modifier.height(20.dp)
-                    )
-
-                    Text(
-                        text = "Anxiety Screening (GAD-7)",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = TextPrimary
+                    Divider(
+                        color =
+                            MaterialTheme.colorScheme.outlineVariant
                     )
 
                     Spacer(
-                        modifier = Modifier.height(12.dp)
+                        modifier =
+                            Modifier.height(20.dp)
                     )
 
                     Text(
-                        text = "Score: ${assessment.gad7Score}",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = TextPrimary
+                        text =
+                            "Anxiety Screening (GAD-7)",
+
+                        style =
+                            MaterialTheme.typography.titleLarge,
+
+                        fontWeight =
+                            FontWeight.Bold,
+
+                        color =
+                            primaryTextColor
+                    )
+
+                    Spacer(
+                        modifier =
+                            Modifier.height(12.dp)
                     )
 
                     Text(
-                        text = "Severity: ${assessment.gad7Severity.displayName} anxiety",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = TextSecondary
+                        text =
+                            "Score: ${assessment.gad7Score}",
+
+                        style =
+                            MaterialTheme.typography.titleMedium,
+
+                        color =
+                            primaryTextColor
+                    )
+
+                    Text(
+                        text =
+                            "Severity: ${assessment.gad7Severity.displayName} anxiety",
+
+                        style =
+                            MaterialTheme.typography.bodyLarge,
+
+                        color =
+                            secondaryTextColor
                     )
                 }
             }
 
             Spacer(
-                modifier = Modifier.height(24.dp)
+                modifier =
+                    Modifier.height(24.dp)
             )
+
+            /*
+             * ==================================================
+             * SCREENING DISCLAIMER
+             * ==================================================
+             */
 
             Text(
                 text =
                     "These questionnaires are validated screening tools and are not intended to provide a clinical diagnosis.\n\n" +
                             "If your symptoms are affecting your daily life, consider discussing your results with a qualified mental health professional.",
 
-                style = MaterialTheme.typography.bodyMedium,
+                style =
+                    MaterialTheme.typography.bodyMedium,
 
-                color = TextSecondary,
+                color =
+                    secondaryTextColor,
 
-                textAlign = TextAlign.Center
+                textAlign =
+                    TextAlign.Center
             )
 
             Spacer(
-                modifier = Modifier.height(24.dp)
+                modifier =
+                    Modifier.height(24.dp)
             )
 
             /*
-             * --------------------------------------------------
-             * CBT Guidance
-             * --------------------------------------------------
+             * ==================================================
+             * CBT GUIDANCE
+             * ==================================================
              */
 
             Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = SoftLavender
-                ),
-                shape = RoundedCornerShape(24.dp),
-                elevation = CardDefaults.cardElevation(
-                    defaultElevation = 0.dp
-                )
+                modifier =
+                    Modifier.fillMaxWidth(),
+
+                colors =
+                    CardDefaults.cardColors(
+                        containerColor =
+                            softLavenderColor
+                    ),
+
+                shape =
+                    RoundedCornerShape(24.dp),
+
+                elevation =
+                    CardDefaults.cardElevation(
+                        defaultElevation = 0.dp
+                    )
             ) {
 
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(24.dp),
+
+                    horizontalAlignment =
+                        Alignment.CenterHorizontally
                 ) {
 
                     Icon(
-                        imageVector = Icons.Outlined.SelfImprovement,
-                        contentDescription = null,
-                        tint = DeepLavender
+                        imageVector =
+                            Icons.Outlined.SelfImprovement,
+
+                        contentDescription =
+                            null,
+
+                        tint =
+                            iconColor
                     )
 
                     Spacer(
-                        modifier = Modifier.height(12.dp)
+                        modifier =
+                            Modifier.height(12.dp)
                     )
 
                     Text(
-                        text = "Personalized CBT support",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.SemiBold,
-                        color = TextPrimary,
-                        textAlign = TextAlign.Center
+                        text =
+                            "Personalized CBT support",
+
+                        style =
+                            MaterialTheme.typography.titleLarge,
+
+                        fontWeight =
+                            FontWeight.SemiBold,
+
+                        color =
+                            primaryTextColor,
+
+                        textAlign =
+                            TextAlign.Center
                     )
 
                     Spacer(
-                        modifier = Modifier.height(8.dp)
+                        modifier =
+                            Modifier.height(8.dp)
                     )
 
                     Text(
@@ -217,28 +371,37 @@ fun AssessmentResultsScreen(
                             "Based on your assessment results, personalized CBT exercises will be available in the CBT section of the app.\n\n" +
                                     "You can explore them whenever you're ready and work through them at your own pace.",
 
-                        style = MaterialTheme.typography.bodyMedium,
+                        style =
+                            MaterialTheme.typography.bodyMedium,
 
-                        color = TextSecondary,
+                        color =
+                            secondaryTextColor,
 
-                        textAlign = TextAlign.Center
+                        textAlign =
+                            TextAlign.Center
                     )
                 }
             }
 
             Spacer(
-                modifier = Modifier.height(32.dp)
+                modifier =
+                    Modifier.height(32.dp)
             )
 
             Button(
-                onClick = onContinueClicked,
-                modifier = Modifier.fillMaxWidth()
+                onClick =
+                    onContinueClicked,
+
+                modifier =
+                    Modifier.fillMaxWidth()
             ) {
 
                 Text(
-                    text = "Continue"
+                    text =
+                        "Continue"
                 )
             }
         }
     }
 }
+

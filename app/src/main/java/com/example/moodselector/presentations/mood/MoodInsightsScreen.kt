@@ -1,5 +1,10 @@
 package com.example.moodselector.presentations.mood
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -9,90 +14,85 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.Assessment
+import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.MoodBad
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.SelfImprovement
+import androidx.compose.material.icons.filled.SentimentDissatisfied
+import androidx.compose.material.icons.filled.SentimentNeutral
+import androidx.compose.material.icons.filled.SentimentVerySatisfied
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.moodselector.R
+import com.example.moodselector.notifications.NotificationHelper
 import com.example.moodselector.presentations.auth.AuthViewModel
+import kotlinx.coroutines.launch
 
 data class MoodOption(
     val label: String,
-    val emoji: String
+    val icon: ImageVector
 )
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MoodInsightsScreen(
+    onSettingsClick: () -> Unit = {},
     onLogout: () -> Unit = {},
+    onAssessmentResultsClick: () -> Unit = {},
     viewModel: MoodViewModel = hiltViewModel(),
     authViewModel: AuthViewModel = hiltViewModel()
 ) {
 
     val moods by viewModel.moodList.collectAsState()
 
-    var moodText by remember {
-        mutableStateOf("")
-    }
+    val authUiState by
+    authViewModel.uiState.collectAsStateWithLifecycle()
 
-    var selectedMood by remember {
-        mutableStateOf("Happy")
-    }
-
+    val displayName =
+        authUiState.user
+            ?.displayName
+            ?.trim()
+            ?.takeIf { it.isNotBlank() }
+            ?: "there"
 
     /*
-     * ==========================================================
-     * MOOD OPTIONS
-     * ==========================================================
-     *
-     * These are real Unicode emoji characters rather than
-     * Material icons, so Android can render them using its
-     * native emoji font.
+     * --------------------------------------------------
+     * DRAWER
+     * --------------------------------------------------
      */
 
-    val moodOptions = listOf(
-
-        MoodOption(
-            label = "Happy",
-            emoji = "😊"
-        ),
-
-        MoodOption(
-            label = "Calm",
-            emoji = "😌"
-        ),
-
-        MoodOption(
-            label = "Neutral",
-            emoji = "😐"
-        ),
-
-        MoodOption(
-            label = "Sad",
-            emoji = "😔"
-        ),
-
-        MoodOption(
-            label = "Angry",
-            emoji = "😠"
+    val drawerState =
+        rememberDrawerState(
+            initialValue = DrawerValue.Closed
         )
-    )
 
+    val scope =
+        rememberCoroutineScope()
 
     /*
-     * ==========================================================
+     * --------------------------------------------------
      * COLORS
-     * ==========================================================
+     * --------------------------------------------------
      */
 
     val darkPurple =
@@ -102,25 +102,141 @@ fun MoodInsightsScreen(
         Color(0xFF8F84C7)
 
     val softLavender =
-        Color(0xFFE8E1F5)
+        MaterialTheme.colorScheme.surfaceVariant
 
     val mutedRose =
-        Color(0xFFF1E2E8)
+        if (MaterialTheme.colorScheme.background.luminance() > 0.5f) {
+            Color(0xFFF1E2E8)
+        } else {
+            Color(0xFF3A2D38)
+        }
 
     val mistBlue =
-        Color(0xFFE2EBF2)
+        if (MaterialTheme.colorScheme.background.luminance() > 0.5f) {
+            Color(0xFFE2EBF2)
+        } else {
+            Color(0xFF29343D)
+        }
 
-    val warmGlass =
-        Color(0xCCF4EFFA)
+    val glassWhite =
+        if (MaterialTheme.colorScheme.background.luminance() > 0.5f) {
+            Color(0xEAF9F6FC)
+        } else {
+            Color(0xE82B2633)
+        }
 
     val textDark =
-        Color(0xFF1F1C24)
+        MaterialTheme.colorScheme.onSurface
 
+    val secondaryText =
+        MaterialTheme.colorScheme.onSurfaceVariant
 
     /*
-     * ==========================================================
-     * MOOD CALCULATION
-     * ==========================================================
+     * --------------------------------------------------
+     * NOTIFICATIONS
+     * --------------------------------------------------
+     */
+
+    val context =
+        LocalContext.current
+
+    val notificationPermissionLauncher =
+        rememberLauncherForActivityResult(
+            contract =
+                ActivityResultContracts.RequestPermission()
+        ) { isGranted ->
+
+            if (isGranted) {
+
+                NotificationHelper.showNotification(
+                    context = context,
+                    title = "HerMind",
+                    body = "Your notifications are now enabled."
+                )
+            }
+        }
+
+    fun handleNotificationClick() {
+
+        if (
+            Build.VERSION.SDK_INT >=
+            Build.VERSION_CODES.TIRAMISU
+        ) {
+
+            val permissionGranted =
+                ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) ==
+                        PackageManager.PERMISSION_GRANTED
+
+            if (permissionGranted) {
+
+                NotificationHelper.showNotification(
+                    context = context,
+                    title = "HerMind",
+                    body = "Your notifications are enabled."
+                )
+
+            } else {
+
+                notificationPermissionLauncher.launch(
+                    Manifest.permission.POST_NOTIFICATIONS
+                )
+            }
+
+        } else {
+
+            NotificationHelper.showNotification(
+                context = context,
+                title = "HerMind",
+                body = "Your notifications are enabled."
+            )
+        }
+    }
+
+    /*
+     * --------------------------------------------------
+     * MOOD INPUT
+     * --------------------------------------------------
+     */
+
+    var moodText by remember {
+        mutableStateOf("")
+    }
+
+    var selectedMood by remember {
+        mutableStateOf("Happy")
+    }
+
+    val moodOptions =
+        listOf(
+            MoodOption(
+                "Happy",
+                Icons.Default.SentimentVerySatisfied
+            ),
+            MoodOption(
+                "Calm",
+                Icons.Default.SelfImprovement
+            ),
+            MoodOption(
+                "Neutral",
+                Icons.Default.SentimentNeutral
+            ),
+            MoodOption(
+                "Sad",
+                Icons.Default.SentimentDissatisfied
+            ),
+            MoodOption(
+                "Angry",
+                Icons.Default.MoodBad
+            )
+        )
+
+    /*
+     * --------------------------------------------------
+     * MOOD CALCULATIONS
+     * --------------------------------------------------
      */
 
     val scores =
@@ -128,23 +244,22 @@ fun MoodInsightsScreen(
 
             when (it.emoji) {
 
-                "Happy" ->
-                    5
+                "Happy",
+                "😊" -> 5
 
-                "Calm" ->
-                    4
+                "Calm",
+                "😌" -> 4
 
-                "Neutral" ->
-                    3
+                "Neutral",
+                "😐" -> 3
 
-                "Sad" ->
-                    2
+                "Sad",
+                "😔" -> 2
 
-                "Angry" ->
-                    1
+                "Angry",
+                "😡" -> 1
 
-                else ->
-                    3
+                else -> 3
             }
         }
 
@@ -168,111 +283,450 @@ fun MoodInsightsScreen(
                 "You've been emotionally overwhelmed lately 💙"
         }
 
-
     /*
-     * ==========================================================
-     * BACKGROUND
-     * ==========================================================
+     * ==================================================
+     * SIDEBAR
+     * ==================================================
      */
 
-    Box(
-        modifier =
-            Modifier.fillMaxSize()
-    ) {
+    ModalNavigationDrawer(
 
-        Image(
-            painter =
-                painterResource(
-                    id =
-                        R.drawable.lavender_scenery
-                ),
+        drawerState =
+            drawerState,
 
-            contentDescription =
-                null,
+        drawerContent = {
 
-            modifier =
-                Modifier.fillMaxSize(),
+            ModalDrawerSheet(
 
-            contentScale =
-                ContentScale.Crop
-        )
+                drawerContainerColor =
+                    MaterialTheme.colorScheme.surface,
 
-        Box(
-            modifier =
-                Modifier
-                    .fillMaxSize()
-                    .background(
-                        Brush.verticalGradient(
-                            listOf(
-                                Color(0x44000000),
-                                Color(0x33000000),
-                                Color(0x66000000)
-                            )
-                        )
-                    )
-        )
-
-
-        /*
-         * ======================================================
-         * CONTENT
-         * ======================================================
-         */
-
-        Scaffold(
-            containerColor =
-                Color.Transparent
-        ) { paddingValues ->
-
-            LazyColumn(
-
-                modifier =
-                    Modifier
-                        .fillMaxSize()
-                        .padding(
-                            paddingValues
-                        )
-                        .statusBarsPadding()
-                        .navigationBarsPadding(),
-
-                contentPadding =
-                    PaddingValues(
-                        bottom = 90.dp
+                drawerShape =
+                    RoundedCornerShape(
+                        topEnd = 28.dp,
+                        bottomEnd = 28.dp
                     )
             ) {
 
+                Column(
+                    modifier =
+                        Modifier
+                            .fillMaxHeight()
+                            .padding(
+                                horizontal = 18.dp
+                            )
+                ) {
 
-                /*
-                 * ==================================================
-                 * HERO SECTION
-                 * ==================================================
-                 */
+                    Spacer(
+                        modifier =
+                            Modifier.height(24.dp)
+                    )
 
-                item {
+                    /*
+                     * SIDEBAR HEADER
+                     */
 
-                    Box {
+                    Row(
+                        modifier =
+                            Modifier.fillMaxWidth(),
+
+                        horizontalArrangement =
+                            Arrangement.SpaceBetween,
+
+                        verticalAlignment =
+                            Alignment.CenterVertically
+                    ) {
+
+                        Column {
+
+                            Text(
+                                text =
+                                    "HerMind",
+
+                                style =
+                                    MaterialTheme
+                                        .typography
+                                        .titleLarge,
+
+                                fontWeight =
+                                    FontWeight.Bold,
+
+                                color =
+                                    darkPurple
+                            )
+
+                            Spacer(
+                                modifier =
+                                    Modifier.height(2.dp)
+                            )
+
+                            Text(
+                                text =
+                                    "Your wellbeing space",
+
+                                style =
+                                    MaterialTheme
+                                        .typography
+                                        .bodySmall,
+
+                                color =
+                                    secondaryText
+                            )
+                        }
+
+                        IconButton(
+                            onClick = {
+                                scope.launch {
+                                    drawerState.close()
+                                }
+                            }
+                        ) {
+
+                            Icon(
+                                imageVector =
+                                    Icons.Default.Close,
+
+                                contentDescription =
+                                    "Close sidebar",
+
+                                tint =
+                                    secondaryText
+                            )
+                        }
+                    }
+
+                    Spacer(
+                        modifier =
+                            Modifier.height(28.dp)
+                    )
+
+                    HorizontalDivider(
+                        color =
+                            MaterialTheme.colorScheme.outlineVariant
+                    )
+
+                    Spacer(
+                        modifier =
+                            Modifier.height(20.dp)
+                    )
+
+                    /*
+                     * ASSESSMENT RESULTS
+                     */
+
+                    NavigationDrawerItem(
+
+                        label = {
+                            Text(
+                                text =
+                                    "Assessment Results",
+
+                                style =
+                                    MaterialTheme
+                                        .typography
+                                        .bodyLarge,
+
+                                fontWeight =
+                                    FontWeight.Medium
+                            )
+                        },
+
+                        selected = false,
+
+                        onClick = {
+
+                            scope.launch {
+                                drawerState.close()
+                            }
+
+                            onAssessmentResultsClick()
+                        },
+
+                        icon = {
+
+                            Icon(
+                                imageVector =
+                                    Icons.Default.Assessment,
+
+                                contentDescription =
+                                    null
+                            )
+                        },
+
+                        shape =
+                            RoundedCornerShape(
+                                16.dp
+                            ),
+
+                        colors =
+                            NavigationDrawerItemDefaults
+                                .colors(
+                                    unselectedIconColor =
+                                        darkPurple,
+
+                                    unselectedTextColor =
+                                        textDark,
+
+                                    unselectedContainerColor =
+                                        Color.Transparent
+                                )
+                    )
+
+                    Spacer(
+                        modifier =
+                            Modifier.height(6.dp)
+                    )
+
+                    /*
+                     * SETTINGS
+                     */
+
+                    NavigationDrawerItem(
+
+                        label = {
+                            Text(
+                                text =
+                                    "Settings",
+
+                                style =
+                                    MaterialTheme
+                                        .typography
+                                        .bodyLarge,
+
+                                fontWeight =
+                                    FontWeight.Medium
+                            )
+                        },
+
+                        selected = false,
+
+                        onClick = {
+
+                            scope.launch {
+                                drawerState.close()
+                            }
+
+                            onSettingsClick()
+                        },
+
+                        icon = {
+
+                            Icon(
+                                imageVector =
+                                    Icons.Default.Settings,
+
+                                contentDescription =
+                                    null
+                            )
+                        },
+
+                        shape =
+                            RoundedCornerShape(
+                                16.dp
+                            ),
+
+                        colors =
+                            NavigationDrawerItemDefaults
+                                .colors(
+                                    unselectedIconColor =
+                                        darkPurple,
+
+                                    unselectedTextColor =
+                                        textDark,
+
+                                    unselectedContainerColor =
+                                        Color.Transparent
+                                )
+                    )
+
+                    Spacer(
+                        modifier =
+                            Modifier.weight(1f)
+                    )
+
+                    HorizontalDivider(
+                        color =
+                            MaterialTheme.colorScheme.outlineVariant
+                    )
+
+                    Spacer(
+                        modifier =
+                            Modifier.height(14.dp)
+                    )
+
+                    /*
+                     * LOGOUT
+                     */
+
+                    NavigationDrawerItem(
+
+                        label = {
+                            Text(
+                                text =
+                                    "Log Out",
+
+                                style =
+                                    MaterialTheme
+                                        .typography
+                                        .bodyLarge,
+
+                                fontWeight =
+                                    FontWeight.Medium
+                            )
+                        },
+
+                        selected = false,
+
+                        onClick = {
+
+                            scope.launch {
+                                drawerState.close()
+                            }
+
+                            authViewModel.signOut()
+                            onLogout()
+                        },
+
+                        icon = {
+
+                            Icon(
+                                imageVector =
+                                    Icons.Default.Logout,
+
+                                contentDescription =
+                                    null
+                            )
+                        },
+
+                        shape =
+                            RoundedCornerShape(
+                                16.dp
+                            ),
+
+                        colors =
+                            NavigationDrawerItemDefaults
+                                .colors(
+                                    unselectedIconColor =
+                                        Color(0xFFB44A5A),
+
+                                    unselectedTextColor =
+                                        Color(0xFFB44A5A),
+
+                                    unselectedContainerColor =
+                                        Color.Transparent
+                                )
+                    )
+
+                    Spacer(
+                        modifier =
+                            Modifier.height(24.dp)
+                    )
+                }
+            }
+        }
+    ) {
+
+        Box(
+            modifier =
+                Modifier.fillMaxSize()
+        ) {
+
+            /*
+             * --------------------------------------------------
+             * BACKGROUND
+             * --------------------------------------------------
+             */
+
+            Image(
+                painter =
+                    painterResource(
+                        id = R.drawable.lavender_scenery
+                    ),
+
+                contentDescription =
+                    null,
+
+                modifier =
+                    Modifier.fillMaxSize(),
+
+                contentScale =
+                    ContentScale.Crop
+            )
+
+            Box(
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .background(
+                            Brush.verticalGradient(
+                                listOf(
+                                    Color(0x30000000),
+                                    Color(0x22000000),
+                                    Color(0x55000000)
+                                )
+                            )
+                        )
+            )
+
+            Scaffold(
+
+                containerColor =
+                    Color.Transparent
+
+            ) { paddingValues ->
+
+                LazyColumn(
+
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .padding(
+                                paddingValues
+                            )
+                            .statusBarsPadding()
+                            .navigationBarsPadding(),
+
+                    contentPadding =
+                        PaddingValues(
+                            bottom = 110.dp
+                        ),
+
+                    verticalArrangement =
+                        Arrangement.spacedBy(
+                            16.dp
+                        )
+                ) {
+
+                    /*
+                     * ==================================================
+                     * HEADER
+                     * ==================================================
+                     */
+
+                    item {
 
                         Box(
                             modifier =
                                 Modifier
                                     .fillMaxWidth()
-                                    .height(245.dp)
+                                    .padding(
+                                        horizontal = 16.dp,
+                                        vertical = 8.dp
+                                    )
                                     .clip(
                                         RoundedCornerShape(
-                                            bottomStart = 30.dp,
-                                            bottomEnd = 30.dp
+                                            28.dp
                                         )
                                     )
                                     .background(
                                         Brush.verticalGradient(
                                             listOf(
                                                 darkPurple.copy(
-                                                    alpha = 0.78f
+                                                    alpha = 0.82f
                                                 ),
                                                 primaryPurple.copy(
-                                                    alpha = 0.60f
-                                                ),
-                                                Color.Transparent
+                                                    alpha = 0.62f
+                                                )
                                             )
                                         )
                                     )
@@ -281,8 +735,8 @@ fun MoodInsightsScreen(
                             Column(
                                 modifier =
                                     Modifier.padding(
-                                        horizontal = 18.dp,
-                                        vertical = 16.dp
+                                        horizontal = 20.dp,
+                                        vertical = 18.dp
                                     )
                             ) {
 
@@ -297,59 +751,119 @@ fun MoodInsightsScreen(
                                         Alignment.CenterVertically
                                 ) {
 
-                                    Column {
+                                    Row(
+                                        verticalAlignment =
+                                            Alignment.CenterVertically
+                                    ) {
 
-                                        Text(
-                                            text =
-                                                "Hello 🌸",
-
-                                            style =
-                                                MaterialTheme
-                                                    .typography
-                                                    .titleLarge,
-
-                                            fontWeight =
-                                                FontWeight.Bold,
-
-                                            color =
-                                                Color.White
-                                        )
-
-                                        Spacer(
+                                        Surface(
                                             modifier =
-                                                Modifier.height(2.dp)
-                                        )
+                                                Modifier
+                                                    .size(42.dp)
+                                                    .clickable {
 
-                                        Text(
-                                            text =
-                                                "Track your emotional wellbeing",
+                                                        scope.launch {
+                                                            drawerState.open()
+                                                        }
+                                                    },
 
-                                            style =
-                                                MaterialTheme
-                                                    .typography
-                                                    .bodySmall,
+                                            shape =
+                                                CircleShape,
 
                                             color =
                                                 Color.White.copy(
-                                                    alpha = 0.9f
+                                                    alpha = 0.18f
+                                                )
+                                        ) {
+
+                                            Box(
+                                                contentAlignment =
+                                                    Alignment.Center
+                                            ) {
+
+                                                Icon(
+                                                    imageVector =
+                                                        Icons.Default.Menu,
+
+                                                    contentDescription =
+                                                        "Open sidebar",
+
+                                                    tint =
+                                                        Color.White,
+
+                                                    modifier =
+                                                        Modifier.size(
+                                                            21.dp
+                                                        )
+                                                )
+                                            }
+                                        }
+
+                                        Spacer(
+                                            modifier =
+                                                Modifier.width(
+                                                    12.dp
                                                 )
                                         )
+
+                                        Column {
+
+                                            Text(
+                                                text =
+                                                    "Hello, $displayName 🌸",
+
+                                                style =
+                                                    MaterialTheme
+                                                        .typography
+                                                        .titleLarge,
+
+                                                fontWeight =
+                                                    FontWeight.Bold,
+
+                                                color =
+                                                    Color.White
+                                            )
+
+                                            Spacer(
+                                                modifier =
+                                                    Modifier.height(3.dp)
+                                            )
+
+                                            Text(
+                                                text =
+                                                    "Track your emotional wellbeing",
+
+                                                style =
+                                                    MaterialTheme
+                                                        .typography
+                                                        .bodySmall,
+
+                                                color =
+                                                    Color.White.copy(
+                                                        alpha = 0.88f
+                                                    )
+                                            )
+                                        }
                                     }
 
                                     Surface(
+                                        modifier =
+                                            Modifier
+                                                .size(42.dp)
+                                                .clickable {
+                                                    handleNotificationClick()
+                                                },
+
                                         shape =
                                             CircleShape,
 
                                         color =
                                             Color.White.copy(
-                                                alpha = 0.16f
+                                                alpha = 0.18f
                                             )
                                     ) {
 
                                         Box(
-                                            modifier =
-                                                Modifier.size(40.dp),
-
                                             contentAlignment =
                                                 Alignment.Center
                                         ) {
@@ -359,13 +873,15 @@ fun MoodInsightsScreen(
                                                     Icons.Default.Notifications,
 
                                                 contentDescription =
-                                                    null,
+                                                    "Notifications",
 
                                                 tint =
                                                     Color.White,
 
                                                 modifier =
-                                                    Modifier.size(20.dp)
+                                                    Modifier.size(
+                                                        21.dp
+                                                    )
                                             )
                                         }
                                     }
@@ -373,32 +889,58 @@ fun MoodInsightsScreen(
 
                                 Spacer(
                                     modifier =
-                                        Modifier.height(24.dp)
+                                        Modifier.height(22.dp)
                                 )
 
-                                Text(
-                                    text =
-                                        String.format(
-                                            "%.1f",
-                                            averageMood
-                                        ),
+                                Row(
+                                    verticalAlignment =
+                                        Alignment.Bottom
+                                ) {
 
-                                    style =
-                                        MaterialTheme
-                                            .typography
-                                            .displaySmall,
+                                    Text(
+                                        text =
+                                            String.format(
+                                                "%.1f",
+                                                averageMood
+                                            ),
 
-                                    fontWeight =
-                                        FontWeight.ExtraBold,
+                                        style =
+                                            MaterialTheme
+                                                .typography
+                                                .displaySmall,
 
-                                    color =
-                                        Color.White
-                                )
+                                        fontWeight =
+                                            FontWeight.Bold,
 
-                                Spacer(
-                                    modifier =
-                                        Modifier.height(2.dp)
-                                )
+                                        color =
+                                            Color.White
+                                    )
+
+                                    Spacer(
+                                        modifier =
+                                            Modifier.width(8.dp)
+                                    )
+
+                                    Text(
+                                        text =
+                                            "/ 5.0",
+
+                                        style =
+                                            MaterialTheme
+                                                .typography
+                                                .bodyMedium,
+
+                                        color =
+                                            Color.White.copy(
+                                                alpha = 0.78f
+                                            ),
+
+                                        modifier =
+                                            Modifier.padding(
+                                                bottom = 5.dp
+                                            )
+                                    )
+                                }
 
                                 Text(
                                     text =
@@ -407,40 +949,31 @@ fun MoodInsightsScreen(
                                     style =
                                         MaterialTheme
                                             .typography
-                                            .bodyMedium,
+                                            .bodySmall,
 
                                     color =
                                         Color.White.copy(
-                                            alpha = 0.92f
+                                            alpha = 0.85f
                                         )
                                 )
                             }
                         }
+                    }
 
+                    /*
+                     * ==================================================
+                     * SUMMARY
+                     * ==================================================
+                     */
 
-                        /*
-                         * ==================================================
-                         * FLOATING SUMMARY CARD
-                         * ==================================================
-                         */
+                    item {
 
                         Card(
-
                             modifier =
                                 Modifier
                                     .fillMaxWidth()
                                     .padding(
                                         horizontal = 16.dp
-                                    )
-                                    .offset(
-                                        y = 180.dp
-                                    )
-                                    .shadow(
-                                        elevation = 8.dp,
-                                        shape =
-                                            RoundedCornerShape(
-                                                22.dp
-                                            )
                                     ),
 
                             shape =
@@ -451,18 +984,22 @@ fun MoodInsightsScreen(
                             colors =
                                 CardDefaults.cardColors(
                                     containerColor =
-                                        warmGlass
+                                        glassWhite
+                                ),
+
+                            elevation =
+                                CardDefaults.cardElevation(
+                                    defaultElevation = 3.dp
                                 )
                         ) {
 
                             Row(
-
                                 modifier =
                                     Modifier
                                         .fillMaxWidth()
                                         .padding(
-                                            horizontal = 16.dp,
-                                            vertical = 14.dp
+                                            horizontal = 18.dp,
+                                            vertical = 15.dp
                                         ),
 
                                 horizontalArrangement =
@@ -481,7 +1018,7 @@ fun MoodInsightsScreen(
                                                 .bodySmall,
 
                                         color =
-                                            Color.Gray
+                                            secondaryText
                                     )
 
                                     Spacer(
@@ -492,14 +1029,14 @@ fun MoodInsightsScreen(
                                     Text(
                                         text =
                                             String.format(
-                                                "%.1f",
+                                                "%.1f / 5.0",
                                                 averageMood
                                             ),
 
                                         style =
                                             MaterialTheme
                                                 .typography
-                                                .titleLarge,
+                                                .titleMedium,
 
                                         fontWeight =
                                             FontWeight.Bold,
@@ -509,7 +1046,10 @@ fun MoodInsightsScreen(
                                     )
                                 }
 
-                                Column {
+                                Column(
+                                    horizontalAlignment =
+                                        Alignment.End
+                                ) {
 
                                     Text(
                                         text =
@@ -521,7 +1061,7 @@ fun MoodInsightsScreen(
                                                 .bodySmall,
 
                                         color =
-                                            Color.Gray
+                                            secondaryText
                                     )
 
                                     Spacer(
@@ -558,506 +1098,61 @@ fun MoodInsightsScreen(
                             }
                         }
                     }
-                }
 
+                    /*
+                     * ==================================================
+                     * MOOD PICKER
+                     * ==================================================
+                     */
 
-                item {
+                    item {
 
-                    Spacer(
-                        modifier =
-                            Modifier.height(105.dp)
-                    )
-                }
-
-
-                /*
-                 * ==================================================
-                 * MOOD PICKER
-                 * ==================================================
-                 */
-
-                item {
-
-                    Card(
-
-                        modifier =
-                            Modifier.padding(
-                                horizontal = 16.dp
-                            ),
-
-                        shape =
-                            RoundedCornerShape(
-                                24.dp
-                            ),
-
-                        colors =
-                            CardDefaults.cardColors(
-                                containerColor =
-                                    softLavender.copy(
-                                        alpha = 0.82f
-                                    )
-                            )
-                    ) {
-
-                        Column(
-
-                            modifier =
-                                Modifier.padding(
-                                    16.dp
-                                )
-                        ) {
-
-                            Text(
-                                text =
-                                    "How do you feel today?",
-
-                                style =
-                                    MaterialTheme
-                                        .typography
-                                        .titleMedium,
-
-                                fontWeight =
-                                    FontWeight.Bold,
-
-                                color =
-                                    textDark
-                            )
-
-                            Spacer(
-                                modifier =
-                                    Modifier.height(18.dp)
-                            )
-
-
-                            /*
-                             * --------------------------------------------------
-                             * EMOJI MOOD SELECTOR
-                             * --------------------------------------------------
-                             */
-
-                            Row(
-
-                                modifier =
-                                    Modifier.fillMaxWidth(),
-
-                                horizontalArrangement =
-                                    Arrangement.SpaceBetween,
-
-                                verticalAlignment =
-                                    Alignment.CenterVertically
-                            ) {
-
-                                moodOptions.forEach { mood ->
-
-                                    val selected =
-                                        selectedMood ==
-                                                mood.label
-
-                                    Box(
-
-                                        modifier =
-                                            Modifier
-                                                .size(
-                                                    if (selected) {
-                                                        56.dp
-                                                    } else {
-                                                        48.dp
-                                                    }
-                                                )
-                                                .clip(
-                                                    CircleShape
-                                                )
-                                                .background(
-
-                                                    if (selected) {
-
-                                                        Brush.linearGradient(
-                                                            listOf(
-                                                                darkPurple,
-                                                                primaryPurple
-                                                            )
-                                                        )
-
-                                                    } else {
-
-                                                        Brush.linearGradient(
-                                                            listOf(
-                                                                Color(0xFFF1ECFA),
-                                                                Color(0xFFE5DEF4)
-                                                            )
-                                                        )
-                                                    }
-                                                )
-                                                .clickable {
-
-                                                    selectedMood =
-                                                        mood.label
-                                                },
-
-                                        contentAlignment =
-                                            Alignment.Center
-                                    ) {
-
-                                        Text(
-
-                                            text =
-                                                mood.emoji,
-
-                                            fontSize =
-                                                if (selected) {
-                                                    27.sp
-                                                } else {
-                                                    24.sp
-                                                }
-                                        )
-                                    }
-                                }
-                            }
-
-
-                            Spacer(
-                                modifier =
-                                    Modifier.height(16.dp)
-                            )
-
-
-                            /*
-                             * --------------------------------------------------
-                             * EMOTION DESCRIPTION
-                             * --------------------------------------------------
-                             */
-
-                            OutlinedTextField(
-
-                                value =
-                                    moodText,
-
-                                onValueChange = {
-                                    moodText = it
-                                },
-
-                                modifier =
-                                    Modifier.fillMaxWidth(),
-
-                                label = {
-                                    Text(
-                                        "Describe your emotions"
-                                    )
-                                },
-
-                                textStyle =
-                                    MaterialTheme
-                                        .typography
-                                        .bodyMedium,
-
-                                shape =
-                                    RoundedCornerShape(
-                                        16.dp
-                                    ),
-
-                                colors =
-                                    TextFieldDefaults.colors(
-
-                                        focusedContainerColor =
-                                            Color.White.copy(
-                                                alpha = 0.35f
-                                            ),
-
-                                        unfocusedContainerColor =
-                                            Color.White.copy(
-                                                alpha = 0.18f
-                                            ),
-
-                                        focusedIndicatorColor =
-                                            Color.Transparent,
-
-                                        unfocusedIndicatorColor =
-                                            Color.Transparent
-                                    )
-                            )
-
-
-                            Spacer(
-                                modifier =
-                                    Modifier.height(16.dp)
-                            )
-
-
-                            /*
-                             * --------------------------------------------------
-                             * SAVE MOOD
-                             * --------------------------------------------------
-                             */
-
-                            Button(
-
-                                onClick = {
-
-                                    if (
-                                        moodText.isNotBlank()
-                                    ) {
-
-                                        viewModel.addMood(
-
-                                            mood =
-                                                moodText,
-
-                                            emoji =
-                                                selectedMood
-                                        )
-
-                                        moodText = ""
-                                    }
-                                },
-
-                                modifier =
-                                    Modifier
-                                        .fillMaxWidth()
-                                        .height(48.dp),
-
-                                shape =
-                                    RoundedCornerShape(
-                                        16.dp
-                                    ),
-
-                                colors =
-                                    ButtonDefaults.buttonColors(
-                                        containerColor =
-                                            darkPurple
-                                    )
-                            ) {
-
-                                Text(
-                                    text =
-                                        "Save Mood",
-
-                                    fontSize =
-                                        14.sp,
-
-                                    fontWeight =
-                                        FontWeight.SemiBold,
-
-                                    color =
-                                        Color.White
-                                )
-                            }
-                        }
-                    }
-                }
-
-
-                /*
-                 * ==================================================
-                 * AI INSIGHT
-                 * ==================================================
-                 */
-
-                item {
-
-                    Card(
-
-                        modifier =
-                            Modifier.padding(
-                                horizontal = 16.dp,
-                                vertical = 14.dp
-                            ),
-
-                        shape =
-                            RoundedCornerShape(
-                                22.dp
-                            ),
-
-                        colors =
-                            CardDefaults.cardColors(
-                                containerColor =
-                                    mistBlue.copy(
-                                        alpha = 0.78f
-                                    )
-                            )
-                    ) {
-
-                        Column(
-                            modifier =
-                                Modifier.padding(
-                                    16.dp
-                                )
-                        ) {
-
-                            Text(
-                                text =
-                                    "AI Insight ✨",
-
-                                style =
-                                    MaterialTheme
-                                        .typography
-                                        .titleMedium,
-
-                                fontWeight =
-                                    FontWeight.Bold,
-
-                                color =
-                                    textDark
-                            )
-
-                            Spacer(
-                                modifier =
-                                    Modifier.height(6.dp)
-                            )
-
-                            Text(
-                                text =
-                                    insight,
-
-                                style =
-                                    MaterialTheme
-                                        .typography
-                                        .bodyMedium,
-
-                                color =
-                                    textDark
-                            )
-                        }
-                    }
-                }
-
-
-                /*
-                 * ==================================================
-                 * RECENT ENTRIES
-                 * ==================================================
-                 */
-
-                item {
-
-                    Text(
-                        text =
-                            "Recent Entries",
-
-                        modifier =
-                            Modifier.padding(
-                                horizontal = 16.dp,
-                                vertical = 4.dp
-                            ),
-
-                        style =
-                            MaterialTheme
-                                .typography
-                                .titleMedium,
-
-                        fontWeight =
-                            FontWeight.Bold,
-
-                        color =
-                            Color.White
-                    )
-                }
-
-
-                items(
-                    moods.takeLast(5).reversed()
-                ) { mood ->
-
-                    Card(
-
-                        modifier =
-                            Modifier.padding(
-                                horizontal = 16.dp,
-                                vertical = 5.dp
-                            ),
-
-                        shape =
-                            RoundedCornerShape(
-                                20.dp
-                            ),
-
-                        colors =
-                            CardDefaults.cardColors(
-                                containerColor =
-                                    mutedRose.copy(
-                                        alpha = 0.80f
-                                    )
-                            )
-                    ) {
-
-                        Row(
-
+                        Card(
                             modifier =
                                 Modifier
                                     .fillMaxWidth()
                                     .padding(
-                                        horizontal = 14.dp,
-                                        vertical = 12.dp
+                                        horizontal = 16.dp
                                     ),
 
-                            verticalAlignment =
-                                Alignment.CenterVertically
+                            shape =
+                                RoundedCornerShape(
+                                    24.dp
+                                ),
+
+                            colors =
+                                CardDefaults.cardColors(
+                                    containerColor =
+                                        softLavender.copy(
+                                            alpha = 0.90f
+                                        )
+                                ),
+
+                            elevation =
+                                CardDefaults.cardElevation(
+                                    defaultElevation = 2.dp
+                                )
                         ) {
 
-                            Box(
-
+                            Column(
                                 modifier =
-                                    Modifier
-                                        .size(46.dp)
-                                        .clip(
-                                            CircleShape
-                                        )
-                                        .background(
-                                            Color.White.copy(
-                                                alpha = 0.35f
-                                            )
-                                        ),
-
-                                contentAlignment =
-                                    Alignment.Center
+                                    Modifier.padding(
+                                        horizontal = 18.dp,
+                                        vertical = 18.dp
+                                    )
                             ) {
 
                                 Text(
-
                                     text =
-                                        when (mood.emoji) {
-
-                                            "Happy" ->
-                                                "✨"
-
-                                            "Calm" ->
-                                                "🌿"
-
-                                            "Neutral" ->
-                                                "☁️"
-
-                                            "Sad" ->
-                                                "💙"
-
-                                            "Angry" ->
-                                                "🔥"
-
-                                            else ->
-                                                "🌸"
-                                        },
-
-                                    fontSize =
-                                        22.sp
-                                )
-                            }
-
-                            Spacer(
-                                modifier =
-                                    Modifier.width(12.dp)
-                            )
-
-                            Column {
-
-                                Text(
-                                    text =
-                                        mood.mood,
+                                        "How do you feel today?",
 
                                     style =
                                         MaterialTheme
                                             .typography
-                                            .bodyLarge,
+                                            .titleMedium,
 
                                     fontWeight =
-                                        FontWeight.SemiBold,
+                                        FontWeight.Bold,
 
                                     color =
                                         textDark
@@ -1065,109 +1160,547 @@ fun MoodInsightsScreen(
 
                                 Spacer(
                                     modifier =
-                                        Modifier.height(2.dp)
+                                        Modifier.height(18.dp)
+                                )
+
+                                Row(
+                                    modifier =
+                                        Modifier.fillMaxWidth(),
+
+                                    horizontalArrangement =
+                                        Arrangement.SpaceBetween,
+
+                                    verticalAlignment =
+                                        Alignment.CenterVertically
+                                ) {
+
+                                    moodOptions.forEach { mood ->
+
+                                        val selected =
+                                            selectedMood ==
+                                                    mood.label
+
+                                        Column(
+                                            horizontalAlignment =
+                                                Alignment.CenterHorizontally
+                                        ) {
+
+                                            Box(
+                                                modifier =
+                                                    Modifier
+                                                        .size(
+                                                            if (selected) {
+                                                                50.dp
+                                                            } else {
+                                                                44.dp
+                                                            }
+                                                        )
+                                                        .clip(
+                                                            CircleShape
+                                                        )
+                                                        .background(
+                                                            if (selected) {
+                                                                Brush.linearGradient(
+                                                                    listOf(
+                                                                        darkPurple,
+                                                                        primaryPurple
+                                                                    )
+                                                                )
+                                                            } else {
+                                                                Brush.linearGradient(
+                                                                    listOf(
+                                                                        MaterialTheme
+                                                                            .colorScheme
+                                                                            .surface,
+                                                                        MaterialTheme
+                                                                            .colorScheme
+                                                                            .surfaceVariant
+                                                                    )
+                                                                )
+                                                            }
+                                                        )
+                                                        .clickable {
+                                                            selectedMood =
+                                                                mood.label
+                                                        },
+
+                                                contentAlignment =
+                                                    Alignment.Center
+                                            ) {
+
+                                                Icon(
+                                                    imageVector =
+                                                        mood.icon,
+
+                                                    contentDescription =
+                                                        mood.label,
+
+                                                    tint =
+                                                        if (selected) {
+                                                            Color.White
+                                                        } else {
+                                                            darkPurple
+                                                        },
+
+                                                    modifier =
+                                                        Modifier.size(
+                                                            22.dp
+                                                        )
+                                                )
+                                            }
+
+                                            Spacer(
+                                                modifier =
+                                                    Modifier.height(
+                                                        5.dp
+                                                    )
+                                            )
+
+                                            Text(
+                                                text =
+                                                    mood.label,
+
+                                                style =
+                                                    MaterialTheme
+                                                        .typography
+                                                        .labelSmall,
+
+                                                color =
+                                                    if (selected) {
+                                                        darkPurple
+                                                    } else {
+                                                        secondaryText
+                                                    },
+
+                                                fontWeight =
+                                                    if (selected) {
+                                                        FontWeight.SemiBold
+                                                    } else {
+                                                        FontWeight.Normal
+                                                    }
+                                            )
+                                        }
+                                    }
+                                }
+
+                                Spacer(
+                                    modifier =
+                                        Modifier.height(18.dp)
+                                )
+
+                                OutlinedTextField(
+
+                                    value =
+                                        moodText,
+
+                                    onValueChange = {
+                                        moodText = it
+                                    },
+
+                                    modifier =
+                                        Modifier.fillMaxWidth(),
+
+                                    label = {
+                                        Text(
+                                            "Describe your emotions"
+                                        )
+                                    },
+
+                                    textStyle =
+                                        MaterialTheme
+                                            .typography
+                                            .bodyMedium,
+
+                                    shape =
+                                        RoundedCornerShape(
+                                            16.dp
+                                        ),
+
+                                    colors =
+                                        TextFieldDefaults.colors(
+
+                                            focusedContainerColor =
+                                                MaterialTheme
+                                                    .colorScheme
+                                                    .surface
+                                                    .copy(
+                                                        alpha = 0.55f
+                                                    ),
+
+                                            unfocusedContainerColor =
+                                                MaterialTheme
+                                                    .colorScheme
+                                                    .surface
+                                                    .copy(
+                                                        alpha = 0.40f
+                                                    ),
+
+                                            focusedIndicatorColor =
+                                                Color.Transparent,
+
+                                            unfocusedIndicatorColor =
+                                                Color.Transparent
+                                        )
+                                )
+
+                                Spacer(
+                                    modifier =
+                                        Modifier.height(14.dp)
+                                )
+
+                                Button(
+
+                                    onClick = {
+
+                                        if (
+                                            moodText.isNotBlank()
+                                        ) {
+
+                                            viewModel.addMood(
+
+                                                mood =
+                                                    moodText,
+
+                                                emoji =
+                                                    selectedMood
+                                            )
+
+                                            moodText = ""
+                                        }
+                                    },
+
+                                    modifier =
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .height(48.dp),
+
+                                    shape =
+                                        RoundedCornerShape(
+                                            16.dp
+                                        ),
+
+                                    colors =
+                                        ButtonDefaults
+                                            .buttonColors(
+                                                containerColor =
+                                                    darkPurple
+                                            )
+                                ) {
+
+                                    Text(
+                                        text =
+                                            "Save Mood",
+
+                                        style =
+                                            MaterialTheme
+                                                .typography
+                                                .labelLarge,
+
+                                        color =
+                                            Color.White
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    /*
+                     * ==================================================
+                     * AI INSIGHT
+                     * ==================================================
+                     */
+
+                    item {
+
+                        Card(
+
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .padding(
+                                        horizontal = 16.dp
+                                    ),
+
+                            shape =
+                                RoundedCornerShape(
+                                    22.dp
+                                ),
+
+                            colors =
+                                CardDefaults.cardColors(
+                                    containerColor =
+                                        mistBlue.copy(
+                                            alpha = 0.88f
+                                        )
+                                ),
+
+                            elevation =
+                                CardDefaults.cardElevation(
+                                    defaultElevation = 2.dp
+                                )
+                        ) {
+
+                            Column(
+                                modifier =
+                                    Modifier.padding(
+                                        horizontal = 18.dp,
+                                        vertical = 16.dp
+                                    )
+                            ) {
+
+                                Row(
+                                    verticalAlignment =
+                                        Alignment.CenterVertically
+                                ) {
+
+                                    Icon(
+                                        imageVector =
+                                            Icons.Default.AutoAwesome,
+
+                                        contentDescription =
+                                            null,
+
+                                        tint =
+                                            darkPurple,
+
+                                        modifier =
+                                            Modifier.size(
+                                                20.dp
+                                            )
+                                    )
+
+                                    Spacer(
+                                        modifier =
+                                            Modifier.width(8.dp)
+                                    )
+
+                                    Text(
+                                        text =
+                                            "AI Insight",
+
+                                        style =
+                                            MaterialTheme
+                                                .typography
+                                                .titleMedium,
+
+                                        fontWeight =
+                                            FontWeight.Bold,
+
+                                        color =
+                                            textDark
+                                    )
+                                }
+
+                                Spacer(
+                                    modifier =
+                                        Modifier.height(8.dp)
                                 )
 
                                 Text(
                                     text =
-                                        mood.timestamp,
+                                        insight,
 
                                     style =
                                         MaterialTheme
                                             .typography
-                                            .bodySmall,
+                                            .bodyMedium,
 
                                     color =
-                                        Color.Gray
+                                        textDark.copy(
+                                            alpha = 0.82f
+                                        )
                                 )
                             }
                         }
                     }
-                }
 
+                    /*
+                     * ==================================================
+                     * RECENT ENTRIES
+                     * ==================================================
+                     */
 
-                /*
-                 * ==================================================
-                 * LOGOUT
-                 * ==================================================
-                 */
-
-                item {
-
-                    Spacer(
-                        modifier =
-                            Modifier.height(12.dp)
-                    )
-
-                    OutlinedButton(
-
-                        onClick = {
-
-                            authViewModel.signOut()
-
-                            onLogout()
-                        },
-
-                        modifier =
-                            Modifier
-                                .fillMaxWidth()
-                                .padding(
-                                    horizontal = 16.dp
-                                )
-                                .height(48.dp),
-
-                        shape =
-                            RoundedCornerShape(
-                                18.dp
-                            ),
-
-                        colors =
-                            ButtonDefaults
-                                .outlinedButtonColors(
-                                    contentColor =
-                                        Color(0xFFB44A5A)
-                                )
-                    ) {
-
-                        Icon(
-                            imageVector =
-                                Icons.Default.Logout,
-
-                            contentDescription =
-                                "Log out",
-
-                            modifier =
-                                Modifier.size(19.dp)
-                        )
-
-                        Spacer(
-                            modifier =
-                                Modifier.width(7.dp)
-                        )
+                    item {
 
                         Text(
                             text =
-                                "Log Out",
+                                "Recent Entries",
 
-                            fontSize =
-                                14.sp,
+                            modifier =
+                                Modifier.padding(
+                                    horizontal = 18.dp
+                                ),
+
+                            style =
+                                MaterialTheme
+                                    .typography
+                                    .titleMedium,
 
                             fontWeight =
-                                FontWeight.SemiBold
+                                FontWeight.Bold,
+
+                            color =
+                                Color.White
                         )
                     }
-                }
 
+                    items(
+                        moods.takeLast(5).reversed(),
+                        key = { mood ->
+                            mood.id
+                        }
+                    ) { mood ->
 
-                item {
+                        Card(
 
-                    Spacer(
-                        modifier =
-                            Modifier.height(20.dp)
-                    )
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .padding(
+                                        horizontal = 16.dp
+                                    ),
+
+                            shape =
+                                RoundedCornerShape(
+                                    20.dp
+                                ),
+
+                            colors =
+                                CardDefaults.cardColors(
+                                    containerColor =
+                                        mutedRose.copy(
+                                            alpha = 0.88f
+                                        )
+                                ),
+
+                            elevation =
+                                CardDefaults.cardElevation(
+                                    defaultElevation = 1.dp
+                                )
+                        ) {
+
+                            Row(
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .padding(
+                                            horizontal = 16.dp,
+                                            vertical = 13.dp
+                                        ),
+
+                                verticalAlignment =
+                                    Alignment.CenterVertically
+                            ) {
+
+                                Box(
+                                    modifier =
+                                        Modifier
+                                            .size(44.dp)
+                                            .clip(
+                                                CircleShape
+                                            )
+                                            .background(
+                                                MaterialTheme
+                                                    .colorScheme
+                                                    .surface
+                                                    .copy(
+                                                        alpha = 0.42f
+                                                    )
+                                            ),
+
+                                    contentAlignment =
+                                        Alignment.Center
+                                ) {
+
+                                    Text(
+                                        text =
+                                            when (
+                                                mood.emoji
+                                            ) {
+
+                                                "Happy",
+                                                "😊" ->
+                                                    "✨"
+
+                                                "Calm",
+                                                "😌" ->
+                                                    "🌿"
+
+                                                "Neutral",
+                                                "😐" ->
+                                                    "☁️"
+
+                                                "Sad",
+                                                "😔" ->
+                                                    "💙"
+
+                                                "Angry",
+                                                "😡" ->
+                                                    "🔥"
+
+                                                else ->
+                                                    "🌸"
+                                            }
+                                    )
+                                }
+
+                                Spacer(
+                                    modifier =
+                                        Modifier.width(12.dp)
+                                )
+
+                                Column(
+                                    modifier =
+                                        Modifier.weight(1f)
+                                ) {
+
+                                    Text(
+                                        text =
+                                            mood.mood,
+
+                                        style =
+                                            MaterialTheme
+                                                .typography
+                                                .bodyLarge,
+
+                                        fontWeight =
+                                            FontWeight.SemiBold,
+
+                                        color =
+                                            textDark
+                                    )
+
+                                    Spacer(
+                                        modifier =
+                                            Modifier.height(2.dp)
+                                    )
+
+                                    Text(
+                                        text =
+                                            mood.timestamp,
+
+                                        style =
+                                            MaterialTheme
+                                                .typography
+                                                .bodySmall,
+
+                                        color =
+                                            secondaryText
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    item {
+
+                        Spacer(
+                            modifier =
+                                Modifier.height(24.dp)
+                        )
+                    }
                 }
             }
         }
     }
 }
-

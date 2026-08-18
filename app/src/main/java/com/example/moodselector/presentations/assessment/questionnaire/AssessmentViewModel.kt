@@ -237,25 +237,32 @@ class AssessmentViewModel @Inject constructor(
                             severity,
 
                         gad7Completed =
-                            true,
-
-                        isCompleted =
                             true
                     )
 
-                _uiState.value =
-                    updatedState
 
-
-                val diagnosisSummary =
-                    "Depression: ${updatedState.phq9Severity}, Anxiety: ${updatedState.gad7Severity}"
-
+                /*
+                 * --------------------------------------------------
+                 * SAVE RESULT BEFORE MARKING AS COMPLETED
+                 * --------------------------------------------------
+                 *
+                 * The questionnaire navigates to the results screen
+                 * when isCompleted becomes true.
+                 *
+                 * Therefore, the Room result must be saved first.
+                 * Otherwise the results screen can open before the
+                 * latest result exists in the database.
+                 */
 
                 viewModelScope.launch {
 
                     val currentUserId =
                         userId
                             ?: return@launch
+
+
+                    val diagnosisSummary =
+                        "Depression: ${updatedState.phq9Severity}, Anxiety: ${updatedState.gad7Severity}"
 
 
                     /*
@@ -297,6 +304,9 @@ class AssessmentViewModel @Inject constructor(
                      * ----------------------------------------------
                      * MARK ASSESSMENT COMPLETE FOR CURRENT USER
                      * ----------------------------------------------
+                     *
+                     * This happens only after the Room save above
+                     * has completed successfully.
                      */
 
                     userPreferencesRepository
@@ -315,13 +325,11 @@ class AssessmentViewModel @Inject constructor(
                      * BACK UP UPDATED USER DATA
                      * ----------------------------------------------
                      *
-                     * The assessment has already been saved
-                     * successfully to Room.
+                     * Cloud backup is intentionally performed after
+                     * the local Room save.
                      *
-                     * Firestore backup is attempted afterward.
-                     * A cloud failure does not affect the local
-                     * assessment result or mark the assessment
-                     * as unsuccessful.
+                     * A cloud backup failure should not prevent the
+                     * locally saved assessment result from being used.
                      */
 
                     cloudBackupRepository
@@ -329,19 +337,29 @@ class AssessmentViewModel @Inject constructor(
                             userId =
                                 currentUserId
                         )
+
+
+                    /*
+                     * ----------------------------------------------
+                     * PUBLISH COMPLETION LAST
+                     * ----------------------------------------------
+                     *
+                     * AssessmentQuestionnaireScreen observes this
+                     * value and navigates to AssessmentResults when
+                     * it becomes true.
+                     *
+                     * At this point the result is already persisted.
+                     */
+
+                    _uiState.update {
+
+                        updatedState.copy(
+                            isCompleted =
+                                true
+                        )
+                    }
                 }
             }
         }
-    }
-
-
-    fun restartAssessment() {
-
-        _uiState.value =
-            AssessmentUiState()
-
-        loadAssessment(
-            AssessmentType.PHQ9
-        )
     }
 }

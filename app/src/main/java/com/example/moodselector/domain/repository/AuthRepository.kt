@@ -19,6 +19,7 @@ interface AuthRepository {
     ): Result<FirebaseUser>
 
     suspend fun signUp(
+        name: String,
         email: String,
         password: String
     ): Result<FirebaseUser>
@@ -29,4 +30,3 @@ interface AuthRepository {
         email: String
     ): Result<Unit>
 }
-

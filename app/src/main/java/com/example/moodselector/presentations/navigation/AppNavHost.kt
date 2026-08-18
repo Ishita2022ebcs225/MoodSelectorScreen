@@ -55,6 +55,7 @@ import com.example.moodselector.presentations.journal.JournalScreen
 import com.example.moodselector.presentations.mood.MoodGraphScreen
 import com.example.moodselector.presentations.mood.MoodHistoryScreen
 import com.example.moodselector.presentations.mood.MoodInsightsScreen
+import com.example.moodselector.presentations.settings.SettingsScreen
 
 @Composable
 fun AppNavHost(
@@ -290,13 +291,6 @@ fun AppNavHost(
              * ==================================================
              * LOGIN
              * ==================================================
-             *
-             * Authentication success is intentionally not
-             * handled by navigation here.
-             *
-             * MainActivity observes Firebase authentication
-             * state through StartupViewModel and recreates
-             * the appropriate navigation flow.
              */
 
             composable(
@@ -312,8 +306,7 @@ fun AppNavHost(
                          *
                          * StartupViewModel observes the Firebase
                          * authentication state and determines the
-                         * correct startup destination after cloud
-                         * synchronization.
+                         * correct startup destination.
                          */
                     },
 
@@ -335,15 +328,6 @@ fun AppNavHost(
              * ==================================================
              * REGISTER
              * ==================================================
-             *
-             * Registration success is intentionally not
-             * navigated directly to assessment.
-             *
-             * MainActivity observes the newly authenticated
-             * Firebase user through StartupViewModel.
-             *
-             * A new user will therefore reach the assessment
-             * onboarding after synchronization.
              */
 
             composable(
@@ -362,9 +346,8 @@ fun AppNavHost(
                         /*
                          * No direct navigation.
                          *
-                         * StartupViewModel observes the Firebase
-                         * authentication state and determines the
-                         * correct startup destination.
+                         * StartupViewModel observes the newly
+                         * authenticated Firebase user.
                          */
                     },
 
@@ -426,8 +409,7 @@ fun AppNavHost(
 
                 AssessmentQuestionnaireScreen(
 
-                    onAssessmentCompleted = {
-                            _, _, _, _ ->
+                    onAssessmentCompleted = { _, _, _, _ ->
 
                         navController.navigate(
                             Screen.AssessmentResults.route
@@ -485,22 +467,31 @@ fun AppNavHost(
 
                 MoodInsightsScreen(
 
+                    onSettingsClick = {
+
+                        navController.navigate(
+                            Screen.Settings.route
+                        ) {
+
+                            launchSingleTop =
+                                true
+                        }
+                    },
+
+                    onAssessmentResultsClick = {
+
+                        navController.navigate(
+                            Screen.AssessmentResults.route
+                        ) {
+
+                            launchSingleTop =
+                                true
+                        }
+                    },
+
                     onLogout = {
 
-                        /*
-                         * Sign out from Firebase first.
-                         *
-                         * Room data is NOT deleted.
-                         * It remains associated with the
-                         * user's Firebase UID.
-                         */
-
                         authViewModel.signOut()
-
-                        /*
-                         * Return to Login and clear the
-                         * authenticated navigation stack.
-                         */
 
                         navController.navigate(
                             Screen.Login.route
@@ -515,6 +506,27 @@ fun AppNavHost(
                             launchSingleTop =
                                 true
                         }
+                    }
+                )
+            }
+
+
+            /*
+             * ==================================================
+             * SETTINGS
+             * ==================================================
+             */
+
+            composable(
+                route =
+                    Screen.Settings.route
+            ) {
+
+                SettingsScreen(
+
+                    onBackClick = {
+
+                        navController.popBackStack()
                     }
                 )
             }
@@ -884,8 +896,7 @@ fun AppNavHost(
                         }
                     },
 
-                    onEditActivity = {
-                            scheduledActivity ->
+                    onEditActivity = { scheduledActivity ->
 
                         navController.navigate(
 
@@ -901,8 +912,7 @@ fun AppNavHost(
                         }
                     },
 
-                    onCompleteActivity = {
-                            scheduledActivity ->
+                    onCompleteActivity = { scheduledActivity ->
 
                         navController.navigate(
 
@@ -1009,9 +1019,8 @@ fun AppNavHost(
                         navController.popBackStack()
                     },
 
-                    onExerciseCompleted = {
-                            task,
-                            firstStep ->
+                    onExerciseCompleted = { task,
+                                            firstStep ->
 
                         navController.navigate(
 
@@ -1239,6 +1248,15 @@ fun AppNavHost(
                         navController.navigate(
                             Screen.JournalEditor.route
                         )
+                    },
+
+                    onEditJournalClick = { journalId ->
+
+                        navController.navigate(
+                            Screen.JournalEditor.createRoute(
+                                journalId
+                            )
+                        )
                     }
                 )
             }
@@ -1251,11 +1269,47 @@ fun AppNavHost(
              */
 
             composable(
+
                 route =
-                    Screen.JournalEditor.route
-            ) {
+                    Screen.JournalEditor.route,
+
+                arguments =
+                    listOf(
+
+                        navArgument(
+                            "journalId"
+                        ) {
+
+                            type =
+                                NavType.IntType
+
+                            defaultValue =
+                                -1
+                        }
+                    )
+
+            ) { backStackEntry ->
+
+                val journalIdArgument =
+                    backStackEntry.arguments
+                        ?.getInt(
+                            "journalId"
+                        )
+
+                val journalId =
+                    if (
+                        journalIdArgument != null &&
+                        journalIdArgument != -1
+                    ) {
+                        journalIdArgument
+                    } else {
+                        null
+                    }
 
                 JournalEditorScreen(
+
+                    journalId =
+                        journalId,
 
                     onBackClick = {
 
@@ -1266,4 +1320,3 @@ fun AppNavHost(
         }
     }
 }
-

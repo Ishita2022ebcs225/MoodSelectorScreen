@@ -34,7 +34,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -53,6 +55,10 @@ private val SoftPeriwinkle = Color(0xFFE1E3F5)
 private val TextPrimary = Color(0xFF443A48)
 private val TextSecondary = Color(0xFF766B7A)
 
+// Dark-mode text accents only.
+private val DarkTextPrimary = Color(0xFFE4C7EE)
+private val DarkTextSecondary = Color(0xFFC5B2CC)
+
 @Composable
 fun CBTHomeScreen(
     onActivityClick: (CBTActivity) -> Unit,
@@ -70,10 +76,20 @@ fun CBTHomeScreen(
             initialValue = 0
         )
 
+    val isDarkTheme =
+        MaterialTheme.colorScheme.background.luminance() < 0.5f
+
+    val backgroundColor =
+        if (isDarkTheme) {
+            MaterialTheme.colorScheme.background
+        } else {
+            LavenderBackground
+        }
+
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .background(LavenderBackground),
+            .background(backgroundColor),
 
         contentPadding = PaddingValues(
             start = 20.dp,
@@ -86,53 +102,34 @@ fun CBTHomeScreen(
             Arrangement.spacedBy(16.dp)
     ) {
 
-        /*
-         * --------------------------------------------------
-         * HEADER
-         * --------------------------------------------------
-         */
-
         item {
-            CBTHeader()
+            CBTHeader(
+                isDarkTheme = isDarkTheme
+            )
         }
-
-        /*
-         * --------------------------------------------------
-         * CURRENT PROGRESS SUMMARY
-         * --------------------------------------------------
-         */
 
         item {
             ProgressCard(
                 completedCount = completedCount,
-                totalCount = uiState.allActivities.size
+                totalCount = uiState.allActivities.size,
+                isDarkTheme = isDarkTheme
             )
         }
-
-        /*
-         * --------------------------------------------------
-         * DETAILED PROGRESS / TIMELINE
-         * --------------------------------------------------
-         */
 
         item {
             ProgressTimelineCard(
                 completedCount = completedCount,
-                onClick = onProgressClick
+                onClick = onProgressClick,
+                isDarkTheme = isDarkTheme
             )
         }
-
-        /*
-         * --------------------------------------------------
-         * PERSONALIZED CBT PLAN
-         * --------------------------------------------------
-         */
 
         item {
             SectionHeader(
                 title = "Your personalized plan",
                 subtitle =
-                    "Exercises selected based on your assessment."
+                    "Exercises selected based on your assessment.",
+                isDarkTheme = isDarkTheme
             )
         }
 
@@ -141,21 +138,27 @@ fun CBTHomeScreen(
             uiState.isLoading -> {
 
                 item {
-                    LoadingPlanCard()
+                    LoadingPlanCard(
+                        isDarkTheme = isDarkTheme
+                    )
                 }
             }
 
             !uiState.hasAssessmentResult -> {
 
                 item {
-                    NoAssessmentCard()
+                    NoAssessmentCard(
+                        isDarkTheme = isDarkTheme
+                    )
                 }
             }
 
             uiState.activities.isEmpty() -> {
 
                 item {
-                    EmptyPlanCard()
+                    EmptyPlanCard(
+                        isDarkTheme = isDarkTheme
+                    )
                 }
             }
 
@@ -169,24 +172,13 @@ fun CBTHomeScreen(
                     CBTActivityCard(
                         activity = activity,
                         onClick = {
-                            /*
-                             * Always forward the complete CBTActivity.
-                             *
-                             * AppNavHost is responsible for deciding
-                             * which screen belongs to this activity ID.
-                             */
                             onActivityClick(activity)
-                        }
+                        },
+                        isDarkTheme = isDarkTheme
                     )
                 }
             }
         }
-
-        /*
-         * --------------------------------------------------
-         * ALL CBT ACTIVITIES
-         * --------------------------------------------------
-         */
 
         item {
 
@@ -198,7 +190,8 @@ fun CBTHomeScreen(
             SectionHeader(
                 title = "Explore CBT activities",
                 subtitle =
-                    "You can choose any exercise that feels right for you."
+                    "You can choose any exercise that feels right for you.",
+                isDarkTheme = isDarkTheme
             )
         }
 
@@ -210,19 +203,11 @@ fun CBTHomeScreen(
             CBTActivityCard(
                 activity = activity,
                 onClick = {
-                    /*
-                     * Same navigation path as personalized activities.
-                     */
                     onActivityClick(activity)
-                }
+                },
+                isDarkTheme = isDarkTheme
             )
         }
-
-        /*
-         * --------------------------------------------------
-         * ENCOURAGEMENT
-         * --------------------------------------------------
-         */
 
         item {
 
@@ -231,7 +216,9 @@ fun CBTHomeScreen(
                     Modifier.height(8.dp)
             )
 
-            EncouragementCard()
+            EncouragementCard(
+                isDarkTheme = isDarkTheme
+            )
         }
     }
 }
@@ -244,96 +231,153 @@ fun CBTHomeScreen(
  */
 
 @Composable
-private fun CBTHeader() {
+private fun CBTHeader(
+    isDarkTheme: Boolean
+) {
 
-    Column(
+    Card(
+
         modifier =
-            Modifier.fillMaxWidth()
+            Modifier.fillMaxWidth(),
+
+        shape =
+            RoundedCornerShape(
+                bottomStart = 28.dp,
+                bottomEnd = 28.dp,
+                topStart = 22.dp,
+                topEnd = 22.dp
+            ),
+
+        colors =
+            CardDefaults.cardColors(
+                containerColor =
+                    Color.Transparent
+            ),
+
+        elevation =
+            CardDefaults.cardElevation(
+                defaultElevation = 3.dp
+            )
     ) {
 
-        Row(
-            verticalAlignment =
-                Alignment.CenterVertically
+        Column(
+
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .background(
+
+                        Brush.verticalGradient(
+
+                            listOf(
+
+                                MaterialTheme
+                                    .colorScheme
+                                    .primary
+                                    .copy(
+                                        alpha = 0.82f
+                                    ),
+
+                                MaterialTheme
+                                    .colorScheme
+                                    .primary
+                                    .copy(
+                                        alpha = 0.58f
+                                    ),
+
+                                MaterialTheme
+                                    .colorScheme
+                                    .secondary
+                                    .copy(
+                                        alpha = 0.42f
+                                    )
+                            )
+                        )
+                    )
+                    .padding(
+                        horizontal = 20.dp,
+                        vertical = 20.dp
+                    )
         ) {
 
-            Box(
-                modifier = Modifier
-                    .size(52.dp)
-                    .clip(CircleShape)
-                    .background(
-                        SoftLavender
-                    ),
+            /*
+             * --------------------------------------------------
+             * TITLE
+             * --------------------------------------------------
+             */
 
-                contentAlignment =
-                    Alignment.Center
-            ) {
+            Text(
 
-                Icon(
-                    imageVector =
-                        Icons.Outlined.SelfImprovement,
+                text =
+                    "Your CBT Plan",
 
-                    contentDescription = null,
+                style =
+                    MaterialTheme
+                        .typography
+                        .headlineSmall,
 
-                    tint =
-                        DeepLavender,
+                fontWeight =
+                    FontWeight.Bold,
 
-                    modifier =
-                        Modifier.size(28.dp)
-                )
-            }
+                color =
+                    Color.White
+            )
 
             Spacer(
                 modifier =
-                    Modifier.size(14.dp)
+                    Modifier.height(5.dp)
             )
 
-            Column {
+            /*
+             * --------------------------------------------------
+             * SUBTITLE
+             * --------------------------------------------------
+             */
 
-                Text(
-                    text = "Your CBT Plan",
+            Text(
 
-                    style =
-                        MaterialTheme.typography.headlineSmall,
+                text =
+                    "A little time for yourself",
 
-                    fontWeight =
-                        FontWeight.SemiBold,
+                style =
+                    MaterialTheme
+                        .typography
+                        .bodySmall,
 
-                    color =
-                        TextPrimary
-                )
+                color =
+                    Color.White.copy(
+                        alpha = 0.88f
+                    )
+            )
 
-                Text(
-                    text =
-                        "A little time for yourself",
+            Spacer(
+                modifier =
+                    Modifier.height(14.dp)
+            )
 
-                    style =
-                        MaterialTheme.typography.bodyMedium,
+            /*
+             * --------------------------------------------------
+             * DESCRIPTION
+             * --------------------------------------------------
+             */
 
-                    color =
-                        TextSecondary
-                )
-            }
+            Text(
+
+                text =
+                    "Take things one step at a time. " +
+                            "Choose an exercise that feels right for you today.",
+
+                style =
+                    MaterialTheme
+                        .typography
+                        .bodySmall,
+
+                color =
+                    Color.White.copy(
+                        alpha = 0.88f
+                    )
+            )
         }
-
-        Spacer(
-            modifier =
-                Modifier.height(18.dp)
-        )
-
-        Text(
-            text =
-                "Take things one step at a time. " +
-                        "Choose an exercise that feels right for you today.",
-
-            style =
-                MaterialTheme.typography.bodyLarge,
-
-            color =
-                TextSecondary,
-
-            lineHeight =
-                MaterialTheme.typography.bodyLarge.lineHeight
-        )
     }
 }
 
@@ -347,8 +391,21 @@ private fun CBTHeader() {
 @Composable
 private fun ProgressCard(
     completedCount: Int,
-    totalCount: Int
+    totalCount: Int,
+    isDarkTheme: Boolean
 ) {
+
+    val textPrimary =
+        if (isDarkTheme)
+            DarkTextPrimary
+        else
+            TextPrimary
+
+    val textSecondary =
+        if (isDarkTheme)
+            DarkTextSecondary
+        else
+            TextSecondary
 
     Card(
         modifier =
@@ -360,7 +417,10 @@ private fun ProgressCard(
         colors =
             CardDefaults.cardColors(
                 containerColor =
-                    SoftLavender
+                    if (isDarkTheme)
+                        MaterialTheme.colorScheme.surfaceVariant
+                    else
+                        SoftLavender
             ),
 
         elevation =
@@ -383,9 +443,10 @@ private fun ProgressCard(
                     .size(46.dp)
                     .clip(CircleShape)
                     .background(
-                        Color.White.copy(
-                            alpha = 0.7f
-                        )
+                        if (isDarkTheme)
+                            MaterialTheme.colorScheme.surface
+                        else
+                            Color.White.copy(alpha = 0.7f)
                     ),
 
                 contentAlignment =
@@ -399,7 +460,10 @@ private fun ProgressCard(
                     contentDescription = null,
 
                     tint =
-                        DeepLavender,
+                        if (isDarkTheme)
+                            MaterialTheme.colorScheme.primary
+                        else
+                            DeepLavender,
 
                     modifier =
                         Modifier.size(25.dp)
@@ -427,7 +491,7 @@ private fun ProgressCard(
                         FontWeight.SemiBold,
 
                     color =
-                        TextPrimary
+                        textPrimary
                 )
 
                 Spacer(
@@ -451,7 +515,7 @@ private fun ProgressCard(
                         MaterialTheme.typography.bodyMedium,
 
                     color =
-                        TextSecondary
+                        textSecondary
                 )
             }
 
@@ -466,7 +530,10 @@ private fun ProgressCard(
                     FontWeight.Bold,
 
                 color =
-                    DeepLavender
+                    if (isDarkTheme)
+                        MaterialTheme.colorScheme.primary
+                    else
+                        DeepLavender
             )
         }
     }
@@ -482,8 +549,21 @@ private fun ProgressCard(
 @Composable
 private fun ProgressTimelineCard(
     completedCount: Int,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    isDarkTheme: Boolean
 ) {
+
+    val textPrimary =
+        if (isDarkTheme)
+            DarkTextPrimary
+        else
+            TextPrimary
+
+    val textSecondary =
+        if (isDarkTheme)
+            DarkTextSecondary
+        else
+            TextSecondary
 
     Card(
         modifier = Modifier
@@ -498,12 +578,16 @@ private fun ProgressTimelineCard(
         colors =
             CardDefaults.cardColors(
                 containerColor =
-                    Color.White
+                    if (isDarkTheme)
+                        MaterialTheme.colorScheme.surface
+                    else
+                        Color.White
             ),
 
         elevation =
             CardDefaults.cardElevation(
-                defaultElevation = 1.dp
+                defaultElevation =
+                    if (isDarkTheme) 0.dp else 1.dp
             )
     ) {
 
@@ -523,7 +607,10 @@ private fun ProgressTimelineCard(
                         RoundedCornerShape(16.dp)
                     )
                     .background(
-                        SoftTeal
+                        if (isDarkTheme)
+                            MaterialTheme.colorScheme.surfaceVariant
+                        else
+                            SoftTeal
                     ),
 
                 contentAlignment =
@@ -537,7 +624,10 @@ private fun ProgressTimelineCard(
                     contentDescription = null,
 
                     tint =
-                        DeepLavender,
+                        if (isDarkTheme)
+                            MaterialTheme.colorScheme.primary
+                        else
+                            DeepLavender,
 
                     modifier =
                         Modifier.size(27.dp)
@@ -565,7 +655,7 @@ private fun ProgressTimelineCard(
                         FontWeight.SemiBold,
 
                     color =
-                        TextPrimary
+                        textPrimary
                 )
 
                 Spacer(
@@ -585,7 +675,7 @@ private fun ProgressTimelineCard(
                         MaterialTheme.typography.bodyMedium,
 
                     color =
-                        TextSecondary
+                        textSecondary
                 )
             }
 
@@ -597,7 +687,10 @@ private fun ProgressTimelineCard(
                     "View progress",
 
                 tint =
-                    Lavender,
+                    if (isDarkTheme)
+                        MaterialTheme.colorScheme.primary
+                    else
+                        Lavender,
 
                 modifier =
                     Modifier.size(23.dp)
@@ -616,8 +709,21 @@ private fun ProgressTimelineCard(
 @Composable
 private fun SectionHeader(
     title: String,
-    subtitle: String
+    subtitle: String,
+    isDarkTheme: Boolean
 ) {
+
+    val textPrimary =
+        if (isDarkTheme)
+            DarkTextPrimary
+        else
+            TextPrimary
+
+    val textSecondary =
+        if (isDarkTheme)
+            DarkTextSecondary
+        else
+            TextSecondary
 
     Column {
 
@@ -632,7 +738,7 @@ private fun SectionHeader(
                 FontWeight.SemiBold,
 
             color =
-                TextPrimary
+                textPrimary
         )
 
         Spacer(
@@ -648,7 +754,7 @@ private fun SectionHeader(
                 MaterialTheme.typography.bodyMedium,
 
             color =
-                TextSecondary
+                textSecondary
         )
     }
 }
@@ -663,18 +769,32 @@ private fun SectionHeader(
 @Composable
 private fun CBTActivityCard(
     activity: CBTActivity,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    isDarkTheme: Boolean
 ) {
 
     val categoryColor =
         categoryBackground(
-            activity.category
+            activity.category,
+            isDarkTheme
         )
 
     val categoryIcon =
         categoryIcon(
             activity.category
         )
+
+    val textPrimary =
+        if (isDarkTheme)
+            DarkTextPrimary
+        else
+            TextPrimary
+
+    val textSecondary =
+        if (isDarkTheme)
+            DarkTextSecondary
+        else
+            TextSecondary
 
     Card(
         modifier = Modifier
@@ -689,12 +809,16 @@ private fun CBTActivityCard(
         colors =
             CardDefaults.cardColors(
                 containerColor =
-                    Color.White
+                    if (isDarkTheme)
+                        MaterialTheme.colorScheme.surface
+                    else
+                        Color.White
             ),
 
         elevation =
             CardDefaults.cardElevation(
-                defaultElevation = 1.dp
+                defaultElevation =
+                    if (isDarkTheme) 0.dp else 1.dp
             )
     ) {
 
@@ -730,7 +854,10 @@ private fun CBTActivityCard(
                     contentDescription = null,
 
                     tint =
-                        DeepLavender,
+                        if (isDarkTheme)
+                            MaterialTheme.colorScheme.primary
+                        else
+                            DeepLavender,
 
                     modifier =
                         Modifier.size(27.dp)
@@ -758,7 +885,7 @@ private fun CBTActivityCard(
                         FontWeight.SemiBold,
 
                     color =
-                        TextPrimary
+                        textPrimary
                 )
 
                 Spacer(
@@ -774,7 +901,7 @@ private fun CBTActivityCard(
                         MaterialTheme.typography.bodyMedium,
 
                     color =
-                        TextSecondary,
+                        textSecondary,
 
                     maxLines = 3
                 )
@@ -786,7 +913,10 @@ private fun CBTActivityCard(
 
                 CategoryLabel(
                     category =
-                        activity.category
+                        activity.category,
+
+                    isDarkTheme =
+                        isDarkTheme
                 )
             }
 
@@ -803,7 +933,10 @@ private fun CBTActivityCard(
                     "Open exercise",
 
                 tint =
-                    Lavender,
+                    if (isDarkTheme)
+                        MaterialTheme.colorScheme.primary
+                    else
+                        Lavender,
 
                 modifier =
                     Modifier.size(22.dp)
@@ -821,7 +954,8 @@ private fun CBTActivityCard(
 
 @Composable
 private fun CategoryLabel(
-    category: CBTCategory
+    category: CBTCategory,
+    isDarkTheme: Boolean
 ) {
 
     Box(
@@ -830,7 +964,10 @@ private fun CategoryLabel(
                 RoundedCornerShape(50)
             )
             .background(
-                SoftLavender
+                if (isDarkTheme)
+                    MaterialTheme.colorScheme.surfaceVariant
+                else
+                    SoftLavender
             )
             .padding(
                 horizontal = 10.dp,
@@ -848,7 +985,10 @@ private fun CategoryLabel(
                 MaterialTheme.typography.labelMedium,
 
             color =
-                DeepLavender,
+                if (isDarkTheme)
+                    MaterialTheme.colorScheme.primary
+                else
+                    DeepLavender,
 
             fontWeight =
                 FontWeight.Medium
@@ -864,7 +1004,21 @@ private fun CategoryLabel(
  */
 
 @Composable
-private fun LoadingPlanCard() {
+private fun LoadingPlanCard(
+    isDarkTheme: Boolean
+) {
+
+    val textPrimary =
+        if (isDarkTheme)
+            DarkTextPrimary
+        else
+            TextPrimary
+
+    val textSecondary =
+        if (isDarkTheme)
+            DarkTextSecondary
+        else
+            TextSecondary
 
     Card(
         modifier =
@@ -876,7 +1030,10 @@ private fun LoadingPlanCard() {
         colors =
             CardDefaults.cardColors(
                 containerColor =
-                    SoftLavender
+                    if (isDarkTheme)
+                        MaterialTheme.colorScheme.surfaceVariant
+                    else
+                        SoftLavender
             ),
 
         elevation =
@@ -902,7 +1059,10 @@ private fun LoadingPlanCard() {
                 contentDescription = null,
 
                 tint =
-                    DeepLavender,
+                    if (isDarkTheme)
+                        MaterialTheme.colorScheme.primary
+                    else
+                        DeepLavender,
 
                 modifier =
                     Modifier.size(40.dp)
@@ -924,7 +1084,7 @@ private fun LoadingPlanCard() {
                     FontWeight.SemiBold,
 
                 color =
-                    TextPrimary
+                    textPrimary
             )
 
             Spacer(
@@ -940,7 +1100,7 @@ private fun LoadingPlanCard() {
                     MaterialTheme.typography.bodyMedium,
 
                 color =
-                    TextSecondary
+                    textSecondary
             )
         }
     }
@@ -954,7 +1114,21 @@ private fun LoadingPlanCard() {
  */
 
 @Composable
-private fun NoAssessmentCard() {
+private fun NoAssessmentCard(
+    isDarkTheme: Boolean
+) {
+
+    val textPrimary =
+        if (isDarkTheme)
+            DarkTextPrimary
+        else
+            TextPrimary
+
+    val textSecondary =
+        if (isDarkTheme)
+            DarkTextSecondary
+        else
+            TextSecondary
 
     Card(
         modifier =
@@ -966,7 +1140,10 @@ private fun NoAssessmentCard() {
         colors =
             CardDefaults.cardColors(
                 containerColor =
-                    SoftLavender
+                    if (isDarkTheme)
+                        MaterialTheme.colorScheme.surfaceVariant
+                    else
+                        SoftLavender
             ),
 
         elevation =
@@ -992,7 +1169,10 @@ private fun NoAssessmentCard() {
                 contentDescription = null,
 
                 tint =
-                    DeepLavender,
+                    if (isDarkTheme)
+                        MaterialTheme.colorScheme.primary
+                    else
+                        DeepLavender,
 
                 modifier =
                     Modifier.size(40.dp)
@@ -1014,7 +1194,7 @@ private fun NoAssessmentCard() {
                     FontWeight.SemiBold,
 
                 color =
-                    TextPrimary
+                    textPrimary
             )
 
             Spacer(
@@ -1030,7 +1210,7 @@ private fun NoAssessmentCard() {
                     MaterialTheme.typography.bodyMedium,
 
                 color =
-                    TextSecondary
+                    textSecondary
             )
         }
     }
@@ -1044,7 +1224,21 @@ private fun NoAssessmentCard() {
  */
 
 @Composable
-private fun EmptyPlanCard() {
+private fun EmptyPlanCard(
+    isDarkTheme: Boolean
+) {
+
+    val textPrimary =
+        if (isDarkTheme)
+            DarkTextPrimary
+        else
+            TextPrimary
+
+    val textSecondary =
+        if (isDarkTheme)
+            DarkTextSecondary
+        else
+            TextSecondary
 
     Card(
         modifier =
@@ -1056,7 +1250,10 @@ private fun EmptyPlanCard() {
         colors =
             CardDefaults.cardColors(
                 containerColor =
-                    SoftLavender
+                    if (isDarkTheme)
+                        MaterialTheme.colorScheme.surfaceVariant
+                    else
+                        SoftLavender
             ),
 
         elevation =
@@ -1082,7 +1279,10 @@ private fun EmptyPlanCard() {
                 contentDescription = null,
 
                 tint =
-                    DeepLavender,
+                    if (isDarkTheme)
+                        MaterialTheme.colorScheme.primary
+                    else
+                        DeepLavender,
 
                 modifier =
                     Modifier.size(40.dp)
@@ -1104,7 +1304,7 @@ private fun EmptyPlanCard() {
                     FontWeight.SemiBold,
 
                 color =
-                    TextPrimary
+                    textPrimary
             )
 
             Spacer(
@@ -1120,7 +1320,7 @@ private fun EmptyPlanCard() {
                     MaterialTheme.typography.bodyMedium,
 
                 color =
-                    TextSecondary
+                    textSecondary
             )
         }
     }
@@ -1134,7 +1334,15 @@ private fun EmptyPlanCard() {
  */
 
 @Composable
-private fun EncouragementCard() {
+private fun EncouragementCard(
+    isDarkTheme: Boolean
+) {
+
+    val textPrimary =
+        if (isDarkTheme)
+            DarkTextPrimary
+        else
+            TextPrimary
 
     Card(
         modifier =
@@ -1146,7 +1354,10 @@ private fun EncouragementCard() {
         colors =
             CardDefaults.cardColors(
                 containerColor =
-                    SoftRose
+                    if (isDarkTheme)
+                        MaterialTheme.colorScheme.surfaceVariant
+                    else
+                        SoftRose
             ),
 
         elevation =
@@ -1170,7 +1381,10 @@ private fun EncouragementCard() {
                 contentDescription = null,
 
                 tint =
-                    DeepLavender,
+                    if (isDarkTheme)
+                        MaterialTheme.colorScheme.primary
+                    else
+                        DeepLavender,
 
                 modifier =
                     Modifier.size(28.dp)
@@ -1194,7 +1408,7 @@ private fun EncouragementCard() {
                         FontWeight.SemiBold,
 
                     color =
-                        TextPrimary
+                        textPrimary
                 )
 
                 Spacer(
@@ -1211,7 +1425,10 @@ private fun EncouragementCard() {
                         MaterialTheme.typography.bodyMedium,
 
                     color =
-                        TextSecondary
+                        if (isDarkTheme)
+                            DarkTextSecondary
+                        else
+                            TextSecondary
                 )
             }
         }
@@ -1243,8 +1460,23 @@ private fun categoryDisplayName(
 }
 
 private fun categoryBackground(
-    category: CBTCategory
+    category: CBTCategory,
+    isDarkTheme: Boolean
 ): Color {
+
+    if (isDarkTheme) {
+        return when (category) {
+
+            CBTCategory.COGNITIVE ->
+                Color(0xFF35345A)
+
+            CBTCategory.BEHAVIORAL ->
+                Color(0xFF4A3040)
+
+            CBTCategory.MINDFULNESS ->
+                Color(0xFF294642)
+        }
+    }
 
     return when (category) {
 

@@ -551,6 +551,9 @@ fun RegisterScreen(
 
                     viewModel.createAccount(
 
+                        name =
+                            name.trim(),
+
                         email =
                             email.trim(),
 

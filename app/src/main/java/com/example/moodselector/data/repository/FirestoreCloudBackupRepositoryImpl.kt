@@ -283,20 +283,70 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
                 .getAllJournals(userId)
                 .firstValue()
 
+        val journalsCollection =
+            firestore
+                .collection("users")
+                .document(userId)
+                .collection("journals")
+
+        /*
+         * Get the journals currently stored in Firestore.
+         *
+         * This allows us to detect journals that were
+         * deleted locally and remove them from Firestore.
+         */
+
+        val existingSnapshot =
+            journalsCollection
+                .get()
+                .await()
+
+        val localJournalIds =
+            journals
+                .map {
+                    it.id.toString()
+                }
+                .toSet()
+
         val batch =
             firestore.batch()
+
+        /*
+         * --------------------------------------------------
+         * DELETE JOURNALS FROM FIRESTORE THAT NO LONGER
+         * EXIST IN ROOM
+         * --------------------------------------------------
+         */
+
+        existingSnapshot.documents.forEach { document ->
+
+            if (
+                document.id !in localJournalIds
+            ) {
+
+                batch.delete(
+                    document.reference
+                )
+            }
+        }
+
+        /*
+         * --------------------------------------------------
+         * BACK UP CURRENT LOCAL JOURNALS
+         * --------------------------------------------------
+         */
 
         journals.forEach { journal ->
 
             val document =
-                firestore
-                    .collection("users")
-                    .document(userId)
-                    .collection("journals")
-                    .document(journal.id.toString())
+                journalsCollection
+                    .document(
+                        journal.id.toString()
+                    )
 
             batch.set(
                 document,
+
                 mapOf(
                     "id" to journal.id,
                     "userId" to journal.userId,
@@ -306,6 +356,10 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
                 )
             )
         }
+
+        /*
+         * Commit both deletions and updates together.
+         */
 
         batch.commit().await()
     }

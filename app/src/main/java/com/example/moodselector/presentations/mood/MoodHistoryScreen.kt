@@ -11,11 +11,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -26,7 +23,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -46,15 +42,11 @@ fun MoodHistoryScreen(
 
         colors = listOf(
 
-            Color(0xFFF6F0FF),
-            Color(0xFFFDFBFF),
-            Color(0xFFEFE7FF)
+            MaterialTheme.colorScheme.background,
+            MaterialTheme.colorScheme.surface,
+            MaterialTheme.colorScheme.surfaceVariant
         )
     )
-
-    val darkPurple = Color(0xFF6C63FF)
-
-    val primaryPurple = Color(0xFF8E7CFF)
 
     Scaffold(
 
@@ -68,7 +60,6 @@ fun MoodHistoryScreen(
                 .fillMaxSize()
                 .background(backgroundGradient)
                 .padding(paddingValues)
-                .statusBarsPadding()
                 .navigationBarsPadding(),
 
             contentPadding = PaddingValues(
@@ -87,80 +78,70 @@ fun MoodHistoryScreen(
 
             item {
 
-                Box(
+                Card(
 
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(215.dp)
-                        .clip(
+                    modifier =
+                        Modifier.fillMaxWidth(),
 
-                            RoundedCornerShape(
-                                bottomStart = 32.dp,
-                                bottomEnd = 32.dp
-                            )
-                        )
-                        .background(
+                    shape =
+                        RoundedCornerShape(
+                            bottomStart = 28.dp,
+                            bottomEnd = 28.dp,
+                            topStart = 22.dp,
+                            topEnd = 22.dp
+                        ),
 
-                            brush = Brush.verticalGradient(
+                    colors =
+                        CardDefaults.cardColors(
+                            containerColor =
+                                Color.Transparent
+                        ),
 
-                                listOf(
-                                    darkPurple,
-                                    primaryPurple,
-                                    Color(0xFFB39DFF)
-                                )
-                            )
+                    elevation =
+                        CardDefaults.cardElevation(
+                            defaultElevation = 3.dp
                         )
                 ) {
-
-                    /*
-                     * --------------------------------------------------
-                     * DECORATIVE CIRCLES
-                     * --------------------------------------------------
-                     */
-
-                    Box(
-                        modifier = Modifier
-                            .size(125.dp)
-                            .padding(
-                                top = 18.dp,
-                                start = 245.dp
-                            )
-                            .clip(CircleShape)
-                            .background(
-                                Color.White.copy(
-                                    alpha = 0.08f
-                                )
-                            )
-                    )
-
-                    Box(
-                        modifier = Modifier
-                            .size(85.dp)
-                            .padding(
-                                top = 135.dp,
-                                start = 24.dp
-                            )
-                            .clip(CircleShape)
-                            .background(
-                                Color.White.copy(
-                                    alpha = 0.06f
-                                )
-                            )
-                    )
 
                     Column(
 
                         modifier =
-                            Modifier.padding(
-                                horizontal = 20.dp,
-                                vertical = 18.dp
-                            )
-                    ) {
+                            Modifier
+                                .fillMaxWidth()
+                                .background(
 
-                        Spacer(
-                            modifier =
-                                Modifier.height(8.dp)
-                        )
+                                    Brush.verticalGradient(
+
+                                        listOf(
+
+                                            MaterialTheme
+                                                .colorScheme
+                                                .primary
+                                                .copy(
+                                                    alpha = 0.82f
+                                                ),
+
+                                            MaterialTheme
+                                                .colorScheme
+                                                .primary
+                                                .copy(
+                                                    alpha = 0.58f
+                                                ),
+
+                                            MaterialTheme
+                                                .colorScheme
+                                                .secondary
+                                                .copy(
+                                                    alpha = 0.42f
+                                                )
+                                        )
+                                    )
+                                )
+                                .padding(
+                                    horizontal = 20.dp,
+                                    vertical = 20.dp
+                                )
+                    ) {
 
                         /*
                          * --------------------------------------------------
@@ -176,7 +157,7 @@ fun MoodHistoryScreen(
                             style =
                                 MaterialTheme
                                     .typography
-                                    .headlineMedium,
+                                    .headlineSmall,
 
                             fontWeight =
                                 FontWeight.Bold,
@@ -187,7 +168,7 @@ fun MoodHistoryScreen(
 
                         Spacer(
                             modifier =
-                                Modifier.height(8.dp)
+                                Modifier.height(5.dp)
                         )
 
                         /*
@@ -204,17 +185,17 @@ fun MoodHistoryScreen(
                             style =
                                 MaterialTheme
                                     .typography
-                                    .bodyMedium,
+                                    .bodySmall,
 
                             color =
                                 Color.White.copy(
-                                    alpha = 0.92f
+                                    alpha = 0.88f
                                 )
                         )
 
                         Spacer(
                             modifier =
-                                Modifier.height(18.dp)
+                                Modifier.height(14.dp)
                         )
 
                         /*
@@ -227,14 +208,14 @@ fun MoodHistoryScreen(
 
                             shape =
                                 RoundedCornerShape(
-                                    20.dp
+                                    16.dp
                                 ),
 
                             colors =
                                 CardDefaults.cardColors(
                                     containerColor =
                                         Color.White.copy(
-                                            alpha = 0.18f
+                                            alpha = 0.14f
                                         )
                                 )
                         ) {
@@ -246,20 +227,22 @@ fun MoodHistoryScreen(
 
                                 modifier =
                                     Modifier.padding(
-                                        horizontal = 16.dp,
-                                        vertical = 10.dp
+                                        horizontal = 14.dp,
+                                        vertical = 8.dp
                                     ),
-
-                                color =
-                                    Color.White,
 
                                 style =
                                     MaterialTheme
                                         .typography
-                                        .bodyMedium,
+                                        .labelMedium,
 
                                 fontWeight =
-                                    FontWeight.SemiBold
+                                    FontWeight.SemiBold,
+
+                                color =
+                                    Color.White.copy(
+                                        alpha = 0.94f
+                                    )
                             )
                         }
                     }
@@ -323,4 +306,3 @@ fun MoodHistoryScreen(
         }
     }
 }
-

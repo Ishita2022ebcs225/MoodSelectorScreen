@@ -22,17 +22,11 @@ class JournalViewModel @Inject constructor(
     private val cloudBackupRepository: CloudBackupRepository
 ) : ViewModel() {
 
-    /*
-     * --------------------------------------------------
-     * CURRENT USER ID
-     * --------------------------------------------------
-     */
-
     private val userId: String?
-        get() = authRepository.currentUser?.uid
-
-
-    // 🧠 UI STATE
+        get() =
+            authRepository
+                .currentUser
+                ?.uid
 
     private val _content =
         MutableStateFlow("")
@@ -40,13 +34,11 @@ class JournalViewModel @Inject constructor(
     val content: StateFlow<String> =
         _content.asStateFlow()
 
-
     private val _selectedMood =
         MutableStateFlow("Calm")
 
     val selectedMood: StateFlow<String> =
         _selectedMood.asStateFlow()
-
 
     private val _selectedTags =
         MutableStateFlow<List<String>>(emptyList())
@@ -54,8 +46,17 @@ class JournalViewModel @Inject constructor(
     val selectedTags: StateFlow<List<String>> =
         _selectedTags.asStateFlow()
 
+    private val _editingJournalId =
+        MutableStateFlow<Int?>(null)
 
-    // 📓 LIVE FEED
+    val editingJournalId: StateFlow<Int?> =
+        _editingJournalId.asStateFlow()
+
+    private val _isLoadingJournal =
+        MutableStateFlow(false)
+
+    val isLoadingJournal: StateFlow<Boolean> =
+        _isLoadingJournal.asStateFlow()
 
     val journals: StateFlow<List<JournalEntity>> =
         repository
@@ -64,16 +65,13 @@ class JournalViewModel @Inject constructor(
             )
             .stateIn(
                 scope = viewModelScope,
-                started = SharingStarted.WhileSubscribed(5000),
-                initialValue = emptyList()
+                started =
+                    SharingStarted.WhileSubscribed(
+                        5000
+                    ),
+                initialValue =
+                    emptyList()
             )
-
-
-    /*
-     * --------------------------------------------------
-     * UPDATE CONTENT
-     * --------------------------------------------------
-     */
 
     fun updateContent(
         value: String
@@ -81,47 +79,64 @@ class JournalViewModel @Inject constructor(
         _content.value = value
     }
 
-
-    /*
-     * --------------------------------------------------
-     * UPDATE MOOD
-     * --------------------------------------------------
-     */
-
     fun updateMood(
         mood: String
     ) {
         _selectedMood.value = mood
     }
 
-
-    /*
-     * --------------------------------------------------
-     * TOGGLE EMOTION TAG
-     * --------------------------------------------------
-     */
-
     fun toggleEmotionTag(
         tag: String
     ) {
-
         _selectedTags.value =
-            if (_selectedTags.value.contains(tag)) {
-
+            if (
+                _selectedTags.value.contains(tag)
+            ) {
                 _selectedTags.value - tag
-
             } else {
-
                 _selectedTags.value + tag
             }
     }
 
+    fun loadJournal(
+        journalId: Int
+    ) {
 
-    /*
-     * --------------------------------------------------
-     * SAVE JOURNAL
-     * --------------------------------------------------
-     */
+        if (
+            _editingJournalId.value ==
+            journalId
+        ) {
+            return
+        }
+
+        val currentUserId =
+            userId ?: return
+
+        viewModelScope.launch {
+
+            _isLoadingJournal.value = true
+
+            val journal =
+                repository.getJournalById(
+                    id = journalId,
+                    userId = currentUserId
+                )
+
+            if (journal != null) {
+
+                _editingJournalId.value =
+                    journal.id
+
+                _content.value =
+                    journal.content
+
+                _selectedMood.value =
+                    journal.mood
+            }
+
+            _isLoadingJournal.value = false
+        }
+    }
 
     fun saveJournal() {
 
@@ -137,33 +152,62 @@ class JournalViewModel @Inject constructor(
 
         viewModelScope.launch {
 
-            val journal =
-                JournalEntity(
-                    userId = currentUserId,
-                    content = text,
-                    mood = _selectedMood.value,
-                    timestamp = System.currentTimeMillis()
-                )
+            val editingId =
+                _editingJournalId.value
 
-            repository.insertJournal(
-                journal
-            )
+            if (editingId != null) {
+
+                val existingJournal =
+                    repository.getJournalById(
+                        id = editingId,
+                        userId = currentUserId
+                    )
+
+                if (existingJournal != null) {
+
+                    val updatedJournal =
+                        existingJournal.copy(
+                            content = text,
+                            mood =
+                                _selectedMood.value
+                        )
+
+                    repository.updateJournal(
+                        updatedJournal
+                    )
+                }
+
+            } else {
+
+                val journal =
+                    JournalEntity(
+                        userId =
+                            currentUserId,
+
+                        content =
+                            text,
+
+                        mood =
+                            _selectedMood.value,
+
+                        timestamp =
+                            System.currentTimeMillis()
+                    )
+
+                repository.insertJournal(
+                    journal
+                )
+            }
 
             cloudBackupRepository
                 .backupUserData(
-                    userId = currentUserId
+                    userId =
+                        currentUserId
                 )
 
             clearFields()
         }
     }
-
-
-    /*
-     * --------------------------------------------------
-     * DELETE ONE JOURNAL
-     * --------------------------------------------------
-     */
 
     fun deleteJournal(
         journal: JournalEntity
@@ -172,25 +216,30 @@ class JournalViewModel @Inject constructor(
         val currentUserId =
             userId ?: return
 
+        if (
+            journal.userId !=
+            currentUserId
+        ) {
+            return
+        }
+
         viewModelScope.launch {
 
             repository.deleteJournal(
-                journal
+                journalId =
+                    journal.id,
+
+                userId =
+                    currentUserId
             )
 
             cloudBackupRepository
                 .backupUserData(
-                    userId = currentUserId
+                    userId =
+                        currentUserId
                 )
         }
     }
-
-
-    /*
-     * --------------------------------------------------
-     * DELETE ALL JOURNALS
-     * --------------------------------------------------
-     */
 
     fun deleteAllJournals() {
 
@@ -205,17 +254,11 @@ class JournalViewModel @Inject constructor(
 
             cloudBackupRepository
                 .backupUserData(
-                    userId = currentUserId
+                    userId =
+                        currentUserId
                 )
         }
     }
-
-
-    /*
-     * --------------------------------------------------
-     * CLEAR FIELDS
-     * --------------------------------------------------
-     */
 
     private fun clearFields() {
 
@@ -226,6 +269,8 @@ class JournalViewModel @Inject constructor(
 
         _selectedTags.value =
             emptyList()
+
+        _editingJournalId.value =
+            null
     }
 }
-

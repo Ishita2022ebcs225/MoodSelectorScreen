@@ -118,14 +118,27 @@ class AuthViewModel @Inject constructor(
      */
 
     fun createAccount(
+        name: String,
         email: String,
         password: String,
         confirmPassword: String,
         onSuccess: () -> Unit
     ) {
 
+        val cleanName =
+            name.trim()
+
         val cleanEmail =
             email.trim()
+
+        if (cleanName.isBlank()) {
+
+            setError(
+                "Please enter your name."
+            )
+
+            return
+        }
 
         if (cleanEmail.isBlank()) {
 
@@ -164,6 +177,7 @@ class AuthViewModel @Inject constructor(
 
             val result =
                 authRepository.signUp(
+                    name = cleanName,
                     email = cleanEmail,
                     password = password
                 )
@@ -257,16 +271,6 @@ class AuthViewModel @Inject constructor(
      * --------------------------------------------------
      * AUTHENTICATION SUCCESS
      * --------------------------------------------------
-     *
-     * Authentication has succeeded at this point.
-     *
-     * Cloud synchronization is intentionally NOT
-     * performed here.
-     *
-     * StartupViewModel observes the authenticated
-     * Firebase user and is responsible for performing
-     * cloud synchronization before the application
-     * determines its startup destination.
      */
 
     private fun handleAuthenticationSuccess(

@@ -33,6 +33,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -59,8 +60,14 @@ import java.util.Date
 import java.util.Locale
 
 private val Lavender = Color(0xFF6C63FF)
-private val SoftLavender = Color(0xFFEDEBFF)
-private val PaleLavender = Color(0xFFF7F5FF)
+
+private val SoftLavender: Color
+    @Composable
+    get() = MaterialTheme.colorScheme.surfaceVariant
+
+private val PaleLavender: Color
+    @Composable
+    get() = MaterialTheme.colorScheme.surface
 
 private val SoftRose = Color(0xFFFFEEF4)
 private val Rose = Color(0xFFE88BA5)
@@ -68,11 +75,21 @@ private val Rose = Color(0xFFE88BA5)
 private val SoftTeal = Color(0xFFE8F7F5)
 private val Teal = Color(0xFF4BA89C)
 
-private val TextPrimary = Color(0xFF292638)
-private val TextSecondary = Color(0xFF777282)
+private val TextPrimary: Color
+    @Composable
+    get() = MaterialTheme.colorScheme.onBackground
 
-private val Background = Color(0xFFFAF9FD)
-private val SurfaceWhite = Color.White
+private val TextSecondary: Color
+    @Composable
+    get() = MaterialTheme.colorScheme.onSurfaceVariant
+
+private val Background: Color
+    @Composable
+    get() = MaterialTheme.colorScheme.background
+
+private val SurfaceWhite: Color
+    @Composable
+    get() = MaterialTheme.colorScheme.surface
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -83,31 +100,17 @@ fun CBTProgressScreen(
         hiltViewModel()
 ) {
 
-    /*
-     * ==================================================
-     * COMBINED PROGRESS TIMELINE
-     * ==================================================
-     */
-
     val progressItems by
     viewModel.progressItems
         .collectAsStateWithLifecycle(
             initialValue = emptyList()
         )
 
-
-    /*
-     * ==================================================
-     * UNIQUE COMPLETED EXERCISE COUNT
-     * ==================================================
-     */
-
     val completionCount by
     viewModel.uniqueCompletedExerciseCount
         .collectAsStateWithLifecycle(
             initialValue = 0
         )
-
 
     Scaffold(
 
@@ -213,12 +216,6 @@ fun CBTProgressScreen(
                     )
             ) {
 
-                /*
-                 * ------------------------------------------
-                 * PROGRESS SUMMARY
-                 * ------------------------------------------
-                 */
-
                 item {
 
                     ProgressSummaryCard(
@@ -226,13 +223,6 @@ fun CBTProgressScreen(
                             completionCount
                     )
                 }
-
-
-                /*
-                 * ------------------------------------------
-                 * JOURNEY
-                 * ------------------------------------------
-                 */
 
                 item {
 
@@ -250,13 +240,6 @@ fun CBTProgressScreen(
                             18.sp
                     )
                 }
-
-
-                /*
-                 * ------------------------------------------
-                 * COMBINED TIMELINE
-                 * ------------------------------------------
-                 */
 
                 items(
 
@@ -291,12 +274,6 @@ fun CBTProgressScreen(
 
                     when (item) {
 
-                        /*
-                         * ----------------------------------
-                         * ACTIVITY SCHEDULING
-                         * ----------------------------------
-                         */
-
                         is CBTProgressItem.ActivityCompletion -> {
 
                             ActivityCompletionTimelineItem(
@@ -304,13 +281,6 @@ fun CBTProgressScreen(
                                     item.completion
                             )
                         }
-
-
-                        /*
-                         * ----------------------------------
-                         * ABC MODEL
-                         * ----------------------------------
-                         */
 
                         is CBTProgressItem.ABCModelCompletion -> {
 
@@ -320,13 +290,6 @@ fun CBTProgressScreen(
                             )
                         }
 
-
-                        /*
-                         * ----------------------------------
-                         * FIVE-MINUTE STARTER
-                         * ----------------------------------
-                         */
-
                         is CBTProgressItem.FiveMinuteStarterCompletion -> {
 
                             FiveMinuteStarterTimelineItem(
@@ -334,13 +297,6 @@ fun CBTProgressScreen(
                                     item.completion
                             )
                         }
-
-
-                        /*
-                         * ----------------------------------
-                         * MINDFUL MEDITATION
-                         * ----------------------------------
-                         */
 
                         is CBTProgressItem.MindfulMeditationCompletion -> {
 
@@ -350,13 +306,6 @@ fun CBTProgressScreen(
                             )
                         }
 
-
-                        /*
-                         * ----------------------------------
-                         * 5-4-3-2-1 GROUNDING
-                         * ----------------------------------
-                         */
-
                         is CBTProgressItem.Grounding54321Completion -> {
 
                             Grounding54321TimelineItem(
@@ -364,13 +313,6 @@ fun CBTProgressScreen(
                                     item.completion
                             )
                         }
-
-
-                        /*
-                         * ----------------------------------
-                         * SELF-COMPASSION REFLECTION
-                         * ----------------------------------
-                         */
 
                         is CBTProgressItem.SelfCompassionReflectionCompletion -> {
 
@@ -381,13 +323,6 @@ fun CBTProgressScreen(
                         }
                     }
                 }
-
-
-                /*
-                 * ------------------------------------------
-                 * ENCOURAGEMENT
-                 * ------------------------------------------
-                 */
 
                 item {
 
@@ -403,12 +338,6 @@ fun CBTProgressScreen(
     }
 }
 
-
-/*
- * ======================================================
- * PROGRESS SUMMARY
- * ======================================================
- */
 
 @Composable
 private fun ProgressSummaryCard(
@@ -520,12 +449,6 @@ private fun ProgressSummaryCard(
 }
 
 
-/*
- * ======================================================
- * ACTIVITY SCHEDULING TIMELINE ITEM
- * ======================================================
- */
-
 @Composable
 private fun ActivityCompletionTimelineItem(
     completion:
@@ -544,12 +467,6 @@ private fun ActivityCompletionTimelineItem(
     }
 }
 
-
-/*
- * ======================================================
- * ABC MODEL TIMELINE ITEM
- * ======================================================
- */
 
 @Composable
 private fun ABCModelTimelineItem(
@@ -570,12 +487,6 @@ private fun ABCModelTimelineItem(
 }
 
 
-/*
- * ======================================================
- * FIVE-MINUTE STARTER TIMELINE ITEM
- * ======================================================
- */
-
 @Composable
 private fun FiveMinuteStarterTimelineItem(
     completion:
@@ -594,12 +505,6 @@ private fun FiveMinuteStarterTimelineItem(
     }
 }
 
-
-/*
- * ======================================================
- * MINDFUL MEDITATION TIMELINE ITEM
- * ======================================================
- */
 
 @Composable
 private fun MindfulMeditationTimelineItem(
@@ -620,12 +525,6 @@ private fun MindfulMeditationTimelineItem(
 }
 
 
-/*
- * ======================================================
- * 5-4-3-2-1 GROUNDING TIMELINE ITEM
- * ======================================================
- */
-
 @Composable
 private fun Grounding54321TimelineItem(
     completion:
@@ -645,12 +544,6 @@ private fun Grounding54321TimelineItem(
 }
 
 
-/*
- * ======================================================
- * SELF-COMPASSION REFLECTION TIMELINE ITEM
- * ======================================================
- */
-
 @Composable
 private fun SelfCompassionReflectionTimelineItem(
     completion:
@@ -669,12 +562,6 @@ private fun SelfCompassionReflectionTimelineItem(
     }
 }
 
-
-/*
- * ======================================================
- * TIMELINE CONTAINER
- * ======================================================
- */
 
 @Composable
 private fun TimelineContainer(
@@ -754,12 +641,6 @@ private fun TimelineContainer(
 }
 
 
-/*
- * ======================================================
- * ACTIVITY SCHEDULING COMPLETION CARD
- * ======================================================
- */
-
 @Composable
 private fun CompletionCard(
     completion:
@@ -796,7 +677,6 @@ private fun CompletionCard(
         ) {
 
             Text(
-
                 text =
                     formatDate(
                         completion.completedAt
@@ -818,7 +698,6 @@ private fun CompletionCard(
             )
 
             Text(
-
                 text =
                     completion.activityTitle,
 
@@ -838,7 +717,6 @@ private fun CompletionCard(
             )
 
             Text(
-
                 text =
                     completion.activityName,
 
@@ -907,12 +785,6 @@ private fun CompletionCard(
 }
 
 
-/*
- * ======================================================
- * ABC MODEL COMPLETION CARD
- * ======================================================
- */
-
 @Composable
 private fun ABCModelCompletionCard(
     completion:
@@ -949,7 +821,6 @@ private fun ABCModelCompletionCard(
         ) {
 
             Text(
-
                 text =
                     formatDate(
                         completion.completedAt
@@ -971,7 +842,6 @@ private fun ABCModelCompletionCard(
             )
 
             Text(
-
                 text =
                     "ABC Model",
 
@@ -991,7 +861,6 @@ private fun ABCModelCompletionCard(
             )
 
             Text(
-
                 text =
                     "Cognitive",
 
@@ -1112,12 +981,6 @@ private fun ABCModelCompletionCard(
 }
 
 
-/*
- * ======================================================
- * FIVE-MINUTE STARTER COMPLETION CARD
- * ======================================================
- */
-
 @Composable
 private fun FiveMinuteStarterCompletionCard(
     completion:
@@ -1154,7 +1017,6 @@ private fun FiveMinuteStarterCompletionCard(
         ) {
 
             Text(
-
                 text =
                     formatDate(
                         completion.completedAt
@@ -1176,7 +1038,6 @@ private fun FiveMinuteStarterCompletionCard(
             )
 
             Text(
-
                 text =
                     "Five-Minute Starter",
 
@@ -1196,7 +1057,6 @@ private fun FiveMinuteStarterCompletionCard(
             )
 
             Text(
-
                 text =
                     completion.task,
 
@@ -1280,7 +1140,6 @@ private fun FiveMinuteStarterCompletionCard(
             )
 
             TimelineDetailRow(
-
                 icon =
                     Icons.Default.TaskAlt,
 
@@ -1308,7 +1167,6 @@ private fun FiveMinuteStarterCompletionCard(
                 )
 
                 Text(
-
                     text =
                         completion.outcome,
 
@@ -1341,12 +1199,6 @@ private fun FiveMinuteStarterCompletionCard(
     }
 }
 
-
-/*
- * ======================================================
- * MINDFUL MEDITATION COMPLETION CARD
- * ======================================================
- */
 
 @Composable
 private fun MindfulMeditationCompletionCard(
@@ -1384,7 +1236,6 @@ private fun MindfulMeditationCompletionCard(
         ) {
 
             Text(
-
                 text =
                     formatDate(
                         completion.completedAt
@@ -1406,7 +1257,6 @@ private fun MindfulMeditationCompletionCard(
             )
 
             Text(
-
                 text =
                     "Mindful Meditation",
 
@@ -1426,7 +1276,6 @@ private fun MindfulMeditationCompletionCard(
             )
 
             Text(
-
                 text =
                     "Mindfulness",
 
@@ -1523,12 +1372,6 @@ private fun MindfulMeditationCompletionCard(
 }
 
 
-/*
- * ======================================================
- * 5-4-3-2-1 GROUNDING COMPLETION CARD
- * ======================================================
- */
-
 @Composable
 private fun Grounding54321CompletionCard(
     completion:
@@ -1565,7 +1408,6 @@ private fun Grounding54321CompletionCard(
         ) {
 
             Text(
-
                 text =
                     formatDate(
                         completion.completedAt
@@ -1587,7 +1429,6 @@ private fun Grounding54321CompletionCard(
             )
 
             Text(
-
                 text =
                     "5-4-3-2-1 Grounding",
 
@@ -1607,7 +1448,6 @@ private fun Grounding54321CompletionCard(
             )
 
             Text(
-
                 text =
                     "Mindfulness",
 
@@ -1704,12 +1544,6 @@ private fun Grounding54321CompletionCard(
 }
 
 
-/*
- * ======================================================
- * SELF-COMPASSION REFLECTION COMPLETION CARD
- * ======================================================
- */
-
 @Composable
 private fun SelfCompassionReflectionCompletionCard(
     completion:
@@ -1745,14 +1579,7 @@ private fun SelfCompassionReflectionCompletionCard(
                 Modifier.padding(17.dp)
         ) {
 
-            /*
-             * ------------------------------------------
-             * DATE
-             * ------------------------------------------
-             */
-
             Text(
-
                 text =
                     formatDate(
                         completion.completedAt
@@ -1773,15 +1600,7 @@ private fun SelfCompassionReflectionCompletionCard(
                     Modifier.height(7.dp)
             )
 
-
-            /*
-             * ------------------------------------------
-             * TITLE
-             * ------------------------------------------
-             */
-
             Text(
-
                 text =
                     "Self-Compassion Reflection",
 
@@ -1801,7 +1620,6 @@ private fun SelfCompassionReflectionCompletionCard(
             )
 
             Text(
-
                 text =
                     "Mindfulness",
 
@@ -1819,13 +1637,6 @@ private fun SelfCompassionReflectionCompletionCard(
                 modifier =
                     Modifier.height(12.dp)
             )
-
-
-            /*
-             * ------------------------------------------
-             * CATEGORY TAG
-             * ------------------------------------------
-             */
 
             Box(
 
@@ -1891,15 +1702,7 @@ private fun SelfCompassionReflectionCompletionCard(
                     Modifier.height(15.dp)
             )
 
-
-            /*
-             * ------------------------------------------
-             * SITUATION
-             * ------------------------------------------
-             */
-
             ResponseSummary(
-
                 label =
                     "Situation",
 
@@ -1912,15 +1715,7 @@ private fun SelfCompassionReflectionCompletionCard(
                     Modifier.height(12.dp)
             )
 
-
-            /*
-             * ------------------------------------------
-             * FRIEND RESPONSE
-             * ------------------------------------------
-             */
-
             ResponseSummary(
-
                 label =
                     "What I would say to a friend",
 
@@ -1933,15 +1728,7 @@ private fun SelfCompassionReflectionCompletionCard(
                     Modifier.height(12.dp)
             )
 
-
-            /*
-             * ------------------------------------------
-             * SELF-COMPASSION RESPONSE
-             * ------------------------------------------
-             */
-
             ResponseSummary(
-
                 label =
                     "What I can say to myself",
 
@@ -1953,14 +1740,6 @@ private fun SelfCompassionReflectionCompletionCard(
 }
 
 
-/*
- * ======================================================
- * RESPONSE SUMMARY
- * ======================================================
- *
- * Shared by ABC and Self-Compassion reflections.
- */
-
 @Composable
 private fun ResponseSummary(
     label: String,
@@ -1970,7 +1749,6 @@ private fun ResponseSummary(
     Column {
 
         Text(
-
             text =
                 label,
 
@@ -2025,12 +1803,6 @@ private fun ResponseSummary(
     }
 }
 
-
-/*
- * ======================================================
- * REFLECTION BOX
- * ======================================================
- */
 
 @Composable
 private fun ReflectionBox(
@@ -2095,12 +1867,6 @@ private fun ReflectionBox(
 }
 
 
-/*
- * ======================================================
- * SMALL LABEL
- * ======================================================
- */
-
 @Composable
 private fun SmallLabel(
     text: String
@@ -2122,12 +1888,6 @@ private fun SmallLabel(
     )
 }
 
-
-/*
- * ======================================================
- * ACTIVITY TYPE TAG
- * ======================================================
- */
 
 @Composable
 private fun ActivityTypeTag(
@@ -2219,12 +1979,6 @@ private fun ActivityTypeTag(
 }
 
 
-/*
- * ======================================================
- * DETAIL ROW
- * ======================================================
- */
-
 @Composable
 private fun TimelineDetailRow(
     icon:
@@ -2273,12 +2027,6 @@ private fun TimelineDetailRow(
     }
 }
 
-
-/*
- * ======================================================
- * EMPTY STATE
- * ======================================================
- */
 
 @Composable
 private fun EmptyProgressState(
@@ -2372,14 +2120,25 @@ private fun EmptyProgressState(
 }
 
 
-/*
- * ======================================================
- * ENCOURAGEMENT
- * ======================================================
- */
-
 @Composable
 private fun EncouragementCard() {
+
+    val isDarkTheme =
+        androidx.compose.foundation.isSystemInDarkTheme()
+
+    val cardBackground =
+        if (isDarkTheme) {
+            MaterialTheme.colorScheme.surfaceVariant
+        } else {
+            SoftTeal
+        }
+
+    val cardTextColor =
+        if (isDarkTheme) {
+            MaterialTheme.colorScheme.onSurfaceVariant
+        } else {
+            TextPrimary
+        }
 
     Card(
 
@@ -2392,7 +2151,7 @@ private fun EncouragementCard() {
         colors =
             CardDefaults.cardColors(
                 containerColor =
-                    SoftTeal
+                    cardBackground
             )
     ) {
 
@@ -2432,7 +2191,7 @@ private fun EncouragementCard() {
                             "It's about noticing the small steps you take.",
 
                 color =
-                    TextPrimary,
+                    cardTextColor,
 
                 fontSize =
                     13.sp,
@@ -2444,12 +2203,6 @@ private fun EncouragementCard() {
     }
 }
 
-
-/*
- * ======================================================
- * DATE FORMATTER
- * ======================================================
- */
 
 private fun formatDate(
     timestamp: Long

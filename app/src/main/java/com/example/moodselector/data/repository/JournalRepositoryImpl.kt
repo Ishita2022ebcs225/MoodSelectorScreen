@@ -10,30 +10,58 @@ class JournalRepositoryImpl @Inject constructor(
     private val dao: JournalDao
 ) : JournalRepository {
 
-    override suspend fun insertJournal(journal: JournalEntity) {
-        dao.insertJournal(journal)
+    override suspend fun insertJournal(
+        journal: JournalEntity
+    ) {
+        dao.insertJournal(
+            journal
+        )
     }
 
-    override suspend fun deleteJournal(journal: JournalEntity) {
-        dao.deleteJournal(journal)
+    override suspend fun updateJournal(
+        journal: JournalEntity
+    ) {
+        dao.updateJournal(
+            journal
+        )
+    }
+
+    override suspend fun deleteJournal(
+        journalId: Int,
+        userId: String
+    ) {
+        dao.deleteJournal(
+            journalId = journalId,
+            userId = userId
+        )
     }
 
     override fun getAllJournals(
         userId: String
     ): Flow<List<JournalEntity>> {
-        return dao.getAllJournals(userId)
+
+        return dao.getAllJournals(
+            userId
+        )
     }
 
     override suspend fun getJournalById(
         id: Int,
         userId: String
     ): JournalEntity? {
-        return dao.getJournalById(id, userId)
+
+        return dao.getJournalById(
+            id,
+            userId
+        )
     }
 
     override suspend fun deleteAllJournals(
         userId: String
     ) {
-        dao.deleteAllJournals(userId)
+
+        dao.deleteAllJournals(
+            userId
+        )
     }
 }

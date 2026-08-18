@@ -12,8 +12,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -36,12 +41,40 @@ import java.util.Locale
 fun JournalCard(
     journal: JournalEntity,
     pastelPink: Color,
-    textDark: Color
+    textDark: Color,
+    onEditClick: (JournalEntity) -> Unit,
+    onDeleteClick: (JournalEntity) -> Unit
 ) {
 
-    // ✅ Observable locale
-    val configuration = LocalConfiguration.current
-    val currentLocale = configuration.locales[0]
+    val configuration =
+        LocalConfiguration.current
+
+    val currentLocale =
+        configuration.locales[0]
+
+    /*
+     * ==========================================================
+     * THEME COLORS
+     * ==========================================================
+     */
+
+    val colorScheme =
+        MaterialTheme.colorScheme
+
+    val cardBackground =
+        colorScheme.surface
+
+    val primaryText =
+        colorScheme.onSurface
+
+    val secondaryText =
+        colorScheme.onSurfaceVariant
+
+    val iconColor =
+        colorScheme.onSurfaceVariant
+
+    val contentBackground =
+        colorScheme.surfaceVariant
 
     val moodEmoji =
         when (journal.mood) {
@@ -54,6 +87,15 @@ fun JournalCard(
 
             else -> "✨"
         }
+
+    /*
+     * ==========================================================
+     * MOOD GRADIENT
+     * ==========================================================
+     *
+     * These remain intentionally colorful because they identify
+     * the selected mood visually.
+     */
 
     val gradientColors =
         when (journal.mood) {
@@ -85,29 +127,38 @@ fun JournalCard(
 
             else -> listOf(
                 pastelPink,
-                pastelPink.copy(alpha = 0.7f)
+                pastelPink.copy(
+                    alpha = 0.7f
+                )
             )
         }
 
-    val formattedTime = remember(
-        journal.timestamp,
-        currentLocale
-    ) {
+    val formattedTime =
+        remember(
+            journal.timestamp,
+            currentLocale
+        ) {
 
-        try {
+            try {
 
-            SimpleDateFormat(
-                "dd MMM yyyy • hh:mm a",
-                currentLocale
-            ).format(
-                Date(journal.timestamp)
-            )
+                SimpleDateFormat(
+                    "dd MMM yyyy • hh:mm a",
+                    currentLocale
+                ).format(
+                    Date(journal.timestamp)
+                )
 
-        } catch (_: Exception) {
+            } catch (_: Exception) {
 
-            ""
+                ""
+            }
         }
-    }
+
+    /*
+     * ==========================================================
+     * JOURNAL CARD
+     * ==========================================================
+     */
 
     Card(
 
@@ -124,47 +175,57 @@ fun JournalCard(
 
         colors =
             CardDefaults.cardColors(
-                containerColor = Color.White.copy(
-                    alpha = 0.96f
-                )
+                containerColor =
+                    cardBackground
             )
     ) {
 
         Column(
-
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(18.dp)
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(18.dp)
         ) {
 
-            // TOP SECTION
+            /*
+             * ==================================================
+             * HEADER
+             * ==================================================
+             */
 
             Row(
+
+                modifier =
+                    Modifier.fillMaxWidth(),
+
                 verticalAlignment =
                     Alignment.CenterVertically
             ) {
 
-                // MOOD ORB
-
                 Box(
 
-                    modifier = Modifier
-                        .size(56.dp)
-                        .clip(CircleShape)
-                        .background(
-                            Brush.linearGradient(
-                                gradientColors
-                            )
-                        ),
+                    modifier =
+                        Modifier
+                            .size(56.dp)
+                            .clip(CircleShape)
+                            .background(
+                                Brush.linearGradient(
+                                    gradientColors
+                                )
+                            ),
 
                     contentAlignment =
                         Alignment.Center
                 ) {
 
                     Text(
-                        text = moodEmoji,
+                        text =
+                            moodEmoji,
+
                         style =
-                            MaterialTheme.typography.titleLarge
+                            MaterialTheme
+                                .typography
+                                .titleLarge
                     )
                 }
 
@@ -174,13 +235,25 @@ fun JournalCard(
                 )
 
                 Column(
+
+                    modifier =
+                        Modifier.weight(1f),
+
                     verticalArrangement =
                         Arrangement.spacedBy(4.dp)
                 ) {
 
+                    /*
+                     * Mood title
+                     *
+                     * Uses onSurface so it remains readable
+                     * against the card surface in both themes.
+                     */
+
                     Text(
 
-                        text = journal.mood,
+                        text =
+                            journal.mood,
 
                         style =
                             MaterialTheme
@@ -190,12 +263,21 @@ fun JournalCard(
                         fontWeight =
                             FontWeight.Bold,
 
-                        color = textDark
+                        color =
+                            primaryText
                     )
+
+                    /*
+                     * Timestamp
+                     *
+                     * Uses onSurfaceVariant rather than a fixed
+                     * gray so it maintains contrast in Dark Mode.
+                     */
 
                     Text(
 
-                        text = formattedTime,
+                        text =
+                            formattedTime,
 
                         style =
                             MaterialTheme
@@ -203,64 +285,127 @@ fun JournalCard(
                                 .bodySmall,
 
                         color =
-                            textDark.copy(
-                                alpha = 0.55f
-                            )
+                            secondaryText
+                    )
+                }
+
+                /*
+                 * ==================================================
+                 * EDIT
+                 * ==================================================
+                 */
+
+                IconButton(
+
+                    onClick = {
+                        onEditClick(journal)
+                    }
+                ) {
+
+                    Icon(
+
+                        imageVector =
+                            Icons.Default.Edit,
+
+                        contentDescription =
+                            "Edit journal entry",
+
+                        tint =
+                            iconColor
+                    )
+                }
+
+                /*
+                 * ==================================================
+                 * DELETE
+                 * ==================================================
+                 */
+
+                IconButton(
+
+                    onClick = {
+                        onDeleteClick(journal)
+                    }
+                ) {
+
+                    Icon(
+
+                        imageVector =
+                            Icons.Default.Delete,
+
+                        contentDescription =
+                            "Delete journal entry",
+
+                        tint =
+                            iconColor
                     )
                 }
             }
+        }
 
-            Spacer(
-                modifier =
-                    Modifier.height(18.dp)
-            )
+        Spacer(
+            modifier =
+                Modifier.height(18.dp)
+        )
 
-            // JOURNAL CONTENT
+        /*
+         * ==========================================================
+         * JOURNAL CONTENT
+         * ==========================================================
+         *
+         * The old version used a white gradient here, which would
+         * create a bright block in Dark Mode.
+         *
+         * surfaceVariant is used instead so the content area
+         * automatically follows the active theme.
+         */
 
-            Box(
+        Box(
 
-                modifier = Modifier
+            modifier =
+                Modifier
                     .fillMaxWidth()
                     .clip(
                         RoundedCornerShape(24.dp)
                     )
                     .background(
-                        Brush.verticalGradient(
-                            listOf(
-                                pastelPink.copy(alpha = 0.16f),
-                                Color.White
-                            )
-                        )
+                        contentBackground
                     )
                     .padding(18.dp)
-            ) {
+        ) {
 
-                Text(
+            Text(
 
-                    text = journal.content,
+                text =
+                    journal.content,
 
-                    style =
-                        MaterialTheme
-                            .typography
-                            .bodyLarge,
+                style =
+                    MaterialTheme
+                        .typography
+                        .bodyLarge,
 
-                    color =
-                        textDark.copy(
-                            alpha = 0.92f
-                        ),
+                /*
+                 * Important:
+                 *
+                 * onSurfaceVariant gives the journal text enough
+                 * contrast without forcing a black/white color.
+                 */
 
-                    lineHeight =
-                        MaterialTheme
-                            .typography
-                            .bodyLarge
-                            .lineHeight * 1.15,
+                color =
+                    colorScheme.onSurfaceVariant,
 
-                    maxLines = 8,
+                lineHeight =
+                    MaterialTheme
+                        .typography
+                        .bodyLarge
+                        .lineHeight * 1.15,
 
-                    overflow =
-                        TextOverflow.Ellipsis
-                )
-            }
+                maxLines =
+                    8,
+
+                overflow =
+                    TextOverflow.Ellipsis
+            )
         }
     }
 }

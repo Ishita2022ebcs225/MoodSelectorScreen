@@ -11,7 +11,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
@@ -20,14 +19,13 @@ fun InsightCard(
     insight: String
 ) {
 
-    val pastelBlue = Color(0xFFDDF2FF)
-
     Card(
 
         shape = RoundedCornerShape(30.dp),
 
         colors = CardDefaults.cardColors(
-            containerColor = pastelBlue
+            containerColor =
+                MaterialTheme.colorScheme.secondaryContainer
         )
     ) {
 
@@ -42,7 +40,10 @@ fun InsightCard(
                     .typography
                     .titleLarge,
 
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+
+                color =
+                    MaterialTheme.colorScheme.onSecondaryContainer
             )
 
             Spacer(
@@ -54,7 +55,10 @@ fun InsightCard(
 
                 style = MaterialTheme
                     .typography
-                    .bodyLarge
+                    .bodyLarge,
+
+                color =
+                    MaterialTheme.colorScheme.onSecondaryContainer
             )
         }
     }

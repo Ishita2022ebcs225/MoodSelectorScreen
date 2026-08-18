@@ -48,13 +48,30 @@ sealed class Screen(
 
     /*
      * ----------------------------------------------------------
+     * Settings
+     * ----------------------------------------------------------
+     */
+
+    data object Settings : Screen(
+        "settings"
+    )
+
+
+    /*
+     * ----------------------------------------------------------
      * Journal Editor
      * ----------------------------------------------------------
      */
 
     data object JournalEditor : Screen(
-        "journal_editor"
-    )
+        "journal_editor?journalId={journalId}"
+    ) {
+
+        fun createRoute(
+            journalId: Int
+        ): String =
+            "journal_editor?journalId=$journalId"
+    }
 
 
     /*
@@ -216,4 +233,3 @@ sealed class Screen(
         "self_compassion_reflection"
     )
 }
-

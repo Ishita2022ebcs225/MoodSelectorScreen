@@ -5,6 +5,7 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Update
 import com.example.moodselector.data.local.entity.JournalEntity
 import kotlinx.coroutines.flow.Flow
 
@@ -16,9 +17,26 @@ interface JournalDao {
         journal: JournalEntity
     )
 
+    @Update
+    suspend fun updateJournal(
+        journal: JournalEntity
+    )
+
     @Delete
     suspend fun deleteJournal(
         journal: JournalEntity
+    )
+
+    @Query(
+        """
+        DELETE FROM journal_entries
+        WHERE id = :journalId
+        AND userId = :userId
+        """
+    )
+    suspend fun deleteJournal(
+        journalId: Int,
+        userId: String
     )
 
     @Query(
@@ -29,14 +47,24 @@ interface JournalDao {
     )
 
     @Query(
-        "SELECT * FROM journal_entries WHERE userId = :userId ORDER BY timestamp DESC"
+        """
+        SELECT *
+        FROM journal_entries
+        WHERE userId = :userId
+        ORDER BY timestamp DESC
+        """
     )
     fun getAllJournals(
         userId: String
     ): Flow<List<JournalEntity>>
 
     @Query(
-        "SELECT * FROM journal_entries WHERE id = :id AND userId = :userId"
+        """
+        SELECT *
+        FROM journal_entries
+        WHERE id = :id
+        AND userId = :userId
+        """
     )
     suspend fun getJournalById(
         id: Int,
