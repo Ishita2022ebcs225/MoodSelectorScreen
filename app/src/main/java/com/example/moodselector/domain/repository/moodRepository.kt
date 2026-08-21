@@ -16,4 +16,8 @@ interface MoodRepository {
     fun getAllMoods(
         userId: String
     ): Flow<List<MoodEntry>>
+
+    suspend fun deleteAllMoods(
+        userId: String
+    )
 }

@@ -27,4 +27,10 @@ class MoodRepositoryImpl @Inject constructor(
     ): Flow<List<MoodEntry>> {
         return dao.getAllMoods(userId)
     }
+
+    override suspend fun deleteAllMoods(
+        userId: String
+    ) {
+        dao.deleteAllMoods(userId)
+    }
 }

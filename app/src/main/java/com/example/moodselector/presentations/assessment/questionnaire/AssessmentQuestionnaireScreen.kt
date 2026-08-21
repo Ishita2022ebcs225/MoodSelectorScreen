@@ -24,7 +24,6 @@ import com.example.moodselector.domain.assessment.model.AssessmentSeverity
 import com.example.moodselector.presentations.assessment.questionnaire.components.AssessmentProgressIndicator
 import com.example.moodselector.presentations.assessment.questionnaire.components.QuestionCard
 
-
 @Composable
 fun AssessmentQuestionnaireScreen(
     viewModel: AssessmentViewModel = hiltViewModel(),
@@ -74,67 +73,114 @@ fun AssessmentQuestionnaireScreen(
             .padding(16.dp)
     ) {
 
-
         Text(
-            text = assessment.title,
-            style = MaterialTheme.typography.headlineMedium
+            text =
+                assessment.title,
+
+            style =
+                MaterialTheme
+                    .typography
+                    .headlineMedium,
+
+            color =
+                MaterialTheme
+                    .colorScheme
+                    .onBackground
         )
 
 
         Spacer(
-            modifier = Modifier.height(8.dp)
+            modifier =
+                Modifier.height(8.dp)
         )
 
 
         Text(
-            text = assessment.description,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            text =
+                assessment.description,
+
+            style =
+                MaterialTheme
+                    .typography
+                    .bodyMedium,
+
+            color =
+                MaterialTheme
+                    .colorScheme
+                    .onSurfaceVariant
         )
 
 
         Spacer(
-            modifier = Modifier.height(12.dp)
+            modifier =
+                Modifier.height(12.dp)
         )
 
 
         Text(
-            text = assessment.instructions,
-            style = MaterialTheme.typography.bodyMedium
+            text =
+                assessment.instructions,
+
+            style =
+                MaterialTheme
+                    .typography
+                    .bodyMedium,
+
+            color =
+                MaterialTheme
+                    .colorScheme
+                    .onBackground
         )
 
 
         Spacer(
-            modifier = Modifier.height(20.dp)
+            modifier =
+                Modifier.height(20.dp)
         )
 
 
         AssessmentProgressIndicator(
-            currentQuestion = uiState.currentQuestionIndex,
-            totalQuestions = uiState.totalQuestions
+            currentQuestion =
+                uiState.currentQuestionIndex,
+
+            totalQuestions =
+                uiState.totalQuestions
         )
 
 
         Spacer(
-            modifier = Modifier.height(20.dp)
+            modifier =
+                Modifier.height(20.dp)
         )
 
 
         LazyColumn(
-            modifier = Modifier.weight(1f),
-            contentPadding = PaddingValues(bottom = 16.dp)
+            modifier =
+                Modifier.weight(1f),
+
+            contentPadding =
+                PaddingValues(
+                    bottom = 16.dp
+                )
         ) {
 
             item {
 
                 QuestionCard(
-                    question = currentQuestion,
-                    selectedScore = selectedScore,
+                    question =
+                        currentQuestion,
+
+                    selectedScore =
+                        selectedScore,
+
                     onAnswerSelected = { score ->
 
                         viewModel.selectAnswer(
-                            questionId = currentQuestion.id,
-                            score = score
+                            questionId =
+                                currentQuestion.id,
+
+                            score =
+                                score
                         )
                     }
                 )
@@ -143,20 +189,28 @@ fun AssessmentQuestionnaireScreen(
 
 
         Column(
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement =
+                Arrangement.spacedBy(8.dp)
         ) {
 
 
-            if (uiState.currentQuestionIndex > 0) {
+            if (
+                uiState.currentQuestionIndex > 0
+            ) {
 
                 OutlinedButton(
                     onClick = {
                         viewModel.previousQuestion()
                     },
-                    modifier = Modifier.fillMaxWidth()
+
+                    modifier =
+                        Modifier.fillMaxWidth()
                 ) {
 
-                    Text("Previous")
+                    Text(
+                        text =
+                            "Previous"
+                    )
                 }
             }
 
@@ -167,8 +221,12 @@ fun AssessmentQuestionnaireScreen(
                     viewModel.nextQuestion()
 
                 },
-                enabled = selectedScore != null,
-                modifier = Modifier.fillMaxWidth()
+
+                enabled =
+                    selectedScore != null,
+
+                modifier =
+                    Modifier.fillMaxWidth()
             ) {
 
 
@@ -193,7 +251,10 @@ fun AssessmentQuestionnaireScreen(
                     }
 
 
-                Text(buttonText)
+                Text(
+                    text =
+                        buttonText
+                )
             }
         }
     }

@@ -61,6 +61,18 @@ class MainActivity : ComponentActivity() {
 
             /*
              * --------------------------------------------------
+             * ASSESSMENT STATE
+             * --------------------------------------------------
+             */
+
+            val hasCompletedAssessment by
+            startupViewModel
+                .hasCompletedAssessment
+                .collectAsStateWithLifecycle()
+
+
+            /*
+             * --------------------------------------------------
              * THEME STATE
              * --------------------------------------------------
              */
@@ -107,18 +119,15 @@ class MainActivity : ComponentActivity() {
                 dynamicColor = false
             ) {
 
+                val navController =
+                    rememberNavController()
+
 
                 /*
                  * --------------------------------------------------
-                 * ASSESSMENT STATE
+                 * STARTUP
                  * --------------------------------------------------
                  */
-
-                val hasCompletedAssessment by
-                startupViewModel
-                    .hasCompletedAssessment
-                    .collectAsStateWithLifecycle()
-
 
                 when {
 
@@ -129,9 +138,6 @@ class MainActivity : ComponentActivity() {
                      */
 
                     currentUser == null -> {
-
-                        val navController =
-                            rememberNavController()
 
                         AppNavHost(
 
@@ -146,8 +152,13 @@ class MainActivity : ComponentActivity() {
 
                     /*
                      * ----------------------------------------------
-                     * ASSESSMENT STATE LOADING
+                     * ASSESSMENT STATE STILL LOADING
                      * ----------------------------------------------
+                     *
+                     * The authenticated user is known, but
+                     * StartupViewModel has not yet completed
+                     * cloud synchronization and resolved the
+                     * persisted assessment state.
                      */
 
                     hasCompletedAssessment == null -> {
@@ -167,37 +178,15 @@ class MainActivity : ComponentActivity() {
 
                     /*
                      * ----------------------------------------------
-                     * SIGNED-IN USER
+                     * ASSESSMENT NOT COMPLETED
                      * ----------------------------------------------
+                     *
+                     * Show the assessment onboarding screen.
+                     * The user can either begin the assessment or
+                     * choose "Skip for now".
                      */
 
-                    else -> {
-
-                        val navController =
-                            rememberNavController()
-
-                        val startDestination =
-                            if (
-                                hasCompletedAssessment == true
-                            ) {
-
-                                /*
-                                 * Existing user who already
-                                 * completed the assessment.
-                                 */
-
-                                Screen.Insights.route
-
-                            } else {
-
-                                /*
-                                 * New user who has not yet
-                                 * completed the assessment.
-                                 */
-
-                                Screen.AssessmentOnboarding.route
-                            }
-
+                    hasCompletedAssessment == false -> {
 
                         AppNavHost(
 
@@ -205,7 +194,29 @@ class MainActivity : ComponentActivity() {
                                 navController,
 
                             startDestination =
-                                startDestination
+                                Screen.AssessmentOnboarding.route
+                        )
+                    }
+
+
+                    /*
+                     * ----------------------------------------------
+                     * ASSESSMENT COMPLETED
+                     * ----------------------------------------------
+                     *
+                     * Users who have already completed the
+                     * assessment go directly to Home.
+                     */
+
+                    else -> {
+
+                        AppNavHost(
+
+                            navController =
+                                navController,
+
+                            startDestination =
+                                Screen.Insights.route
                         )
                     }
                 }

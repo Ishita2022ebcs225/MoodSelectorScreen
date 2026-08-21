@@ -1,7 +1,7 @@
 package com.example.moodselector.domain.repository
 
 /**
- * Handles backup and restoration of the authenticated user's
+ * Handles backup, restoration, and deletion of the authenticated user's
  * local Room data using Firebase Firestore.
  *
  * Room remains the app's local/offline data source.
@@ -51,6 +51,21 @@ interface CloudBackupRepository {
      * backup/restore sequence.
      */
     suspend fun syncUserData(
+        userId: String
+    ): Result<Unit>
+
+
+    /*
+     * --------------------------------------------------
+     * DELETE CLOUD USER DATA
+     * --------------------------------------------------
+     *
+     * Deletes all Firestore cloud backup data belonging
+     * to the authenticated user.
+     *
+     * The userId must be the Firebase Authentication UID.
+     */
+    suspend fun deleteUserData(
         userId: String
     ): Result<Unit>
 }

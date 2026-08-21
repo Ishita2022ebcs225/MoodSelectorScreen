@@ -52,7 +52,7 @@ fun EmptyMoodState() {
             Text(
 
                 text =
-                    "No mood entries yet 🌸",
+                    "No mood entries yet ",
 
                 color =
                     textColor

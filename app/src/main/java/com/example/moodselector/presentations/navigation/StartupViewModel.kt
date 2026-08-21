@@ -6,20 +6,23 @@ import com.example.moodselector.data.preferences.UserPreferencesRepository
 import com.example.moodselector.domain.repository.AuthRepository
 import com.example.moodselector.domain.repository.CloudBackupRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
-import javax.inject.Inject
 
 @HiltViewModel
 class StartupViewModel @Inject constructor(
     private val authRepository: AuthRepository,
-    private val userPreferencesRepository: UserPreferencesRepository,
-    private val cloudBackupRepository: CloudBackupRepository
+    private val userPreferencesRepository:
+    UserPreferencesRepository,
+    private val cloudBackupRepository:
+    CloudBackupRepository
 ) : ViewModel() {
 
     /*
@@ -34,7 +37,8 @@ class StartupViewModel @Inject constructor(
             .stateIn(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(5000),
-                initialValue = authRepository.currentUser
+                initialValue =
+                    authRepository.currentUser
             )
 
 
@@ -44,12 +48,15 @@ class StartupViewModel @Inject constructor(
      * --------------------------------------------------
      *
      * Whenever the authenticated Firebase user changes,
-     * that user's Room data is synchronized with
-     * Firestore.
+     * that user's Room data is synchronized with Firestore.
+     *
+     * The user ID is emitted only after synchronization
+     * has completed successfully.
      */
 
     private val cloudSyncCompleted:
             StateFlow<String?> =
+
         authRepository
             .authState
             .distinctUntilChanged { oldUser, newUser ->
@@ -72,12 +79,21 @@ class StartupViewModel @Inject constructor(
                                 )
 
                         /*
-                         * Whether synchronization succeeds
-                         * or fails, allow the application to
-                         * continue using local Room data.
+                         * Only mark synchronization as
+                         * completed when the repository
+                         * reports success.
                          */
 
-                        emit(user.uid)
+                        if (result.isSuccess) {
+
+                            emit(
+                                user.uid
+                            )
+
+                        } else {
+
+                            emit(null)
+                        }
                     }
                 }
             }
@@ -93,12 +109,21 @@ class StartupViewModel @Inject constructor(
      * CURRENT USER ASSESSMENT STATE
      * --------------------------------------------------
      *
-     * The assessment state is evaluated only after
-     * synchronization has completed for the current user.
+     * The assessment state is resolved only after cloud
+     * synchronization has completed successfully.
+     *
+     * The persisted preference is read once with first()
+     * so a temporary/default emission cannot cause
+     * MainActivity to select the wrong startup destination.
+     *
+     * null  = still resolving
+     * false = assessment has not been completed
+     * true  = assessment has been completed
      */
 
     val hasCompletedAssessment:
             StateFlow<Boolean?> =
+
         authRepository
             .authState
             .flatMapLatest { user ->
@@ -112,16 +137,27 @@ class StartupViewModel @Inject constructor(
                     cloudSyncCompleted
                         .flatMapLatest { syncedUserId ->
 
-                            if (syncedUserId != user.uid) {
+                            if (
+                                syncedUserId != user.uid
+                            ) {
 
                                 flowOf<Boolean?>(null)
 
                             } else {
 
-                                userPreferencesRepository
-                                    .hasCompletedAssessment(
-                                        userId = user.uid
+                                flow {
+
+                                    val completed =
+                                        userPreferencesRepository
+                                            .hasCompletedAssessment(
+                                                userId = user.uid
+                                            )
+                                            .first()
+
+                                    emit(
+                                        completed
                                     )
+                                }
                             }
                         }
                 }

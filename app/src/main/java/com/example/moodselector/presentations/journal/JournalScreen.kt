@@ -1,6 +1,5 @@
 package com.example.moodselector.presentations.journal
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -15,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Book
 import androidx.compose.material.icons.filled.Edit
@@ -23,37 +23,27 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.luminance
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.moodselector.R
 import com.example.moodselector.data.local.entity.JournalEntity
 import com.example.moodselector.presentations.journal.components.JournalCard
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun JournalScreen(
     viewModel: JournalViewModel = hiltViewModel(),
@@ -78,203 +68,315 @@ fun JournalScreen(
     val softPurple =
         MaterialTheme.colorScheme.primary
 
-    val isDarkTheme =
-        MaterialTheme.colorScheme.background.luminance() < 0.5f
+    /*
+     * ==========================================================
+     * SCREEN
+     * ==========================================================
+     *
+     * Uses the same background style as the rest of the app.
+     *
+     * The previous journal image background has been removed.
+     */
 
-    Box(
-        modifier =
-            Modifier.fillMaxSize()
-    ) {
+    val backgroundGradient =
+        Brush.verticalGradient(
 
-        Image(
-            painter =
-                painterResource(
-                    id = R.drawable.journal_background
-                ),
-
-            contentDescription = null,
-
-            contentScale =
-                ContentScale.Crop,
-
-            modifier =
-                Modifier.fillMaxSize()
+            colors =
+                listOf(
+                    MaterialTheme.colorScheme.background,
+                    MaterialTheme.colorScheme.surface,
+                    MaterialTheme.colorScheme.surfaceVariant
+                )
         )
 
-        Box(
+    Scaffold(
+
+        containerColor =
+            Color.Transparent,
+
+        floatingActionButton = {
+
+            FloatingActionButton(
+
+                onClick =
+                    onAddJournalClick,
+
+                containerColor =
+                    softPurple
+            ) {
+
+                Icon(
+
+                    imageVector =
+                        Icons.Default.Edit,
+
+                    contentDescription =
+                        "Add Journal",
+
+                    tint =
+                        MaterialTheme
+                            .colorScheme
+                            .onPrimary
+                )
+            }
+        }
+
+    ) { paddingValues ->
+
+        LazyColumn(
+
             modifier =
                 Modifier
                     .fillMaxSize()
                     .background(
-                        brush =
-                            if (isDarkTheme) {
-                                Brush.verticalGradient(
-                                    colors =
-                                        listOf(
-                                            MaterialTheme.colorScheme.background.copy(
-                                                alpha = 0.78f
-                                            ),
-                                            MaterialTheme.colorScheme.primary.copy(
-                                                alpha = 0.28f
-                                            ),
-                                            MaterialTheme.colorScheme.background.copy(
-                                                alpha = 0.84f
-                                            )
-                                        )
-                                )
-                            } else {
-                                Brush.verticalGradient(
-                                    colors =
-                                        listOf(
-                                            Color.White.copy(
-                                                alpha = 0.35f
-                                            ),
-                                            Color.White.copy(
-                                                alpha = 0.35f
-                                            )
-                                        )
-                                )
-                            }
+                        backgroundGradient
                     )
-        )
+                    .padding(
+                        paddingValues
+                    )
+                    .navigationBarsPadding(),
 
-        Scaffold(
-            containerColor =
-                Color.Transparent,
+            contentPadding =
+                PaddingValues(
+                    bottom = 110.dp
+                ),
 
-            topBar = {
+            verticalArrangement =
+                Arrangement.spacedBy(
+                    12.dp
+                )
+        ) {
 
-                TopAppBar(
-                    title = {
+            /*
+             * ==================================================
+             * HEADER
+             * ==================================================
+             */
 
-                        Column(
+            item {
+
+                Card(
+
+                    modifier =
+                        Modifier.fillMaxWidth(),
+
+                    shape =
+                        RoundedCornerShape(
+                            bottomStart = 28.dp,
+                            bottomEnd = 28.dp,
+                            topStart = 22.dp,
+                            topEnd = 22.dp
+                        ),
+
+                    colors =
+                        CardDefaults.cardColors(
+                            containerColor =
+                                Color.Transparent
+                        ),
+
+                    elevation =
+                        CardDefaults.cardElevation(
+                            defaultElevation = 3.dp
+                        )
+                ) {
+
+                    Column(
+
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .background(
+
+                                    Brush.verticalGradient(
+
+                                        listOf(
+
+                                            MaterialTheme
+                                                .colorScheme
+                                                .primary
+                                                .copy(
+                                                    alpha = 0.82f
+                                                ),
+
+                                            MaterialTheme
+                                                .colorScheme
+                                                .primary
+                                                .copy(
+                                                    alpha = 0.58f
+                                                ),
+
+                                            MaterialTheme
+                                                .colorScheme
+                                                .secondary
+                                                .copy(
+                                                    alpha = 0.42f
+                                                )
+                                        )
+                                    )
+                                )
+                                .padding(
+                                    horizontal = 20.dp,
+                                    vertical = 20.dp
+                                )
+                    ) {
+
+                        /*
+                         * --------------------------------------------------
+                         * TITLE
+                         * --------------------------------------------------
+                         */
+
+                        Text(
+
+                            text =
+                                "Journal 📖",
+
+                            style =
+                                MaterialTheme
+                                    .typography
+                                    .headlineSmall,
+
+                            fontWeight =
+                                FontWeight.Bold,
+
+                            color =
+                                Color.White
+                        )
+
+                        Spacer(
                             modifier =
-                                Modifier.fillMaxWidth(),
+                                Modifier.height(
+                                    5.dp
+                                )
+                        )
 
-                            horizontalAlignment =
-                                Alignment.CenterHorizontally
+                        /*
+                         * --------------------------------------------------
+                         * DESCRIPTION
+                         * --------------------------------------------------
+                         */
+
+                        Text(
+
+                            text =
+                                "Capture your thoughts, feelings, and reflections as you move through your days.",
+
+                            style =
+                                MaterialTheme
+                                    .typography
+                                    .bodySmall,
+
+                            color =
+                                Color.White.copy(
+                                    alpha = 0.88f
+                                )
+                        )
+
+                        Spacer(
+                            modifier =
+                                Modifier.height(
+                                    14.dp
+                                )
+                        )
+
+                        /*
+                         * --------------------------------------------------
+                         * ENTRY COUNT
+                         * --------------------------------------------------
+                         */
+
+                        Card(
+
+                            shape =
+                                RoundedCornerShape(
+                                    16.dp
+                                ),
+
+                            colors =
+                                CardDefaults.cardColors(
+                                    containerColor =
+                                        Color.White.copy(
+                                            alpha = 0.14f
+                                        )
+                                )
                         ) {
 
                             Text(
-                                text = "📖 Journal",
 
-                                style =
-                                    TextStyle(
-                                        fontWeight =
-                                            FontWeight.ExtraBold,
-
-                                        fontSize =
-                                            MaterialTheme
-                                                .typography
-                                                .headlineMedium
-                                                .fontSize,
-
-                                        brush =
-                                            Brush.linearGradient(
-                                                colors =
-                                                    listOf(
-                                                        MaterialTheme.colorScheme.primary,
-                                                        MaterialTheme.colorScheme.tertiary,
-                                                        MaterialTheme.colorScheme.secondary
-                                                    )
-                                            )
-                                    )
-                            )
-
-                            Text(
                                 text =
-                                    "Your reflections",
+                                    "${journals.size} journal entries recorded",
+
+                                modifier =
+                                    Modifier.padding(
+                                        horizontal = 14.dp,
+                                        vertical = 8.dp
+                                    ),
 
                                 style =
                                     MaterialTheme
                                         .typography
-                                        .bodySmall,
+                                        .labelMedium,
+
+                                fontWeight =
+                                    FontWeight.SemiBold,
 
                                 color =
-                                    textDark.copy(
-                                        alpha = 0.75f
+                                    Color.White.copy(
+                                        alpha = 0.94f
                                     )
                             )
                         }
-                    },
-
-                    colors =
-                        TopAppBarDefaults
-                            .topAppBarColors(
-                                containerColor =
-                                    Color.Transparent
-                            )
-                )
-            },
-
-            floatingActionButton = {
-
-                FloatingActionButton(
-                    onClick =
-                        onAddJournalClick,
-
-                    containerColor =
-                        softPurple
-                ) {
-
-                    Icon(
-                        imageVector =
-                            Icons.Default.Edit,
-
-                        contentDescription =
-                            "Add Journal",
-
-                        tint =
-                            MaterialTheme.colorScheme.onPrimary
-                    )
+                    }
                 }
             }
 
-        ) { padding ->
+            /*
+             * ==================================================
+             * EMPTY STATE
+             * ==================================================
+             */
 
-            LazyColumn(
-                modifier =
-                    Modifier
-                        .fillMaxSize()
-                        .padding(padding),
+            if (journals.isEmpty()) {
 
-                contentPadding =
-                    PaddingValues(16.dp),
+                item {
 
-                verticalArrangement =
-                    Arrangement.spacedBy(12.dp)
-            ) {
+                    Box(
 
-                if (journals.isEmpty()) {
-
-                    item {
+                        modifier =
+                            Modifier.padding(
+                                horizontal = 18.dp
+                            )
+                    ) {
 
                         Card(
+
                             modifier =
                                 Modifier.fillMaxWidth(),
 
                             colors =
-                                CardDefaults
-                                    .cardColors(
-                                        containerColor =
-                                            MaterialTheme
-                                                .colorScheme
-                                                .surfaceContainer
-                                                .copy(
-                                                    alpha = 0.90f
-                                                )
-                                    )
+                                CardDefaults.cardColors(
+                                    containerColor =
+                                        MaterialTheme
+                                            .colorScheme
+                                            .surfaceContainer
+                                )
                         ) {
 
                             Column(
+
                                 modifier =
-                                    Modifier.padding(24.dp),
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .padding(
+                                            24.dp
+                                        ),
 
                                 horizontalAlignment =
-                                    Alignment.CenterHorizontally
+                                    androidx.compose.ui.Alignment.CenterHorizontally
                             ) {
 
                                 Icon(
+
                                     imageVector =
                                         Icons.Default.Book,
 
@@ -285,15 +387,20 @@ fun JournalScreen(
                                         softPurple,
 
                                     modifier =
-                                        Modifier.size(48.dp)
+                                        Modifier.size(
+                                            48.dp
+                                        )
                                 )
 
                                 Spacer(
                                     modifier =
-                                        Modifier.height(12.dp)
+                                        Modifier.height(
+                                            12.dp
+                                        )
                                 )
 
                                 Text(
+
                                     text =
                                         "No journal entries yet",
 
@@ -305,6 +412,7 @@ fun JournalScreen(
                                 )
 
                                 Text(
+
                                     text =
                                         "Start writing your thoughts",
 
@@ -318,48 +426,77 @@ fun JournalScreen(
                     }
                 }
 
+            } else {
+
+                /*
+                 * ==================================================
+                 * JOURNAL ENTRIES
+                 * ==================================================
+                 */
+
                 items(
+
                     journals.reversed(),
-                    key = { it.id }
+
+                    key = {
+                        it.id
+                    }
+
                 ) { journal ->
 
-                    JournalCard(
-                        journal =
-                            journal,
+                    Box(
 
-                        pastelPink =
-                            pastelPink,
-
-                        textDark =
-                            textDark,
-
-                        onEditClick = {
-
-                            onEditJournalClick(
-                                it.id
-                            )
-                        },
-
-                        onDeleteClick = {
-
-                            journalToDelete =
-                                it
-                        }
-                    )
-                }
-
-                item {
-
-                    Spacer(
                         modifier =
-                            Modifier
-                                .height(80.dp)
-                                .navigationBarsPadding()
-                    )
+                            Modifier.padding(
+                                horizontal = 18.dp
+                            )
+                    ) {
+
+                        JournalCard(
+
+                            journal =
+                                journal,
+
+                            pastelPink =
+                                pastelPink,
+
+                            textDark =
+                                textDark,
+
+                            onEditClick = {
+
+                                onEditJournalClick(
+                                    it.id
+                                )
+                            },
+
+                            onDeleteClick = {
+
+                                journalToDelete =
+                                    it
+                            }
+                        )
+                    }
                 }
+            }
+
+            item {
+
+                Spacer(
+                    modifier =
+                        Modifier.height(
+                            20.dp
+                        )
+                )
             }
         }
     }
+
+    /*
+     * ==========================================================
+     * DELETE CONFIRMATION
+     * ==========================================================
+     */
 
     journalToDelete?.let { journal ->
 
@@ -370,6 +507,7 @@ fun JournalScreen(
             },
 
             title = {
+
                 Text(
                     text =
                         "Delete journal entry?"
@@ -377,6 +515,7 @@ fun JournalScreen(
             },
 
             text = {
+
                 Text(
                     text =
                         "Are you sure you want to delete this journal entry? This action cannot be undone."
@@ -386,6 +525,7 @@ fun JournalScreen(
             confirmButton = {
 
                 Button(
+
                     onClick = {
 
                         viewModel.deleteJournal(
@@ -399,14 +539,21 @@ fun JournalScreen(
                     colors =
                         ButtonDefaults.buttonColors(
                             containerColor =
-                                MaterialTheme.colorScheme.error
+                                MaterialTheme
+                                    .colorScheme
+                                    .error
                         )
                 ) {
 
                     Text(
-                        text = "Delete",
+
+                        text =
+                            "Delete",
+
                         color =
-                            MaterialTheme.colorScheme.onError
+                            MaterialTheme
+                                .colorScheme
+                                .onError
                     )
                 }
             },
@@ -414,14 +561,19 @@ fun JournalScreen(
             dismissButton = {
 
                 TextButton(
+
                     onClick = {
                         journalToDelete = null
                     }
                 ) {
 
                     Text(
-                        text = "Cancel",
-                        color = textDark
+
+                        text =
+                            "Cancel",
+
+                        color =
+                            textDark
                     )
                 }
             }

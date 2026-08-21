@@ -71,6 +71,9 @@ fun JournalEditorScreen(
     val isLoadingJournal by
     viewModel.isLoadingJournal.collectAsState()
 
+    val isSaving by
+    viewModel.isSaving.collectAsState()
+
     val colorScheme =
         androidx.compose.material3.MaterialTheme.colorScheme
 
@@ -99,14 +102,6 @@ fun JournalEditorScreen(
      * ==========================================================
      * THEME-AWARE PAPER OVERLAY
      * ==========================================================
-     *
-     * The original lined-paper image is preserved.
-     *
-     * Light theme:
-     * subtle white overlay.
-     *
-     * Dark theme:
-     * darker overlay so the light image fits the dark theme.
      */
 
     val isDarkTheme =
@@ -135,6 +130,12 @@ fun JournalEditorScreen(
             "Angry"
         )
 
+    /*
+     * ==========================================================
+     * LOAD JOURNAL
+     * ==========================================================
+     */
+
     LaunchedEffect(journalId) {
 
         if (journalId != null) {
@@ -148,7 +149,14 @@ fun JournalEditorScreen(
     val isEditing =
         journalId != null
 
+    /*
+     * ==========================================================
+     * SCREEN
+     * ==========================================================
+     */
+
     Scaffold(
+
         containerColor =
             background,
 
@@ -176,12 +184,23 @@ fun JournalEditorScreen(
                 navigationIcon = {
 
                     IconButton(
-                        onClick =
-                            onBackClick
+
+                        onClick = {
+
+                            /*
+                             * Do not allow navigation while
+                             * the journal is being saved.
+                             */
+                            if (!isSaving) {
+                                onBackClick()
+                            }
+                        }
+
                     ) {
 
                         Icon(
                             Icons.Default.ArrowBack,
+
                             contentDescription =
                                 "Back",
 
@@ -194,6 +213,7 @@ fun JournalEditorScreen(
                 colors =
                     TopAppBarDefaults
                         .topAppBarColors(
+
                             containerColor =
                                 background,
 
@@ -213,14 +233,23 @@ fun JournalEditorScreen(
             isLoadingJournal
         ) {
 
+            /*
+             * ==================================================
+             * LOADING EXISTING JOURNAL
+             * ==================================================
+             */
+
             Box(
+
                 modifier =
                     Modifier
                         .fillMaxSize()
                         .background(
                             background
                         )
-                        .padding(padding),
+                        .padding(
+                            padding
+                        ),
 
                 contentAlignment =
                     Alignment.Center
@@ -234,14 +263,23 @@ fun JournalEditorScreen(
 
         } else {
 
+            /*
+             * ==================================================
+             * EDITOR CONTENT
+             * ==================================================
+             */
+
             Column(
+
                 modifier =
                     Modifier
                         .fillMaxSize()
                         .background(
                             background
                         )
-                        .padding(padding)
+                        .padding(
+                            padding
+                        )
                         .verticalScroll(
                             rememberScrollState()
                         )
@@ -254,7 +292,14 @@ fun JournalEditorScreen(
                     Arrangement.spacedBy(14.dp)
             ) {
 
+                /*
+                 * ==================================================
+                 * HEADER
+                 * ==================================================
+                 */
+
                 CardHeader(
+
                     lavender =
                         lavender,
 
@@ -265,7 +310,14 @@ fun JournalEditorScreen(
                         textPrimary
                 )
 
+                /*
+                 * ==================================================
+                 * JOURNAL PAPER
+                 * ==================================================
+                 */
+
                 Box(
+
                     modifier =
                         Modifier
                             .fillMaxWidth()
@@ -281,6 +333,7 @@ fun JournalEditorScreen(
                 ) {
 
                     Image(
+
                         painter =
                             painterResource(
                                 id =
@@ -303,6 +356,7 @@ fun JournalEditorScreen(
                      */
 
                     Box(
+
                         modifier =
                             Modifier
                                 .matchParentSize()
@@ -312,11 +366,15 @@ fun JournalEditorScreen(
                     )
 
                     OutlinedTextField(
+
                         value =
                             content,
 
                         onValueChange =
                             viewModel::updateContent,
+
+                        enabled =
+                            !isSaving,
 
                         modifier =
                             Modifier
@@ -326,6 +384,7 @@ fun JournalEditorScreen(
                         placeholder = {
 
                             Text(
+
                                 text =
                                     "Write about your day...",
 
@@ -341,16 +400,23 @@ fun JournalEditorScreen(
 
                         colors =
                             TextFieldDefaults.colors(
+
                                 focusedContainerColor =
                                     Color.Transparent,
 
                                 unfocusedContainerColor =
                                     Color.Transparent,
 
+                                disabledContainerColor =
+                                    Color.Transparent,
+
                                 focusedIndicatorColor =
                                     Color.Transparent,
 
                                 unfocusedIndicatorColor =
+                                    Color.Transparent,
+
+                                disabledIndicatorColor =
                                     Color.Transparent,
 
                                 cursorColor =
@@ -360,12 +426,22 @@ fun JournalEditorScreen(
                                     textPrimary,
 
                                 unfocusedTextColor =
+                                    textPrimary,
+
+                                disabledTextColor =
                                     textPrimary
                             )
                     )
                 }
 
+                /*
+                 * ==================================================
+                 * MOOD
+                 * ==================================================
+                 */
+
                 Text(
+
                     text =
                         "Mood",
 
@@ -377,6 +453,7 @@ fun JournalEditorScreen(
                 )
 
                 FlowRow(
+
                     horizontalArrangement =
                         Arrangement.spacedBy(8.dp),
 
@@ -390,14 +467,22 @@ fun JournalEditorScreen(
                             selectedMood == mood
 
                         AssistChip(
+
                             onClick = {
 
-                                viewModel.updateMood(
-                                    mood
-                                )
+                                if (!isSaving) {
+
+                                    viewModel.updateMood(
+                                        mood
+                                    )
+                                }
                             },
 
+                            enabled =
+                                !isSaving,
+
                             label = {
+
                                 Text(
                                     text =
                                         mood
@@ -410,6 +495,7 @@ fun JournalEditorScreen(
                             colors =
                                 AssistChipDefaults
                                     .assistChipColors(
+
                                         containerColor =
                                             if (selected)
                                                 primary
@@ -427,13 +513,32 @@ fun JournalEditorScreen(
                     }
                 }
 
+                /*
+                 * ==================================================
+                 * SAVE BUTTON
+                 * ==================================================
+                 */
+
                 Button(
+
                     onClick = {
 
-                        viewModel.saveJournal()
+                        /*
+                         * The editor now waits for the ViewModel
+                         * to finish both Room persistence and
+                         * Firestore backup before navigating away.
+                         */
+                        viewModel.saveJournal { success ->
 
-                        onBackClick()
+                            if (success) {
+                                onBackClick()
+                            }
+                        }
                     },
+
+                    enabled =
+                        !isSaving &&
+                                content.trim().isNotBlank(),
 
                     modifier =
                         Modifier
@@ -442,11 +547,22 @@ fun JournalEditorScreen(
 
                     colors =
                         ButtonDefaults.buttonColors(
+
                             containerColor =
                                 primary,
 
                             contentColor =
-                                onPrimary
+                                onPrimary,
+
+                            disabledContainerColor =
+                                primary.copy(
+                                    alpha = 0.45f
+                                ),
+
+                            disabledContentColor =
+                                onPrimary.copy(
+                                    alpha = 0.8f
+                                )
                         ),
 
                     shape =
@@ -455,19 +571,39 @@ fun JournalEditorScreen(
                         )
                 ) {
 
-                    Text(
-                        text =
-                            if (isEditing)
-                                "Save Changes"
-                            else
-                                "Save Entry",
+                    if (isSaving) {
 
-                        color =
-                            onPrimary,
+                        CircularProgressIndicator(
 
-                        fontWeight =
-                            FontWeight.Bold
-                    )
+                            modifier =
+                                Modifier.size(
+                                    22.dp
+                                ),
+
+                            color =
+                                onPrimary,
+
+                            strokeWidth =
+                                2.dp
+                        )
+
+                    } else {
+
+                        Text(
+
+                            text =
+                                if (isEditing)
+                                    "Save Changes"
+                                else
+                                    "Save Entry",
+
+                            color =
+                                onPrimary,
+
+                            fontWeight =
+                                FontWeight.Bold
+                        )
+                    }
                 }
 
                 Spacer(
@@ -479,6 +615,13 @@ fun JournalEditorScreen(
     }
 }
 
+
+/*
+ * ==========================================================
+ * CARD HEADER
+ * ==========================================================
+ */
+
 @Composable
 private fun CardHeader(
     lavender: Color,
@@ -487,13 +630,17 @@ private fun CardHeader(
 ) {
 
     Card(
+
         shape =
-            RoundedCornerShape(24.dp),
+            RoundedCornerShape(
+                24.dp
+            ),
 
         colors =
             androidx.compose.material3
                 .CardDefaults
                 .cardColors(
+
                     containerColor =
                         androidx.compose.material3
                             .MaterialTheme
@@ -506,30 +653,39 @@ private fun CardHeader(
     ) {
 
         Box(
+
             modifier =
                 Modifier
                     .fillMaxWidth()
                     .background(
+
                         Brush.linearGradient(
+
                             listOf(
                                 lavender,
                                 mutedBlue
                             )
                         )
                     )
-                    .padding(20.dp)
+                    .padding(
+                        20.dp
+                    )
         ) {
 
             Row(
+
                 verticalAlignment =
                     Alignment.CenterVertically
             ) {
 
                 Box(
+
                     modifier =
                         Modifier
                             .size(52.dp)
-                            .clip(CircleShape)
+                            .clip(
+                                CircleShape
+                            )
                             .background(
                                 textDark.copy(
                                     alpha = 0.10f
@@ -541,7 +697,9 @@ private fun CardHeader(
                 ) {
 
                     Icon(
+
                         Icons.Default.AutoStories,
+
                         contentDescription =
                             null,
 
@@ -552,12 +710,15 @@ private fun CardHeader(
 
                 Spacer(
                     modifier =
-                        Modifier.width(12.dp)
+                        Modifier.width(
+                            12.dp
+                        )
                 )
 
                 Column {
 
                     Text(
+
                         text =
                             "Write Freely",
 
@@ -569,6 +730,7 @@ private fun CardHeader(
                     )
 
                     Text(
+
                         text =
                             "Capture your thoughts and emotions",
 

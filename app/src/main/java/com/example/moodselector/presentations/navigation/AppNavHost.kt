@@ -37,6 +37,7 @@ import com.example.moodselector.presentations.assessment.questionnaire.Assessmen
 import com.example.moodselector.presentations.assessment.results.AssessmentResultsScreen
 import com.example.moodselector.presentations.auth.AuthViewModel
 import com.example.moodselector.presentations.auth.LoginScreen
+import com.example.moodselector.presentations.auth.ReauthenticationScreen
 import com.example.moodselector.presentations.auth.RegisterScreen
 import com.example.moodselector.presentations.cbt.exercises.ABCModelScreen
 import com.example.moodselector.presentations.cbt.exercises.ActivitySchedulingScreen
@@ -55,6 +56,10 @@ import com.example.moodselector.presentations.journal.JournalScreen
 import com.example.moodselector.presentations.mood.MoodGraphScreen
 import com.example.moodselector.presentations.mood.MoodHistoryScreen
 import com.example.moodselector.presentations.mood.MoodInsightsScreen
+import com.example.moodselector.presentations.reading.ReadingScreen
+import com.example.moodselector.presentations.reading.ReadingStories
+import com.example.moodselector.presentations.reading.ReadingStoryScreen
+import com.example.moodselector.presentations.reading.RealStoriesScreen
 import com.example.moodselector.presentations.settings.SettingsScreen
 
 @Composable
@@ -375,6 +380,50 @@ fun AppNavHost(
 
             /*
              * ==================================================
+             * ACCOUNT REAUTHENTICATION
+             * ==================================================
+             */
+
+            composable(
+                route =
+                    Screen.AccountReauthentication.route
+            ) {
+
+                ReauthenticationScreen(
+
+                    onReauthenticationSuccess = {
+
+                        authViewModel.deleteAccount(
+
+                            onSuccess = {
+
+                                navController.navigate(
+                                    Screen.Login.route
+                                ) {
+
+                                    popUpTo(0) {
+
+                                        inclusive =
+                                            true
+                                    }
+
+                                    launchSingleTop =
+                                        true
+                                }
+                            }
+                        )
+                    },
+
+                    onCancel = {
+
+                        navController.popBackStack()
+                    }
+                )
+            }
+
+
+            /*
+             * ==================================================
              * ASSESSMENT ONBOARDING
              * ==================================================
              */
@@ -391,6 +440,25 @@ fun AppNavHost(
                         navController.navigate(
                             Screen.AssessmentQuestionnaire.route
                         )
+                    },
+
+                    onSkipAssessment = {
+
+                        navController.navigate(
+                            Screen.Insights.route
+                        ) {
+
+                            popUpTo(
+                                Screen.AssessmentOnboarding.route
+                            ) {
+
+                                inclusive =
+                                    true
+                            }
+
+                            launchSingleTop =
+                                true
+                        }
                     }
                 )
             }
@@ -489,6 +557,39 @@ fun AppNavHost(
                         }
                     },
 
+                    onAssessmentClick = {
+
+                        navController.navigate(
+                            Screen.AssessmentOnboarding.route
+                        ) {
+
+                            launchSingleTop =
+                                true
+                        }
+                    },
+
+                    onReadingClick = {
+
+                        navController.navigate(
+                            Screen.Reading.route
+                        ) {
+
+                            launchSingleTop =
+                                true
+                        }
+                    },
+
+                    onRealStoriesClick = {
+
+                        navController.navigate(
+                            Screen.RealStories.route
+                        ) {
+
+                            launchSingleTop =
+                                true
+                        }
+                    },
+
                     onLogout = {
 
                         authViewModel.signOut()
@@ -527,6 +628,17 @@ fun AppNavHost(
                     onBackClick = {
 
                         navController.popBackStack()
+                    },
+
+                    onAccountDeleted = {
+
+                        navController.navigate(
+                            Screen.AccountReauthentication.route
+                        ) {
+
+                            launchSingleTop =
+                                true
+                        }
                     }
                 )
             }
@@ -727,6 +839,27 @@ fun AppNavHost(
                             launchSingleTop =
                                 true
                         }
+                    }
+                )
+            }
+
+
+            /*
+             * ==================================================
+             * REAL STORIES
+             * ==================================================
+             */
+
+            composable(
+                route =
+                    Screen.RealStories.route
+            ) {
+
+                RealStoriesScreen(
+
+                    onBackClick = {
+
+                        navController.popBackStack()
                     }
                 )
             }
@@ -1197,6 +1330,91 @@ fun AppNavHost(
                         }
                     }
                 )
+            }
+
+
+            /*
+             * ==================================================
+             * READING
+             * ==================================================
+             */
+
+            composable(
+                route =
+                    Screen.Reading.route
+            ) {
+
+                ReadingScreen(
+
+                    onBackClick = {
+
+                        navController.popBackStack()
+                    },
+
+                    onStoryClick = { story ->
+
+                        navController.navigate(
+                            Screen.ReadingStory.createRoute(
+                                story.id
+                            )
+                        )
+                    }
+                )
+            }
+
+
+            /*
+             * ==================================================
+             * READING STORY
+             * ==================================================
+             */
+
+            composable(
+
+                route =
+                    Screen.ReadingStory.route,
+
+                arguments =
+                    listOf(
+
+                        navArgument(
+                            "storyId"
+                        ) {
+
+                            type =
+                                NavType.StringType
+                        }
+                    )
+
+            ) { backStackEntry ->
+
+                val storyId =
+                    backStackEntry.arguments
+                        ?.getString(
+                            "storyId"
+                        )
+
+                val story =
+                    storyId?.let {
+
+                        ReadingStories.getStoryById(
+                            it
+                        )
+                    }
+
+                if (story != null) {
+
+                    ReadingStoryScreen(
+
+                        story =
+                            story,
+
+                        onBackClick = {
+
+                            navController.popBackStack()
+                        }
+                    )
+                }
             }
 
 

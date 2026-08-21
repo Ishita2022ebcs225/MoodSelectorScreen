@@ -243,15 +243,18 @@ class AssessmentViewModel @Inject constructor(
 
                 /*
                  * --------------------------------------------------
-                 * SAVE RESULT BEFORE MARKING AS COMPLETED
+                 * SAVE RESULT AND COMPLETE LOCALLY
                  * --------------------------------------------------
                  *
-                 * The questionnaire navigates to the results screen
-                 * when isCompleted becomes true.
+                 * The Room result is saved first.
                  *
-                 * Therefore, the Room result must be saved first.
-                 * Otherwise the results screen can open before the
-                 * latest result exists in the database.
+                 * Once the local result has been successfully saved,
+                 * isCompleted is published immediately so the
+                 * questionnaire can navigate to the results screen.
+                 *
+                 * User preferences and cloud backup happen after
+                 * completion is published and therefore cannot block
+                 * navigation to the results screen.
                  */
 
                 viewModelScope.launch {
@@ -302,53 +305,16 @@ class AssessmentViewModel @Inject constructor(
 
                     /*
                      * ----------------------------------------------
-                     * MARK ASSESSMENT COMPLETE FOR CURRENT USER
+                     * PUBLISH COMPLETION IMMEDIATELY
                      * ----------------------------------------------
                      *
-                     * This happens only after the Room save above
-                     * has completed successfully.
-                     */
-
-                    userPreferencesRepository
-                        .setAssessmentCompleted(
-
-                            userId =
-                                currentUserId,
-
-                            completed =
-                                true
-                        )
-
-
-                    /*
-                     * ----------------------------------------------
-                     * BACK UP UPDATED USER DATA
-                     * ----------------------------------------------
+                     * Room has successfully persisted the result.
                      *
-                     * Cloud backup is intentionally performed after
-                     * the local Room save.
+                     * AssessmentQuestionnaireScreen observes
+                     * isCompleted and navigates to AssessmentResults.
                      *
-                     * A cloud backup failure should not prevent the
-                     * locally saved assessment result from being used.
-                     */
-
-                    cloudBackupRepository
-                        .backupUserData(
-                            userId =
-                                currentUserId
-                        )
-
-
-                    /*
-                     * ----------------------------------------------
-                     * PUBLISH COMPLETION LAST
-                     * ----------------------------------------------
-                     *
-                     * AssessmentQuestionnaireScreen observes this
-                     * value and navigates to AssessmentResults when
-                     * it becomes true.
-                     *
-                     * At this point the result is already persisted.
+                     * Nothing related to preferences or cloud backup
+                     * occurs before this state change.
                      */
 
                     _uiState.update {
@@ -357,6 +323,77 @@ class AssessmentViewModel @Inject constructor(
                             isCompleted =
                                 true
                         )
+                    }
+
+
+                    /*
+                     * ----------------------------------------------
+                     * MARK ASSESSMENT COMPLETE FOR CURRENT USER
+                     * ----------------------------------------------
+                     *
+                     * This is local persistence and is intentionally
+                     * performed after the results screen navigation
+                     * signal has already been published.
+                     */
+
+                    try {
+
+                        userPreferencesRepository
+                            .setAssessmentCompleted(
+
+                                userId =
+                                    currentUserId,
+
+                                completed =
+                                    true
+                            )
+
+                    } catch (
+                        _: Exception
+                    ) {
+
+                        /*
+                         * The assessment result is already persisted
+                         * in Room and completion has already been
+                         * published to the UI.
+                         *
+                         * Therefore a preference update failure must
+                         * not prevent the results screen from opening.
+                         */
+                    }
+
+
+                    /*
+                     * ----------------------------------------------
+                     * BACK UP UPDATED USER DATA
+                     * ----------------------------------------------
+                     *
+                     * Cloud backup is performed only after the local
+                     * result has been saved and completion has been
+                     * published.
+                     *
+                     * A cloud backup failure must not prevent the
+                     * assessment results screen from opening.
+                     */
+
+                    try {
+
+                        cloudBackupRepository
+                            .backupUserData(
+                                userId =
+                                    currentUserId
+                            )
+
+                    } catch (
+                        _: Exception
+                    ) {
+
+                        /*
+                         * Local assessment data has already been
+                         * successfully saved. Therefore a cloud
+                         * backup failure does not block the user from
+                         * continuing.
+                         */
                     }
                 }
             }

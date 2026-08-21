@@ -12,6 +12,7 @@ import com.example.moodselector.data.repository.MindfulMeditationCompletionRepos
 import com.example.moodselector.data.repository.MoodRepositoryImpl
 import com.example.moodselector.data.repository.ScheduledCBTActivityRepositoryImpl
 import com.example.moodselector.data.repository.SelfCompassionReflectionCompletionRepositoryImpl
+import com.example.moodselector.data.repository.UserDataDeletionRepositoryImpl
 
 import com.example.moodselector.domain.repository.ABCModelCompletionRepository
 import com.example.moodselector.domain.repository.AssessmentRepository
@@ -25,6 +26,7 @@ import com.example.moodselector.domain.repository.MindfulMeditationCompletionRep
 import com.example.moodselector.domain.repository.MoodRepository
 import com.example.moodselector.domain.repository.ScheduledCBTActivityRepository
 import com.example.moodselector.domain.repository.SelfCompassionReflectionCompletionRepository
+import com.example.moodselector.domain.repository.UserDataDeletionRepository
 
 import dagger.Binds
 import dagger.Module
@@ -113,6 +115,20 @@ abstract class RepositoryModule {
         implementation:
         SelfCompassionReflectionCompletionRepositoryImpl
     ): SelfCompassionReflectionCompletionRepository
+
+
+    /*
+     * --------------------------------------------------
+     * USER DATA DELETION
+     * --------------------------------------------------
+     */
+
+    @Binds
+    @Singleton
+    abstract fun bindUserDataDeletionRepository(
+        implementation:
+        UserDataDeletionRepositoryImpl
+    ): UserDataDeletionRepository
 
 
     /*

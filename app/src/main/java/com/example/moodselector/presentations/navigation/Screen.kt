@@ -18,6 +18,10 @@ sealed class Screen(
         "register"
     )
 
+    data object AccountReauthentication : Screen(
+        "account_reauthentication"
+    )
+
 
     /*
      * ----------------------------------------------------------
@@ -232,4 +236,36 @@ sealed class Screen(
     data object SelfCompassionReflection : Screen(
         "self_compassion_reflection"
     )
+
+
+    /*
+     * ----------------------------------------------------------
+     * Real Stories
+     * ----------------------------------------------------------
+     */
+
+    data object RealStories : Screen(
+        "real_stories"
+    )
+
+
+    /*
+     * ----------------------------------------------------------
+     * Reading
+     * ----------------------------------------------------------
+     */
+
+    data object Reading : Screen(
+        "reading"
+    )
+
+    data object ReadingStory : Screen(
+        "reading_story/{storyId}"
+    ) {
+
+        fun createRoute(
+            storyId: String
+        ): String =
+            "reading_story/$storyId"
+    }
 }

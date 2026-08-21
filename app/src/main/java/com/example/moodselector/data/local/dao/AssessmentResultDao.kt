@@ -39,4 +39,14 @@ interface AssessmentResultDao {
     fun getAllResults(
         userId: String
     ): Flow<List<AssessmentResultEntity>>
+
+    @Query(
+        """
+        DELETE FROM assessment_results
+        WHERE userId = :userId
+        """
+    )
+    suspend fun deleteAllResults(
+        userId: String
+    )
 }

@@ -23,6 +23,7 @@ import com.example.moodselector.data.local.entity.SelfCompassionReflectionComple
 import com.example.moodselector.data.preferences.UserPreferencesRepository
 import com.example.moodselector.domain.assessment.model.AssessmentSeverity
 import com.example.moodselector.domain.repository.CloudBackupRepository
+import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -38,15 +39,20 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
     private val assessmentResultDao: AssessmentResultDao,
     private val cbtActivityCompletionDao: CBTActivityCompletionDao,
     private val scheduledCBTActivityDao: ScheduledCBTActivityDao,
-    private val fiveMinuteStarterCompletionDao: FiveMinuteStarterCompletionDao,
-    private val mindfulMeditationCompletionDao: MindfulMeditationCompletionDao,
-    private val grounding54321CompletionDao: Grounding54321CompletionDao,
-    private val abcModelCompletionDao: ABCModelCompletionDao,
+    private val fiveMinuteStarterCompletionDao:
+    FiveMinuteStarterCompletionDao,
+    private val mindfulMeditationCompletionDao:
+    MindfulMeditationCompletionDao,
+    private val grounding54321CompletionDao:
+    Grounding54321CompletionDao,
+    private val abcModelCompletionDao:
+    ABCModelCompletionDao,
     private val selfCompassionReflectionCompletionDao:
     SelfCompassionReflectionCompletionDao,
     private val userPreferencesRepository:
     UserPreferencesRepository
 ) : CloudBackupRepository {
+
 
     /*
      * --------------------------------------------------
@@ -64,13 +70,13 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
      * users/{userId}/abc_model_completions/{localRoomId}
      * users/{userId}/self_compassion_reflection_completions/{localRoomId}
      *
-     * The Room database remains local.
+     * Room remains the local data source.
+     *
+     * Firestore is used as cloud backup and restoration.
      *
      * The Room primary key is used as the Firestore
-     * document ID so the same record can be identified
-     * during backup and restoration.
+     * document ID.
      */
-
 
     /*
      * --------------------------------------------------
@@ -85,7 +91,6 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
         return try {
 
             if (userId.isBlank()) {
-
                 return Result.failure(
                     IllegalArgumentException(
                         "A valid Firebase user ID is required."
@@ -112,7 +117,6 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
         }
     }
 
-
     /*
      * --------------------------------------------------
      * RESTORE USER DATA
@@ -126,7 +130,6 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
         return try {
 
             if (userId.isBlank()) {
-
                 return Result.failure(
                     IllegalArgumentException(
                         "A valid Firebase user ID is required."
@@ -153,6 +156,136 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
         }
     }
 
+    /*
+     * --------------------------------------------------
+     * DELETE ALL CLOUD USER DATA
+     * --------------------------------------------------
+     */
+
+    override suspend fun deleteUserData(
+        userId: String
+    ): Result<Unit> {
+
+        return try {
+
+            if (userId.isBlank()) {
+                return Result.failure(
+                    IllegalArgumentException(
+                        "A valid Firebase user ID is required."
+                    )
+                )
+            }
+
+            val userDocument =
+                firestore
+                    .collection("users")
+                    .document(userId)
+
+            deleteCollectionDocuments(
+                userDocument.collection("moods")
+            )
+
+            deleteCollectionDocuments(
+                userDocument.collection("journals")
+            )
+
+            deleteCollectionDocuments(
+                userDocument.collection("assessment_results")
+            )
+
+            deleteCollectionDocuments(
+                userDocument.collection(
+                    "cbt_activity_completions"
+                )
+            )
+
+            deleteCollectionDocuments(
+                userDocument.collection(
+                    "scheduled_cbt_activities"
+                )
+            )
+
+            deleteCollectionDocuments(
+                userDocument.collection(
+                    "five_minute_starter_completions"
+                )
+            )
+
+            deleteCollectionDocuments(
+                userDocument.collection(
+                    "mindful_meditation_completions"
+                )
+            )
+
+            deleteCollectionDocuments(
+                userDocument.collection(
+                    "grounding_54321_completions"
+                )
+            )
+
+            deleteCollectionDocuments(
+                userDocument.collection(
+                    "abc_model_completions"
+                )
+            )
+
+            deleteCollectionDocuments(
+                userDocument.collection(
+                    "self_compassion_reflection_completions"
+                )
+            )
+
+            userDocument
+                .delete()
+                .await()
+
+            Result.success(Unit)
+
+        } catch (exception: Exception) {
+
+            Result.failure(exception)
+        }
+    }
+
+    /*
+     * --------------------------------------------------
+     * DELETE FIRESTORE COLLECTION DOCUMENTS
+     * --------------------------------------------------
+     *
+     * Firestore batches support a maximum of 500 writes.
+     * Documents are therefore deleted in batches of
+     * at most 500 until the collection is empty.
+     */
+
+    private suspend fun deleteCollectionDocuments(
+        collection: CollectionReference
+    ) {
+
+        while (true) {
+
+            val snapshot =
+                collection
+                    .limit(500)
+                    .get()
+                    .await()
+
+            if (snapshot.isEmpty) {
+                break
+            }
+
+            val batch =
+                firestore.batch()
+
+            snapshot.documents.forEach { document ->
+
+                batch.delete(
+                    document.reference
+                )
+            }
+
+            batch.commit().await()
+        }
+    }
 
     /*
      * --------------------------------------------------
@@ -166,14 +299,37 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
 
         return try {
 
-            val restoreResult =
-                restoreUserData(userId)
-
-            if (restoreResult.isFailure) {
-                return restoreResult
+            if (userId.isBlank()) {
+                return Result.failure(
+                    IllegalArgumentException(
+                        "A valid Firebase user ID is required."
+                    )
+                )
             }
 
-            backupUserData(userId)
+            val hasLocalData =
+                hasLocalData(userId)
+
+            if (!hasLocalData) {
+
+                val restoreResult =
+                    restoreUserData(userId)
+
+                if (restoreResult.isFailure) {
+                    return restoreResult
+                }
+
+                return backupUserData(userId)
+            }
+
+            val backupResult =
+                backupUserData(userId)
+
+            if (backupResult.isFailure) {
+                return backupResult
+            }
+
+            restoreUserData(userId)
 
         } catch (exception: Exception) {
 
@@ -181,6 +337,102 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
         }
     }
 
+    /*
+     * --------------------------------------------------
+     * CHECK WHETHER ROOM CONTAINS LOCAL USER DATA
+     * --------------------------------------------------
+     */
+
+    private suspend fun hasLocalData(
+        userId: String
+    ): Boolean {
+
+        if (
+            moodDao
+                .getAllMoods(userId)
+                .first()
+                .isNotEmpty()
+        ) {
+            return true
+        }
+
+        if (
+            journalDao
+                .getAllJournals(userId)
+                .first()
+                .isNotEmpty()
+        ) {
+            return true
+        }
+
+        if (
+            assessmentResultDao
+                .getAllResults(userId)
+                .first()
+                .isNotEmpty()
+        ) {
+            return true
+        }
+
+        if (
+            cbtActivityCompletionDao
+                .getAllCompletions(userId)
+                .first()
+                .isNotEmpty()
+        ) {
+            return true
+        }
+
+        if (
+            scheduledCBTActivityDao
+                .getAllScheduledActivities(userId)
+                .first()
+                .isNotEmpty()
+        ) {
+            return true
+        }
+
+        if (
+            fiveMinuteStarterCompletionDao
+                .getAllCompletions(userId)
+                .first()
+                .isNotEmpty()
+        ) {
+            return true
+        }
+
+        if (
+            mindfulMeditationCompletionDao
+                .getAllCompletions(userId)
+                .first()
+                .isNotEmpty()
+        ) {
+            return true
+        }
+
+        if (
+            grounding54321CompletionDao
+                .getAllCompletions(userId)
+                .first()
+                .isNotEmpty()
+        ) {
+            return true
+        }
+
+        if (
+            abcModelCompletionDao
+                .getAllCompletions(userId)
+                .first()
+                .isNotEmpty()
+        ) {
+            return true
+        }
+
+        return selfCompassionReflectionCompletionDao
+            .getAllCompletions(userId)
+            .first()
+            .isNotEmpty()
+    }
 
     /*
      * ==================================================
@@ -195,7 +447,7 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
         val moods =
             moodDao
                 .getAllMoods(userId)
-                .firstValue()
+                .first()
 
         val batch =
             firestore.batch()
@@ -216,6 +468,7 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
                     "userId" to mood.userId,
                     "mood" to mood.mood,
                     "emoji" to mood.emoji,
+                    "trigger" to mood.trigger,
                     "timestamp" to mood.timestamp
                 )
             )
@@ -223,7 +476,6 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
 
         batch.commit().await()
     }
-
 
     private suspend fun restoreMoods(
         userId: String
@@ -258,6 +510,10 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
                         document.getString("emoji")
                             ?: "",
 
+                    trigger =
+                        document.getString("trigger")
+                            ?: "",
+
                     timestamp =
                         document.getString("timestamp")
                             ?: ""
@@ -266,7 +522,6 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
             moodDao.insertMood(mood)
         }
     }
-
 
     /*
      * ==================================================
@@ -281,20 +536,13 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
         val journals =
             journalDao
                 .getAllJournals(userId)
-                .firstValue()
+                .first()
 
         val journalsCollection =
             firestore
                 .collection("users")
                 .document(userId)
                 .collection("journals")
-
-        /*
-         * Get the journals currently stored in Firestore.
-         *
-         * This allows us to detect journals that were
-         * deleted locally and remove them from Firestore.
-         */
 
         val existingSnapshot =
             journalsCollection
@@ -303,50 +551,27 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
 
         val localJournalIds =
             journals
-                .map {
-                    it.id.toString()
-                }
+                .map { it.id.toString() }
                 .toSet()
 
         val batch =
             firestore.batch()
 
-        /*
-         * --------------------------------------------------
-         * DELETE JOURNALS FROM FIRESTORE THAT NO LONGER
-         * EXIST IN ROOM
-         * --------------------------------------------------
-         */
-
         existingSnapshot.documents.forEach { document ->
 
-            if (
-                document.id !in localJournalIds
-            ) {
-
-                batch.delete(
-                    document.reference
-                )
+            if (document.id !in localJournalIds) {
+                batch.delete(document.reference)
             }
         }
-
-        /*
-         * --------------------------------------------------
-         * BACK UP CURRENT LOCAL JOURNALS
-         * --------------------------------------------------
-         */
 
         journals.forEach { journal ->
 
             val document =
                 journalsCollection
-                    .document(
-                        journal.id.toString()
-                    )
+                    .document(journal.id.toString())
 
             batch.set(
                 document,
-
                 mapOf(
                     "id" to journal.id,
                     "userId" to journal.userId,
@@ -357,13 +582,8 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
             )
         }
 
-        /*
-         * Commit both deletions and updates together.
-         */
-
         batch.commit().await()
     }
-
 
     private suspend fun restoreJournals(
         userId: String
@@ -407,7 +627,6 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
         }
     }
 
-
     /*
      * ==================================================
      * ASSESSMENT RESULTS
@@ -421,7 +640,7 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
         val results =
             assessmentResultDao
                 .getAllResults(userId)
-                .firstValue()
+                .first()
 
         val batch =
             firestore.batch()
@@ -453,7 +672,6 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
         batch.commit().await()
     }
 
-
     private suspend fun restoreAssessmentResults(
         userId: String
     ) {
@@ -465,15 +683,6 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
                 .collection("assessment_results")
                 .get()
                 .await()
-
-        /*
-         * The presence of at least one assessment result
-         * means this user has previously completed the
-         * assessment.
-         *
-         * This restores the corresponding user-scoped
-         * DataStore preference as well.
-         */
 
         if (snapshot.documents.isNotEmpty()) {
 
@@ -541,12 +750,9 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
                             ?: ""
                 )
 
-            assessmentResultDao.insertResult(
-                result
-            )
+            assessmentResultDao.insertResult(result)
         }
     }
-
 
     /*
      * ==================================================
@@ -561,7 +767,7 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
         val completions =
             cbtActivityCompletionDao
                 .getAllCompletions(userId)
-                .firstValue()
+                .first()
 
         val batch =
             firestore.batch()
@@ -595,7 +801,6 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
 
         batch.commit().await()
     }
-
 
     private suspend fun restoreCBTActivityCompletions(
         userId: String
@@ -659,12 +864,9 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
                             ?: 0L
                 )
 
-            cbtActivityCompletionDao.insertCompletion(
-                completion
-            )
+            cbtActivityCompletionDao.insertCompletion(completion)
         }
     }
-
 
     /*
      * ==================================================
@@ -679,7 +881,7 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
         val activities =
             scheduledCBTActivityDao
                 .getAllScheduledActivities(userId)
-                .firstValue()
+                .first()
 
         val batch =
             firestore.batch()
@@ -712,7 +914,6 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
 
         batch.commit().await()
     }
-
 
     private suspend fun restoreScheduledCBTActivities(
         userId: String
@@ -772,12 +973,9 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
                             ?: System.currentTimeMillis()
                 )
 
-            scheduledCBTActivityDao.insertScheduledActivity(
-                activity
-            )
+            scheduledCBTActivityDao.insertScheduledActivity(activity)
         }
     }
-
 
     /*
      * ==================================================
@@ -792,7 +990,7 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
         val completions =
             fiveMinuteStarterCompletionDao
                 .getAllCompletions(userId)
-                .firstValue()
+                .first()
 
         val batch =
             firestore.batch()
@@ -822,7 +1020,6 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
 
         batch.commit().await()
     }
-
 
     private suspend fun restoreFiveMinuteStarterCompletions(
         userId: String
@@ -870,12 +1067,9 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
                             ?: 0L
                 )
 
-            fiveMinuteStarterCompletionDao.insertCompletion(
-                completion
-            )
+            fiveMinuteStarterCompletionDao.insertCompletion(completion)
         }
     }
-
 
     /*
      * ==================================================
@@ -890,7 +1084,7 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
         val completions =
             mindfulMeditationCompletionDao
                 .getAllCompletions(userId)
-                .firstValue()
+                .first()
 
         val batch =
             firestore.batch()
@@ -917,7 +1111,6 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
 
         batch.commit().await()
     }
-
 
     private suspend fun restoreMindfulMeditationCompletions(
         userId: String
@@ -953,12 +1146,9 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
                             ?: 0L
                 )
 
-            mindfulMeditationCompletionDao.insertCompletion(
-                completion
-            )
+            mindfulMeditationCompletionDao.insertCompletion(completion)
         }
     }
-
 
     /*
      * ==================================================
@@ -973,7 +1163,7 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
         val completions =
             grounding54321CompletionDao
                 .getAllCompletions(userId)
-                .firstValue()
+                .first()
 
         val batch =
             firestore.batch()
@@ -1000,7 +1190,6 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
 
         batch.commit().await()
     }
-
 
     private suspend fun restoreGrounding54321Completions(
         userId: String
@@ -1036,12 +1225,9 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
                             ?: 0L
                 )
 
-            grounding54321CompletionDao.insertCompletion(
-                completion
-            )
+            grounding54321CompletionDao.insertCompletion(completion)
         }
     }
-
 
     /*
      * ==================================================
@@ -1056,7 +1242,7 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
         val completions =
             abcModelCompletionDao
                 .getAllCompletions(userId)
-                .firstValue()
+                .first()
 
         val batch =
             firestore.batch()
@@ -1085,7 +1271,6 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
 
         batch.commit().await()
     }
-
 
     private suspend fun restoreABCModelCompletions(
         userId: String
@@ -1129,12 +1314,9 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
                             ?: 0L
                 )
 
-            abcModelCompletionDao.insertCompletion(
-                completion
-            )
+            abcModelCompletionDao.insertCompletion(completion)
         }
     }
-
 
     /*
      * ==================================================
@@ -1149,7 +1331,7 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
         val completions =
             selfCompassionReflectionCompletionDao
                 .getAllCompletions(userId)
-                .firstValue()
+                .first()
 
         val batch =
             firestore.batch()
@@ -1160,7 +1342,9 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
                 firestore
                     .collection("users")
                     .document(userId)
-                    .collection("self_compassion_reflection_completions")
+                    .collection(
+                        "self_compassion_reflection_completions"
+                    )
                     .document(completion.id.toString())
 
             batch.set(
@@ -1170,7 +1354,8 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
                     "userId" to completion.userId,
                     "situation" to completion.situation,
                     "friendResponse" to completion.friendResponse,
-                    "selfCompassionResponse" to completion.selfCompassionResponse,
+                    "selfCompassionResponse" to
+                            completion.selfCompassionResponse,
                     "completedAt" to completion.completedAt
                 )
             )
@@ -1178,7 +1363,6 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
 
         batch.commit().await()
     }
-
 
     private suspend fun restoreSelfCompassionReflectionCompletions(
         userId: String
@@ -1188,7 +1372,9 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
             firestore
                 .collection("users")
                 .document(userId)
-                .collection("self_compassion_reflection_completions")
+                .collection(
+                    "self_compassion_reflection_completions"
+                )
                 .get()
                 .await()
 
@@ -1224,27 +1410,19 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
                 )
 
             selfCompassionReflectionCompletionDao
-                .insertCompletion(
-                    completion
-                )
+                .insertCompletion(completion)
         }
     }
-
 
     /*
      * --------------------------------------------------
      * FLOW HELPER
      * --------------------------------------------------
-     *
-     * Collects the current value of a Room Flow.
-     *
-     * The helper is intentionally kept inside this
-     * repository so the existing DAOs and repositories
-     * do not need to change their public APIs.
      */
 
     private suspend fun <T> Flow<T>.firstValue(): T {
         return first()
     }
-}
 
+
+}

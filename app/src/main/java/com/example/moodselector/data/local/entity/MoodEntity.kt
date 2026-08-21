@@ -18,6 +18,7 @@ data class MoodEntry(
 
     val emoji: String,
 
+    val trigger: String,
+
     val timestamp: String
 )
-

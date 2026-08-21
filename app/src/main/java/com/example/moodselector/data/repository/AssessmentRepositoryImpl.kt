@@ -27,4 +27,10 @@ class AssessmentRepositoryImpl @Inject constructor(
     ): Flow<List<AssessmentResultEntity>> {
         return dao.getAllResults(userId)
     }
+
+    override suspend fun deleteAllResults(
+        userId: String
+    ) {
+        dao.deleteAllResults(userId)
+    }
 }

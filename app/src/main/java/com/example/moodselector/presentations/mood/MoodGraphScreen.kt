@@ -48,6 +48,9 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.moodselector.data.local.entity.MoodEntry
+import com.example.moodselector.presentations.cbt.progress.CBTProgressItem
+import com.example.moodselector.presentations.cbt.progress.CBTProgressViewModel
+import com.github.mikephil.charting.animation.Easing
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.Description
 import com.github.mikephil.charting.components.XAxis
@@ -151,6 +154,21 @@ private fun formatSelectedDate(
 }
 
 
+private fun getCompletionDate(
+    timestamp: Long
+): String {
+
+    val formatter = SimpleDateFormat(
+        "dd MMM yyyy",
+        Locale.getDefault()
+    )
+
+    return formatter.format(
+        Date(timestamp)
+    )
+}
+
+
 /*
  * ==========================================================
  * MOOD SCORE
@@ -191,6 +209,74 @@ private fun moodScore(
 
 /*
  * ==========================================================
+ * CBT ACTIVITY LABEL
+ * ==========================================================
+ */
+
+private fun getCBTActivityLabel(
+    item: CBTProgressItem
+): String {
+
+    return when (item) {
+
+        is CBTProgressItem.ActivityCompletion ->
+            item.completion.activityTitle
+
+        is CBTProgressItem.FiveMinuteStarterCompletion ->
+            "5-Minute Starter"
+
+        is CBTProgressItem.MindfulMeditationCompletion ->
+            "Mindful Meditation"
+
+        is CBTProgressItem.Grounding54321Completion ->
+            "5-4-3-2-1 Grounding"
+
+        is CBTProgressItem.ABCModelCompletion ->
+            "ABC Model"
+
+        is CBTProgressItem.SelfCompassionReflectionCompletion ->
+            "Self-Compassion Reflection"
+    }
+}
+
+
+/*
+ * ==========================================================
+ * CBT ACTIVITY CATEGORY
+ * ==========================================================
+ */
+
+private fun getCBTActivityCategory(
+    item: CBTProgressItem
+): String {
+
+    return when (item) {
+
+        is CBTProgressItem.ActivityCompletion ->
+            item.completion.activityType.ifBlank {
+                "Behavioral"
+            }
+
+        is CBTProgressItem.FiveMinuteStarterCompletion ->
+            "Behavioral"
+
+        is CBTProgressItem.MindfulMeditationCompletion ->
+            "Mindfulness"
+
+        is CBTProgressItem.Grounding54321Completion ->
+            "Mindfulness"
+
+        is CBTProgressItem.ABCModelCompletion ->
+            "Cognitive"
+
+        is CBTProgressItem.SelfCompassionReflectionCompletion ->
+            "Mindfulness"
+    }
+}
+
+
+/*
+ * ==========================================================
  * MOOD GRAPH SCREEN
  * ==========================================================
  */
@@ -198,13 +284,21 @@ private fun moodScore(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MoodGraphScreen(
-    viewModel: MoodViewModel = hiltViewModel()
+    viewModel: MoodViewModel = hiltViewModel(),
+    cbtProgressViewModel: CBTProgressViewModel = hiltViewModel()
 ) {
 
     val moods by
     viewModel
         .moodList
         .collectAsState()
+
+    val cbtProgressItems by
+    cbtProgressViewModel
+        .progressItems
+        .collectAsState(
+            initial = emptyList()
+        )
 
 
     /*
@@ -316,6 +410,87 @@ fun MoodGraphScreen(
                 mood.timestamp
             )
         }
+
+
+    /*
+     * ======================================================
+     * MOOD ANALYSIS
+     * ======================================================
+     */
+
+    val averageMoodScore =
+        if (selectedDayMoods.isNotEmpty()) {
+
+            selectedDayMoods
+                .map {
+                    moodScore(it.emoji)
+                }
+                .average()
+                .toFloat()
+
+        } else {
+
+            0f
+        }
+
+
+    val averageMoodLabel =
+        when {
+
+            averageMoodScore >= 4.5f ->
+                "Mostly Happy"
+
+            averageMoodScore >= 3.5f ->
+                "Mostly Calm"
+
+            averageMoodScore >= 2.5f ->
+                "Mostly Neutral"
+
+            averageMoodScore >= 1.5f ->
+                "Mostly Sad"
+
+            averageMoodScore > 0f ->
+                "Mostly Angry"
+
+            else ->
+                "No mood data"
+        }
+
+
+    /*
+     * ======================================================
+     * CBT ANALYSIS
+     * ======================================================
+     */
+
+    val selectedDayCBTItems =
+        cbtProgressItems
+            .filter { item ->
+
+                getCompletionDate(
+                    item.completedAt
+                ) == selectedDate
+            }
+
+
+    val cbtActivityCount =
+        selectedDayCBTItems.size
+
+
+    val cbtCategories =
+        selectedDayCBTItems
+            .groupingBy { item ->
+                getCBTActivityCategory(item)
+            }
+            .eachCount()
+
+
+    val cbtActivityNames =
+        selectedDayCBTItems
+            .map { item ->
+                getCBTActivityLabel(item)
+            }
+            .distinct()
 
 
     /*
@@ -1024,12 +1199,368 @@ fun MoodGraphScreen(
                                     false
                                 )
 
+                                /*
+                                 * --------------------------------------------------
+                                 * ANIMATED TREND
+                                 * --------------------------------------------------
+                                 */
+
                                 chart.animateX(
-                                    500
+                                    1200,
+                                    Easing.EaseInOutCubic
                                 )
 
                                 chart.invalidate()
                             }
+                        )
+                    }
+                }
+
+
+                /*
+                 * ==================================================
+                 * MOOD + CBT ANALYSIS
+                 * ==================================================
+                 */
+
+                Card(
+
+                    modifier =
+                        Modifier.fillMaxWidth(),
+
+                    shape =
+                        RoundedCornerShape(20.dp),
+
+                    colors =
+                        CardDefaults.cardColors(
+                            containerColor =
+                                surface
+                        ),
+
+                    elevation =
+                        CardDefaults.cardElevation(
+                            defaultElevation = 2.dp
+                        )
+                ) {
+
+                    Column(
+
+                        modifier =
+                            Modifier.padding(
+                                horizontal = 16.dp,
+                                vertical = 14.dp
+                            ),
+
+                        verticalArrangement =
+                            Arrangement.spacedBy(10.dp)
+                    ) {
+
+                        Text(
+
+                            text =
+                                "Daily analysis",
+
+                            style =
+                                MaterialTheme
+                                    .typography
+                                    .titleMedium,
+
+                            fontWeight =
+                                FontWeight.SemiBold,
+
+                            color =
+                                textDark
+                        )
+
+                        Row(
+
+                            modifier =
+                                Modifier.fillMaxWidth(),
+
+                            horizontalArrangement =
+                                Arrangement.spacedBy(10.dp)
+                        ) {
+
+                            Card(
+
+                                modifier =
+                                    Modifier.weight(1f),
+
+                                shape =
+                                    RoundedCornerShape(16.dp),
+
+                                colors =
+                                    CardDefaults.cardColors(
+                                        containerColor =
+                                            softLavender
+                                    )
+                            ) {
+
+                                Column(
+
+                                    modifier =
+                                        Modifier.padding(
+                                            12.dp
+                                        )
+                                ) {
+
+                                    Text(
+
+                                        text =
+                                            "Average mood",
+
+                                        style =
+                                            MaterialTheme
+                                                .typography
+                                                .labelMedium,
+
+                                        color =
+                                            textSecondary
+                                    )
+
+                                    Text(
+
+                                        text =
+                                            if (
+                                                averageMoodScore > 0f
+                                            ) {
+
+                                                String.format(
+                                                    Locale.getDefault(),
+                                                    "%.1f / 5",
+                                                    averageMoodScore
+                                                )
+
+                                            } else {
+
+                                                "—"
+                                            },
+
+                                        style =
+                                            MaterialTheme
+                                                .typography
+                                                .titleLarge,
+
+                                        fontWeight =
+                                            FontWeight.Bold,
+
+                                        color =
+                                            textDark
+                                    )
+
+                                    Text(
+
+                                        text =
+                                            averageMoodLabel,
+
+                                        style =
+                                            MaterialTheme
+                                                .typography
+                                                .bodySmall,
+
+                                        color =
+                                            textSecondary
+                                    )
+                                }
+                            }
+
+
+                            Card(
+
+                                modifier =
+                                    Modifier.weight(1f),
+
+                                shape =
+                                    RoundedCornerShape(16.dp),
+
+                                colors =
+                                    CardDefaults.cardColors(
+                                        containerColor =
+                                            softLavender
+                                    )
+                            ) {
+
+                                Column(
+
+                                    modifier =
+                                        Modifier.padding(
+                                            12.dp
+                                        )
+                                ) {
+
+                                    Text(
+
+                                        text =
+                                            "CBT completed",
+
+                                        style =
+                                            MaterialTheme
+                                                .typography
+                                                .labelMedium,
+
+                                        color =
+                                            textSecondary
+                                    )
+
+                                    Text(
+
+                                        text =
+                                            cbtActivityCount
+                                                .toString(),
+
+                                        style =
+                                            MaterialTheme
+                                                .typography
+                                                .titleLarge,
+
+                                        fontWeight =
+                                            FontWeight.Bold,
+
+                                        color =
+                                            textDark
+                                    )
+
+                                    Text(
+
+                                        text =
+                                            if (
+                                                cbtActivityCount == 1
+                                            ) {
+                                                "exercise"
+                                            } else {
+                                                "exercises"
+                                            },
+
+                                        style =
+                                            MaterialTheme
+                                                .typography
+                                                .bodySmall,
+
+                                        color =
+                                            textSecondary
+                                    )
+                                }
+                            }
+                        }
+
+
+                        if (
+                            cbtActivityCount > 0
+                        ) {
+
+                            Text(
+
+                                text =
+                                    "CBT activity",
+
+                                style =
+                                    MaterialTheme
+                                        .typography
+                                        .labelLarge,
+
+                                fontWeight =
+                                    FontWeight.SemiBold,
+
+                                color =
+                                    textDark
+                            )
+
+                            cbtActivityNames.forEach { activityName ->
+
+                                Text(
+
+                                    text =
+                                        "• $activityName",
+
+                                    style =
+                                        MaterialTheme
+                                            .typography
+                                            .bodySmall,
+
+                                    color =
+                                        textSecondary
+                                )
+                            }
+
+
+                            if (
+                                cbtCategories.isNotEmpty()
+                            ) {
+
+                                Spacer(
+                                    modifier =
+                                        Modifier.height(2.dp)
+                                )
+
+                                Text(
+
+                                    text =
+                                        cbtCategories.entries
+                                            .sortedByDescending {
+                                                it.value
+                                            }
+                                            .joinToString(
+                                                separator = "  •  "
+                                            ) {
+                                                "${it.key}: ${it.value}"
+                                            },
+
+                                    style =
+                                        MaterialTheme
+                                            .typography
+                                            .bodySmall,
+
+                                    color =
+                                        textSecondary
+                                )
+                            }
+
+                        } else {
+
+                            Text(
+
+                                text =
+                                    "No CBT exercises were completed on this day.",
+
+                                style =
+                                    MaterialTheme
+                                        .typography
+                                        .bodySmall,
+
+                                color =
+                                    textSecondary
+                            )
+                        }
+
+
+                        Text(
+
+                            text =
+                                when {
+
+                                    selectedDayMoods.isEmpty() ->
+                                        "Mood data will help build a clearer picture of how your day is changing."
+
+                                    cbtActivityCount == 0 ->
+                                        "You recorded your mood, but no CBT activity was completed on this day."
+
+                                    averageMoodScore >= 4f ->
+                                        "Your mood was generally positive on a day when you also engaged with CBT."
+
+                                    averageMoodScore >= 3f ->
+                                        "Your mood was around neutral while you also engaged with CBT."
+
+                                    else ->
+                                        "You recorded lower mood alongside CBT activity. This can help you track how exercises relate to difficult days."
+                                },
+
+                            style =
+                                MaterialTheme
+                                    .typography
+                                    .bodySmall,
+
+                            color =
+                                textSecondary
                         )
                     }
                 }

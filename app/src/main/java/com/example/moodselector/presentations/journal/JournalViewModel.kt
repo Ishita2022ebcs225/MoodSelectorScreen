@@ -58,6 +58,20 @@ class JournalViewModel @Inject constructor(
     val isLoadingJournal: StateFlow<Boolean> =
         _isLoadingJournal.asStateFlow()
 
+    /*
+     * --------------------------------------------------
+     * SAVING STATE
+     * --------------------------------------------------
+     *
+     * Indicates that a journal is currently being saved.
+     */
+
+    private val _isSaving =
+        MutableStateFlow(false)
+
+    val isSaving: StateFlow<Boolean> =
+        _isSaving.asStateFlow()
+
     val journals: StateFlow<List<JournalEntity>> =
         repository
             .getAllJournals(
@@ -65,12 +79,8 @@ class JournalViewModel @Inject constructor(
             )
             .stateIn(
                 scope = viewModelScope,
-                started =
-                    SharingStarted.WhileSubscribed(
-                        5000
-                    ),
-                initialValue =
-                    emptyList()
+                started = SharingStarted.WhileSubscribed(5000),
+                initialValue = emptyList()
             )
 
     fun updateContent(
@@ -89,9 +99,7 @@ class JournalViewModel @Inject constructor(
         tag: String
     ) {
         _selectedTags.value =
-            if (
-                _selectedTags.value.contains(tag)
-            ) {
+            if (_selectedTags.value.contains(tag)) {
                 _selectedTags.value - tag
             } else {
                 _selectedTags.value + tag
@@ -101,11 +109,7 @@ class JournalViewModel @Inject constructor(
     fun loadJournal(
         journalId: Int
     ) {
-
-        if (
-            _editingJournalId.value ==
-            journalId
-        ) {
+        if (_editingJournalId.value == journalId) {
             return
         }
 
@@ -116,96 +120,169 @@ class JournalViewModel @Inject constructor(
 
             _isLoadingJournal.value = true
 
-            val journal =
-                repository.getJournalById(
-                    id = journalId,
-                    userId = currentUserId
-                )
+            try {
 
-            if (journal != null) {
+                val journal =
+                    repository.getJournalById(
+                        id = journalId,
+                        userId = currentUserId
+                    )
 
-                _editingJournalId.value =
-                    journal.id
+                if (journal != null) {
 
-                _content.value =
-                    journal.content
+                    _editingJournalId.value =
+                        journal.id
 
-                _selectedMood.value =
-                    journal.mood
+                    _content.value =
+                        journal.content
+
+                    _selectedMood.value =
+                        journal.mood
+                }
+
+            } finally {
+
+                _isLoadingJournal.value = false
             }
-
-            _isLoadingJournal.value = false
         }
     }
 
-    fun saveJournal() {
+    /*
+     * --------------------------------------------------
+     * SAVE JOURNAL
+     * --------------------------------------------------
+     *
+     * The save operation is completed before onComplete
+     * is called.
+     *
+     * Room remains the local data source.
+     * Firestore remains the cloud backup.
+     */
+
+    fun saveJournal(
+        onComplete: (Boolean) -> Unit = {}
+    ) {
+
+        if (_isSaving.value) {
+            return
+        }
 
         val text =
             _content.value.trim()
 
         if (text.isBlank()) {
+            onComplete(false)
             return
         }
 
         val currentUserId =
-            userId ?: return
+            userId ?: run {
+                onComplete(false)
+                return
+            }
 
         viewModelScope.launch {
 
-            val editingId =
-                _editingJournalId.value
+            _isSaving.value = true
 
-            if (editingId != null) {
+            try {
 
-                val existingJournal =
-                    repository.getJournalById(
-                        id = editingId,
-                        userId = currentUserId
-                    )
+                val editingId =
+                    _editingJournalId.value
 
-                if (existingJournal != null) {
+                if (editingId != null) {
+
+                    /*
+                     * --------------------------------------------------
+                     * UPDATE EXISTING JOURNAL
+                     * --------------------------------------------------
+                     */
+
+                    val existingJournal =
+                        repository.getJournalById(
+                            id = editingId,
+                            userId = currentUserId
+                        )
+
+                    if (existingJournal == null) {
+
+                        onComplete(false)
+                        return@launch
+                    }
 
                     val updatedJournal =
                         existingJournal.copy(
                             content = text,
-                            mood =
-                                _selectedMood.value
+                            mood = _selectedMood.value
                         )
 
                     repository.updateJournal(
                         updatedJournal
                     )
+
+                } else {
+
+                    /*
+                     * --------------------------------------------------
+                     * CREATE NEW JOURNAL
+                     * --------------------------------------------------
+                     */
+
+                    val journal =
+                        JournalEntity(
+                            userId = currentUserId,
+                            content = text,
+                            mood = _selectedMood.value,
+                            timestamp =
+                                System.currentTimeMillis()
+                        )
+
+                    repository.insertJournal(
+                        journal
+                    )
                 }
 
-            } else {
+                /*
+                 * --------------------------------------------------
+                 * FIRESTORE BACKUP
+                 * --------------------------------------------------
+                 *
+                 * Back up the updated Room data only after
+                 * the local database operation has completed.
+                 */
 
-                val journal =
-                    JournalEntity(
-                        userId =
-                            currentUserId,
+                val backupResult =
+                    cloudBackupRepository
+                        .backupUserData(
+                            userId = currentUserId
+                        )
 
-                        content =
-                            text,
+                if (backupResult.isSuccess) {
 
-                        mood =
-                            _selectedMood.value,
+                    clearFields()
 
-                        timestamp =
-                            System.currentTimeMillis()
-                    )
+                    onComplete(true)
 
-                repository.insertJournal(
-                    journal
-                )
+                } else {
+
+                    /*
+                     * Room has already been updated, but the
+                     * Firestore backup failed.
+                     *
+                     * Do not clear the editor state.
+                     */
+
+                    onComplete(false)
+                }
+
+            } catch (exception: Exception) {
+
+                onComplete(false)
+
+            } finally {
+
+                _isSaving.value = false
             }
-
-            cloudBackupRepository
-                .backupUserData(
-                    userId =
-                        currentUserId
-                )
-
-            clearFields()
         }
     }
 
@@ -216,27 +293,36 @@ class JournalViewModel @Inject constructor(
         val currentUserId =
             userId ?: return
 
-        if (
-            journal.userId !=
-            currentUserId
-        ) {
+        /*
+         * --------------------------------------------------
+         * USER OWNERSHIP CHECK
+         * --------------------------------------------------
+         */
+
+        if (journal.userId != currentUserId) {
             return
         }
 
         viewModelScope.launch {
 
-            repository.deleteJournal(
-                journalId =
-                    journal.id,
+            /*
+             * Delete using the journal's ID and the
+             * authenticated user's ID.
+             */
 
-                userId =
-                    currentUserId
+            repository.deleteJournal(
+                journalId = journal.id,
+                userId = currentUserId
             )
+
+            /*
+             * Back up the updated local data after
+             * deletion has completed.
+             */
 
             cloudBackupRepository
                 .backupUserData(
-                    userId =
-                        currentUserId
+                    userId = currentUserId
                 )
         }
     }
@@ -254,8 +340,7 @@ class JournalViewModel @Inject constructor(
 
             cloudBackupRepository
                 .backupUserData(
-                    userId =
-                        currentUserId
+                    userId = currentUserId
                 )
         }
     }
@@ -274,3 +359,4 @@ class JournalViewModel @Inject constructor(
             null
     }
 }
+

@@ -381,4 +381,65 @@ class UserPreferencesRepository @Inject constructor(
             ] = themeMode
         }
     }
+
+
+    /*
+     * ==================================================
+     * CLEAR ALL USER PREFERENCES
+     * ==================================================
+     *
+     * Removes user-specific notification, reminder, and
+     * theme preferences.
+     *
+     * The assessment-completion state is intentionally
+     * preserved here. Deleting user data must not make
+     * StartupViewModel treat an already-assessed user as
+     * a brand-new user.
+     *
+     * The assessment-completion state can still be
+     * explicitly cleared through clearAssessmentCompleted()
+     * when the user actually chooses to retake the
+     * assessment.
+     */
+
+    suspend fun clearUserPreferences(
+        userId: String
+    ) {
+
+        dataStore.edit { preferences ->
+
+            preferences.remove(
+                notificationsEnabledKey(userId)
+            )
+
+            preferences.remove(
+                moodReminderEnabledKey(userId)
+            )
+
+            preferences.remove(
+                journalReminderEnabledKey(userId)
+            )
+
+            preferences.remove(
+                wellbeingReminderEnabledKey(userId)
+            )
+
+            preferences.remove(
+                moodReminderTimeKey(userId)
+            )
+
+            preferences.remove(
+                journalReminderTimeKey(userId)
+            )
+
+            preferences.remove(
+                wellbeingReminderTimeKey(userId)
+            )
+
+            preferences.remove(
+                themeModeKey(userId)
+            )
+        }
+    }
 }
+

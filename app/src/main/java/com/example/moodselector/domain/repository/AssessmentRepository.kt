@@ -16,4 +16,8 @@ interface AssessmentRepository {
     fun getAllResults(
         userId: String
     ): Flow<List<AssessmentResultEntity>>
+
+    suspend fun deleteAllResults(
+        userId: String
+    )
 }

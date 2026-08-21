@@ -38,7 +38,7 @@ import com.example.moodselector.data.local.entity.SelfCompassionReflectionComple
         ABCModelCompletionEntity::class,
         SelfCompassionReflectionCompletionEntity::class
     ],
-    version = 11,
+    version = 12,
     exportSchema = false
 )
 @TypeConverters(

@@ -12,10 +12,14 @@ import kotlinx.coroutines.flow.Flow
 interface MoodDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertMood(mood: MoodEntry)
+    suspend fun insertMood(
+        mood: MoodEntry
+    )
 
     @Delete
-    suspend fun deleteMood(mood: MoodEntry)
+    suspend fun deleteMood(
+        mood: MoodEntry
+    )
 
     @Query(
         """
@@ -28,5 +32,14 @@ interface MoodDao {
     fun getAllMoods(
         userId: String
     ): Flow<List<MoodEntry>>
-}
 
+    @Query(
+        """
+        DELETE FROM mood_entries
+        WHERE userId = :userId
+        """
+    )
+    suspend fun deleteAllMoods(
+        userId: String
+    )
+}

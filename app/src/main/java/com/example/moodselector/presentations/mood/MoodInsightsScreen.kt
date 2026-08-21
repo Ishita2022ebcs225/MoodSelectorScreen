@@ -5,36 +5,35 @@ import android.content.pm.PackageManager
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Assessment
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.MoodBad
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.SelfImprovement
-import androidx.compose.material.icons.filled.SentimentDissatisfied
-import androidx.compose.material.icons.filled.SentimentNeutral
-import androidx.compose.material.icons.filled.SentimentVerySatisfied
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Logout
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.MenuBook
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -50,7 +49,7 @@ import kotlinx.coroutines.launch
 
 data class MoodOption(
     val label: String,
-    val icon: ImageVector
+    val emoji: String
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -59,6 +58,9 @@ fun MoodInsightsScreen(
     onSettingsClick: () -> Unit = {},
     onLogout: () -> Unit = {},
     onAssessmentResultsClick: () -> Unit = {},
+    onAssessmentClick: () -> Unit = {},
+    onReadingClick: () -> Unit = {},
+    onRealStoriesClick: () -> Unit = {},
     viewModel: MoodViewModel = hiltViewModel(),
     authViewModel: AuthViewModel = hiltViewModel()
 ) {
@@ -74,6 +76,129 @@ fun MoodInsightsScreen(
             ?.trim()
             ?.takeIf { it.isNotBlank() }
             ?: "there"
+
+    /*
+     * --------------------------------------------------
+     * ASSESSMENT STATUS
+     * --------------------------------------------------
+     */
+
+    val userId =
+        authUiState.user?.uid
+
+    val assessmentCompleted by
+    viewModel.assessmentCompleted.collectAsStateWithLifecycle()
+
+
+    /*
+     * --------------------------------------------------
+     * ASSESSMENT NOTIFICATION
+     * --------------------------------------------------
+     *
+     * When the current user has not completed the
+     * assessment, show a notification asking whether
+     * they want to take it now or do it later.
+     *
+     * When the assessment-completion preference is
+     * deleted, assessmentCompleted becomes false again,
+     * causing this notification to appear again.
+     */
+
+    var showAssessmentDialog by remember {
+        mutableStateOf(false)
+    }
+
+    LaunchedEffect(
+        userId,
+        assessmentCompleted
+    ) {
+
+        if (
+            userId != null &&
+            !assessmentCompleted
+        ) {
+
+            showAssessmentDialog = true
+        }
+    }
+
+    if (showAssessmentDialog) {
+
+        AlertDialog(
+
+            onDismissRequest = {
+                showAssessmentDialog = false
+            },
+
+            icon = {
+
+                Icon(
+                    imageVector =
+                        Icons.Default.Assessment,
+
+                    contentDescription =
+                        null,
+
+                    tint =
+                        MaterialTheme
+                            .colorScheme
+                            .primary
+                )
+            },
+
+            title = {
+
+                Text(
+                    text =
+                        "Complete your assessment"
+                )
+            },
+
+            text = {
+
+                Text(
+                    text =
+                        "Take the assessment to receive a personalized CBT-based plan and recommendations tailored to your wellbeing."
+                )
+            },
+
+            confirmButton = {
+
+                Button(
+
+                    onClick = {
+
+                        showAssessmentDialog = false
+
+                        onAssessmentClick()
+                    }
+                ) {
+
+                    Text(
+                        text =
+                            "Take Assessment"
+                    )
+                }
+            },
+
+            dismissButton = {
+
+                TextButton(
+
+                    onClick = {
+
+                        showAssessmentDialog = false
+                    }
+                ) {
+
+                    Text(
+                        text =
+                            "Later"
+                    )
+                }
+            }
+        )
+    }
 
     /*
      * --------------------------------------------------
@@ -190,7 +315,7 @@ fun MoodInsightsScreen(
             NotificationHelper.showNotification(
                 context = context,
                 title = "HerMind",
-                body = "Your notifications are enabled."
+                body = "Your notifications are now enabled."
             )
         }
     }
@@ -205,6 +330,10 @@ fun MoodInsightsScreen(
         mutableStateOf("")
     }
 
+    var triggerText by remember {
+        mutableStateOf("")
+    }
+
     var selectedMood by remember {
         mutableStateOf("Happy")
     }
@@ -212,24 +341,24 @@ fun MoodInsightsScreen(
     val moodOptions =
         listOf(
             MoodOption(
-                "Happy",
-                Icons.Default.SentimentVerySatisfied
+                label = "Happy",
+                emoji = "🤩"
             ),
             MoodOption(
-                "Calm",
-                Icons.Default.SelfImprovement
+                label = "Calm",
+                emoji = "😌"
             ),
             MoodOption(
-                "Neutral",
-                Icons.Default.SentimentNeutral
+                label = "Neutral",
+                emoji = "😐"
             ),
             MoodOption(
-                "Sad",
-                Icons.Default.SentimentDissatisfied
+                label = "Sad",
+                emoji = "🥺"
             ),
             MoodOption(
-                "Angry",
-                Icons.Default.MoodBad
+                label = "Angry",
+                emoji = "😤"
             )
         )
 
@@ -245,7 +374,8 @@ fun MoodInsightsScreen(
             when (it.emoji) {
 
                 "Happy",
-                "😊" -> 5
+                "😊",
+                "🤩" -> 5
 
                 "Calm",
                 "😌" -> 4
@@ -254,10 +384,12 @@ fun MoodInsightsScreen(
                 "😐" -> 3
 
                 "Sad",
-                "😔" -> 2
+                "😔",
+                "🥺" -> 2
 
                 "Angry",
-                "😡" -> 1
+                "😡",
+                "😤" -> 1
 
                 else -> 3
             }
@@ -321,10 +453,6 @@ fun MoodInsightsScreen(
                         modifier =
                             Modifier.height(24.dp)
                     )
-
-                    /*
-                     * SIDEBAR HEADER
-                     */
 
                     Row(
                         modifier =
@@ -410,10 +538,6 @@ fun MoodInsightsScreen(
                             Modifier.height(20.dp)
                     )
 
-                    /*
-                     * ASSESSMENT RESULTS
-                     */
-
                     NavigationDrawerItem(
 
                         label = {
@@ -476,10 +600,6 @@ fun MoodInsightsScreen(
                         modifier =
                             Modifier.height(6.dp)
                     )
-
-                    /*
-                     * SETTINGS
-                     */
 
                     NavigationDrawerItem(
 
@@ -554,10 +674,6 @@ fun MoodInsightsScreen(
                             Modifier.height(14.dp)
                     )
 
-                    /*
-                     * LOGOUT
-                     */
-
                     NavigationDrawerItem(
 
                         label = {
@@ -630,12 +746,6 @@ fun MoodInsightsScreen(
             modifier =
                 Modifier.fillMaxSize()
         ) {
-
-            /*
-             * --------------------------------------------------
-             * BACKGROUND
-             * --------------------------------------------------
-             */
 
             Image(
                 painter =
@@ -801,9 +911,7 @@ fun MoodInsightsScreen(
 
                                         Spacer(
                                             modifier =
-                                                Modifier.width(
-                                                    12.dp
-                                                )
+                                                Modifier.width(12.dp)
                                         )
 
                                         Column {
@@ -956,6 +1064,175 @@ fun MoodInsightsScreen(
                                             alpha = 0.85f
                                         )
                                 )
+                            }
+                        }
+                    }
+
+                    /*
+                     * ==================================================
+                     * ASSESSMENT PROMPT
+                     * ==================================================
+                     */
+
+                    if (!assessmentCompleted) {
+
+                        item {
+
+                            Card(
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .padding(
+                                            horizontal = 16.dp
+                                        )
+                                        .clickable {
+                                            onAssessmentClick()
+                                        },
+
+                                shape =
+                                    RoundedCornerShape(
+                                        22.dp
+                                    ),
+
+                                colors =
+                                    CardDefaults.cardColors(
+                                        containerColor =
+                                            MaterialTheme
+                                                .colorScheme
+                                                .primaryContainer
+                                                .copy(
+                                                    alpha = 0.92f
+                                                )
+                                    ),
+
+                                elevation =
+                                    CardDefaults.cardElevation(
+                                        defaultElevation = 3.dp
+                                    )
+                            ) {
+
+                                Row(
+                                    modifier =
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .padding(
+                                                horizontal = 18.dp,
+                                                vertical = 16.dp
+                                            ),
+
+                                    verticalAlignment =
+                                        Alignment.CenterVertically
+                                ) {
+
+                                    Box(
+                                        modifier =
+                                            Modifier
+                                                .size(46.dp)
+                                                .clip(
+                                                    CircleShape
+                                                )
+                                                .background(
+                                                    MaterialTheme
+                                                        .colorScheme
+                                                        .primary
+                                                        .copy(
+                                                            alpha = 0.14f
+                                                        )
+                                                ),
+
+                                        contentAlignment =
+                                            Alignment.Center
+                                    ) {
+
+                                        Icon(
+                                            imageVector =
+                                                Icons.Default.Assessment,
+
+                                            contentDescription =
+                                                null,
+
+                                            tint =
+                                                MaterialTheme
+                                                    .colorScheme
+                                                    .primary,
+
+                                            modifier =
+                                                Modifier.size(
+                                                    23.dp
+                                                )
+                                        )
+                                    }
+
+                                    Spacer(
+                                        modifier =
+                                            Modifier.width(14.dp)
+                                    )
+
+                                    Column(
+                                        modifier =
+                                            Modifier.weight(1f)
+                                    ) {
+
+                                        Text(
+                                            text =
+                                                "Take the assessment for a personalized plan",
+
+                                            style =
+                                                MaterialTheme
+                                                    .typography
+                                                    .titleMedium,
+
+                                            fontWeight =
+                                                FontWeight.Bold,
+
+                                            color =
+                                                MaterialTheme
+                                                    .colorScheme
+                                                    .onPrimaryContainer
+                                        )
+
+                                        Spacer(
+                                            modifier =
+                                                Modifier.height(4.dp)
+                                        )
+
+                                        Text(
+                                            text =
+                                                "Complete the assessment to receive CBT-based recommendations tailored to you.",
+
+                                            style =
+                                                MaterialTheme
+                                                    .typography
+                                                    .bodySmall,
+
+                                            color =
+                                                MaterialTheme
+                                                    .colorScheme
+                                                    .onPrimaryContainer
+                                                    .copy(
+                                                        alpha = 0.78f
+                                                    )
+                                        )
+                                    }
+
+                                    Spacer(
+                                        modifier =
+                                            Modifier.width(8.dp)
+                                    )
+
+                                    Icon(
+                                        imageVector =
+                                            Icons.Default.ChevronRight,
+
+                                        contentDescription =
+                                            "Take assessment",
+
+                                        tint =
+                                            MaterialTheme
+                                                .colorScheme
+                                                .primary
+                                    )
+                                }
                             }
                         }
                     }
@@ -1180,6 +1457,27 @@ fun MoodInsightsScreen(
                                             selectedMood ==
                                                     mood.label
 
+                                        val emojiScale by
+                                        animateFloatAsState(
+
+                                            targetValue =
+                                                if (selected) {
+                                                    1.18f
+                                                } else {
+                                                    1.0f
+                                                },
+
+                                            animationSpec =
+                                                tween(
+                                                    durationMillis = 280,
+                                                    easing =
+                                                        FastOutSlowInEasing
+                                                ),
+
+                                            label =
+                                                "moodEmojiScale"
+                                        )
+
                                         Column(
                                             horizontalAlignment =
                                                 Alignment.CenterHorizontally
@@ -1190,9 +1488,9 @@ fun MoodInsightsScreen(
                                                     Modifier
                                                         .size(
                                                             if (selected) {
-                                                                50.dp
+                                                                54.dp
                                                             } else {
-                                                                44.dp
+                                                                48.dp
                                                             }
                                                         )
                                                         .clip(
@@ -1220,6 +1518,7 @@ fun MoodInsightsScreen(
                                                             }
                                                         )
                                                         .clickable {
+
                                                             selectedMood =
                                                                 mood.label
                                                         },
@@ -1228,32 +1527,20 @@ fun MoodInsightsScreen(
                                                     Alignment.Center
                                             ) {
 
-                                                Icon(
-                                                    imageVector =
-                                                        mood.icon,
-
-                                                    contentDescription =
-                                                        mood.label,
-
-                                                    tint =
-                                                        if (selected) {
-                                                            Color.White
-                                                        } else {
-                                                            darkPurple
-                                                        },
+                                                Text(
+                                                    text =
+                                                        mood.emoji,
 
                                                     modifier =
-                                                        Modifier.size(
-                                                            22.dp
+                                                        Modifier.scale(
+                                                            emojiScale
                                                         )
                                                 )
                                             }
 
                                             Spacer(
                                                 modifier =
-                                                    Modifier.height(
-                                                        5.dp
-                                                    )
+                                                    Modifier.height(5.dp)
                                             )
 
                                             Text(
@@ -1345,6 +1632,72 @@ fun MoodInsightsScreen(
 
                                 Spacer(
                                     modifier =
+                                        Modifier.height(12.dp)
+                                )
+
+                                OutlinedTextField(
+
+                                    value =
+                                        triggerText,
+
+                                    onValueChange = {
+                                        triggerText = it
+                                    },
+
+                                    modifier =
+                                        Modifier.fillMaxWidth(),
+
+                                    label = {
+                                        Text(
+                                            "What triggered this mood?"
+                                        )
+                                    },
+
+                                    placeholder = {
+                                        Text(
+                                            "For example: work, relationships, stress, or something that happened today"
+                                        )
+                                    },
+
+                                    textStyle =
+                                        MaterialTheme
+                                            .typography
+                                            .bodyMedium,
+
+                                    shape =
+                                        RoundedCornerShape(
+                                            16.dp
+                                        ),
+
+                                    colors =
+                                        TextFieldDefaults.colors(
+
+                                            focusedContainerColor =
+                                                MaterialTheme
+                                                    .colorScheme
+                                                    .surface
+                                                    .copy(
+                                                        alpha = 0.55f
+                                                    ),
+
+                                            unfocusedContainerColor =
+                                                MaterialTheme
+                                                    .colorScheme
+                                                    .surface
+                                                    .copy(
+                                                        alpha = 0.40f
+                                                    ),
+
+                                            focusedIndicatorColor =
+                                                Color.Transparent,
+
+                                            unfocusedIndicatorColor =
+                                                Color.Transparent
+                                        )
+                                )
+
+                                Spacer(
+                                    modifier =
                                         Modifier.height(14.dp)
                                 )
 
@@ -1362,10 +1715,14 @@ fun MoodInsightsScreen(
                                                     moodText,
 
                                                 emoji =
-                                                    selectedMood
+                                                    selectedMood,
+
+                                                trigger =
+                                                    triggerText
                                             )
 
                                             moodText = ""
+                                            triggerText = ""
                                         }
                                     },
 
@@ -1406,7 +1763,7 @@ fun MoodInsightsScreen(
 
                     /*
                      * ==================================================
-                     * AI INSIGHT
+                     * MOOD INSIGHT
                      * ==================================================
                      */
 
@@ -1476,7 +1833,7 @@ fun MoodInsightsScreen(
 
                                     Text(
                                         text =
-                                            "AI Insight",
+                                            "Mood Insight",
 
                                         style =
                                             MaterialTheme
@@ -1516,40 +1873,11 @@ fun MoodInsightsScreen(
 
                     /*
                      * ==================================================
-                     * RECENT ENTRIES
+                     * READING
                      * ==================================================
                      */
 
                     item {
-
-                        Text(
-                            text =
-                                "Recent Entries",
-
-                            modifier =
-                                Modifier.padding(
-                                    horizontal = 18.dp
-                                ),
-
-                            style =
-                                MaterialTheme
-                                    .typography
-                                    .titleMedium,
-
-                            fontWeight =
-                                FontWeight.Bold,
-
-                            color =
-                                Color.White
-                        )
-                    }
-
-                    items(
-                        moods.takeLast(5).reversed(),
-                        key = { mood ->
-                            mood.id
-                        }
-                    ) { mood ->
 
                         Card(
 
@@ -1558,11 +1886,14 @@ fun MoodInsightsScreen(
                                     .fillMaxWidth()
                                     .padding(
                                         horizontal = 16.dp
-                                    ),
+                                    )
+                                    .clickable {
+                                        onReadingClick()
+                                    },
 
                             shape =
                                 RoundedCornerShape(
-                                    20.dp
+                                    22.dp
                                 ),
 
                             colors =
@@ -1575,17 +1906,18 @@ fun MoodInsightsScreen(
 
                             elevation =
                                 CardDefaults.cardElevation(
-                                    defaultElevation = 1.dp
+                                    defaultElevation = 2.dp
                                 )
                         ) {
 
                             Row(
+
                                 modifier =
                                     Modifier
                                         .fillMaxWidth()
                                         .padding(
-                                            horizontal = 16.dp,
-                                            vertical = 13.dp
+                                            horizontal = 18.dp,
+                                            vertical = 16.dp
                                         ),
 
                                 verticalAlignment =
@@ -1593,9 +1925,10 @@ fun MoodInsightsScreen(
                             ) {
 
                                 Box(
+
                                     modifier =
                                         Modifier
-                                            .size(44.dp)
+                                            .size(46.dp)
                                             .clip(
                                                 CircleShape
                                             )
@@ -1604,7 +1937,7 @@ fun MoodInsightsScreen(
                                                     .colorScheme
                                                     .surface
                                                     .copy(
-                                                        alpha = 0.42f
+                                                        alpha = 0.55f
                                                     )
                                             ),
 
@@ -1612,41 +1945,27 @@ fun MoodInsightsScreen(
                                         Alignment.Center
                                 ) {
 
-                                    Text(
-                                        text =
-                                            when (
-                                                mood.emoji
-                                            ) {
+                                    Icon(
 
-                                                "Happy",
-                                                "😊" ->
-                                                    "✨"
+                                        imageVector =
+                                            Icons.Default.MenuBook,
 
-                                                "Calm",
-                                                "😌" ->
-                                                    "🌿"
+                                        contentDescription =
+                                            null,
 
-                                                "Neutral",
-                                                "😐" ->
-                                                    "☁️"
+                                        tint =
+                                            darkPurple,
 
-                                                "Sad",
-                                                "😔" ->
-                                                    "💙"
-
-                                                "Angry",
-                                                "😡" ->
-                                                    "🔥"
-
-                                                else ->
-                                                    "🌸"
-                                            }
+                                        modifier =
+                                            Modifier.size(
+                                                23.dp
+                                            )
                                     )
                                 }
 
                                 Spacer(
                                     modifier =
-                                        Modifier.width(12.dp)
+                                        Modifier.width(14.dp)
                                 )
 
                                 Column(
@@ -1655,16 +1974,17 @@ fun MoodInsightsScreen(
                                 ) {
 
                                     Text(
+
                                         text =
-                                            mood.mood,
+                                            "Reading",
 
                                         style =
                                             MaterialTheme
                                                 .typography
-                                                .bodyLarge,
+                                                .titleMedium,
 
                                         fontWeight =
-                                            FontWeight.SemiBold,
+                                            FontWeight.Bold,
 
                                         color =
                                             textDark
@@ -1672,12 +1992,13 @@ fun MoodInsightsScreen(
 
                                     Spacer(
                                         modifier =
-                                            Modifier.height(2.dp)
+                                            Modifier.height(4.dp)
                                     )
 
                                     Text(
+
                                         text =
-                                            mood.timestamp,
+                                            "Take a quiet moment to read stories about self-doubt, anxiety, and finding your way forward.",
 
                                         style =
                                             MaterialTheme
@@ -1688,6 +2009,182 @@ fun MoodInsightsScreen(
                                             secondaryText
                                     )
                                 }
+
+                                Spacer(
+                                    modifier =
+                                        Modifier.width(8.dp)
+                                )
+
+                                Icon(
+
+                                    imageVector =
+                                        Icons.Default.ChevronRight,
+
+                                    contentDescription =
+                                        "Open reading",
+
+                                    tint =
+                                        darkPurple
+                                )
+                            }
+                        }
+                    }
+
+                    /*
+                     * ==================================================
+                     * REAL STORIES
+                     * ==================================================
+                     */
+
+                    item {
+
+                        Card(
+
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .padding(
+                                        horizontal = 16.dp
+                                    )
+                                    .clickable {
+                                        onRealStoriesClick()
+                                    },
+
+                            shape =
+                                RoundedCornerShape(
+                                    22.dp
+                                ),
+
+                            colors =
+                                CardDefaults.cardColors(
+                                    containerColor =
+                                        mistBlue.copy(
+                                            alpha = 0.88f
+                                        )
+                                ),
+
+                            elevation =
+                                CardDefaults.cardElevation(
+                                    defaultElevation = 2.dp
+                                )
+                        ) {
+
+                            Row(
+
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .padding(
+                                            horizontal = 18.dp,
+                                            vertical = 16.dp
+                                        ),
+
+                                verticalAlignment =
+                                    Alignment.CenterVertically
+                            ) {
+
+                                Box(
+
+                                    modifier =
+                                        Modifier
+                                            .size(46.dp)
+                                            .clip(
+                                                CircleShape
+                                            )
+                                            .background(
+                                                MaterialTheme
+                                                    .colorScheme
+                                                    .surface
+                                                    .copy(
+                                                        alpha = 0.55f
+                                                    )
+                                            ),
+
+                                    contentAlignment =
+                                        Alignment.Center
+                                ) {
+
+                                    Icon(
+
+                                        imageVector =
+                                            Icons.Default.MenuBook,
+
+                                        contentDescription =
+                                            null,
+
+                                        tint =
+                                            darkPurple,
+
+                                        modifier =
+                                            Modifier.size(
+                                                23.dp
+                                            )
+                                    )
+                                }
+
+                                Spacer(
+                                    modifier =
+                                        Modifier.width(14.dp)
+                                )
+
+                                Column(
+                                    modifier =
+                                        Modifier.weight(1f)
+                                ) {
+
+                                    Text(
+
+                                        text =
+                                            "Real Stories",
+
+                                        style =
+                                            MaterialTheme
+                                                .typography
+                                                .titleMedium,
+
+                                        fontWeight =
+                                            FontWeight.Bold,
+
+                                        color =
+                                            textDark
+                                    )
+
+                                    Spacer(
+                                        modifier =
+                                            Modifier.height(4.dp)
+                                    )
+
+                                    Text(
+
+                                        text =
+                                            "Read personal experiences with anxiety, depression, and CBT from people who have been through it.",
+
+                                        style =
+                                            MaterialTheme
+                                                .typography
+                                                .bodySmall,
+
+                                        color =
+                                            secondaryText
+                                    )
+                                }
+
+                                Spacer(
+                                    modifier =
+                                        Modifier.width(8.dp)
+                                )
+
+                                Icon(
+
+                                    imageVector =
+                                        Icons.Default.ChevronRight,
+
+                                    contentDescription =
+                                        "Open real stories",
+
+                                    tint =
+                                        darkPurple
+                                )
                             }
                         }
                     }

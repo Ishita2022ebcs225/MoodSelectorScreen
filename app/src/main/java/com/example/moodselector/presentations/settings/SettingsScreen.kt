@@ -17,6 +17,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.WbSunny
@@ -25,7 +26,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -37,12 +37,14 @@ import com.example.moodselector.presentations.auth.AuthViewModel
 @Composable
 fun SettingsScreen(
     onBackClick: () -> Unit,
+    onAccountDeleted: () -> Unit,
     authViewModel: AuthViewModel = hiltViewModel(),
     settingsViewModel: SettingsViewModel = hiltViewModel()
 ) {
 
     val context =
         LocalContext.current
+
 
     /*
      * --------------------------------------------------
@@ -104,6 +106,28 @@ fun SettingsScreen(
                 true
             }
         )
+    }
+
+
+    /*
+     * --------------------------------------------------
+     * DELETE ALL DATA DIALOG
+     * --------------------------------------------------
+     */
+
+    var showDeleteAllDataDialog by remember {
+        mutableStateOf(false)
+    }
+
+
+    /*
+     * --------------------------------------------------
+     * DELETE ACCOUNT DIALOG
+     * --------------------------------------------------
+     */
+
+    var showDeleteAccountDialog by remember {
+        mutableStateOf(false)
     }
 
 
@@ -196,12 +220,6 @@ fun SettingsScreen(
      * --------------------------------------------------
      * COLORS
      * --------------------------------------------------
-     *
-     * Keep the screen background consistent with the
-     * other app screens by deriving it from MaterialTheme.
-     *
-     * The active light/dark palette is controlled by
-     * MoodselectorTheme.kt.
      */
 
     val background =
@@ -215,9 +233,6 @@ fun SettingsScreen(
 
     val darkPurple =
         MaterialTheme.colorScheme.primary
-
-    val softLavender =
-        MaterialTheme.colorScheme.secondaryContainer
 
     val warmGlass =
         surface.copy(
@@ -504,12 +519,6 @@ fun SettingsScreen(
                     )
 
 
-                    /*
-                     * --------------------------------------------------
-                     * MOOD CHECK-IN
-                     * --------------------------------------------------
-                     */
-
                     ReminderRow(
 
                         title =
@@ -552,12 +561,6 @@ fun SettingsScreen(
                     )
 
 
-                    /*
-                     * --------------------------------------------------
-                     * JOURNAL
-                     * --------------------------------------------------
-                     */
-
                     ReminderRow(
 
                         title =
@@ -599,12 +602,6 @@ fun SettingsScreen(
                             Modifier.height(16.dp)
                     )
 
-
-                    /*
-                     * --------------------------------------------------
-                     * WELLBEING
-                     * --------------------------------------------------
-                     */
 
                     ReminderRow(
 
@@ -805,9 +802,457 @@ fun SettingsScreen(
 
             Spacer(
                 modifier =
+                    Modifier.height(16.dp)
+            )
+
+
+            /*
+             * --------------------------------------------------
+             * DELETE ALL USER DATA
+             * --------------------------------------------------
+             */
+
+            Card(
+
+                modifier =
+                    Modifier.fillMaxWidth(),
+
+                shape =
+                    RoundedCornerShape(
+                        28.dp
+                    ),
+
+                colors =
+                    CardDefaults.cardColors(
+                        containerColor =
+                            warmGlass
+                    )
+            ) {
+
+                Column(
+
+                    modifier =
+                        Modifier.padding(
+                            20.dp
+                        )
+                ) {
+
+                    Row(
+
+                        modifier =
+                            Modifier.fillMaxWidth(),
+
+                        verticalAlignment =
+                            Alignment.CenterVertically
+                    ) {
+
+                        Icon(
+                            imageVector =
+                                Icons.Default.Delete,
+
+                            contentDescription =
+                                null,
+
+                            tint =
+                                MaterialTheme
+                                    .colorScheme
+                                    .error
+                        )
+
+                        Spacer(
+                            modifier =
+                                Modifier.width(8.dp)
+                        )
+
+                        Column(
+                            modifier =
+                                Modifier.weight(1f)
+                        ) {
+
+                            Text(
+                                text =
+                                    "Delete all data",
+
+                                style =
+                                    MaterialTheme
+                                        .typography
+                                        .titleMedium,
+
+                                fontWeight =
+                                    FontWeight.Bold,
+
+                                color =
+                                    textDark
+                            )
+
+                            Spacer(
+                                modifier =
+                                    Modifier.height(4.dp)
+                            )
+
+                            Text(
+                                text =
+                                    "Permanently delete your saved app data.",
+
+                                style =
+                                    MaterialTheme
+                                        .typography
+                                        .bodyMedium,
+
+                                color =
+                                    MaterialTheme
+                                        .colorScheme
+                                        .onSurfaceVariant
+                            )
+                        }
+                    }
+
+                    Spacer(
+                        modifier =
+                            Modifier.height(16.dp)
+                    )
+
+                    OutlinedButton(
+
+                        onClick = {
+                            showDeleteAllDataDialog = true
+                        },
+
+                        modifier =
+                            Modifier.fillMaxWidth(),
+
+                        colors =
+                            ButtonDefaults.outlinedButtonColors(
+                                contentColor =
+                                    MaterialTheme
+                                        .colorScheme
+                                        .error
+                            )
+                    ) {
+
+                        Icon(
+                            imageVector =
+                                Icons.Default.Delete,
+
+                            contentDescription =
+                                null
+                        )
+
+                        Spacer(
+                            modifier =
+                                Modifier.width(8.dp)
+                        )
+
+                        Text(
+                            text =
+                                "Delete all data"
+                        )
+                    }
+                }
+            }
+
+
+            Spacer(
+                modifier =
+                    Modifier.height(16.dp)
+            )
+
+
+            /*
+             * --------------------------------------------------
+             * DELETE ACCOUNT
+             * --------------------------------------------------
+             */
+
+            Card(
+
+                modifier =
+                    Modifier.fillMaxWidth(),
+
+                shape =
+                    RoundedCornerShape(
+                        28.dp
+                    ),
+
+                colors =
+                    CardDefaults.cardColors(
+                        containerColor =
+                            warmGlass
+                    )
+            ) {
+
+                Column(
+
+                    modifier =
+                        Modifier.padding(
+                            20.dp
+                        )
+                ) {
+
+                    Row(
+
+                        modifier =
+                            Modifier.fillMaxWidth(),
+
+                        verticalAlignment =
+                            Alignment.CenterVertically
+                    ) {
+
+                        Icon(
+                            imageVector =
+                                Icons.Default.Delete,
+
+                            contentDescription =
+                                null,
+
+                            tint =
+                                MaterialTheme
+                                    .colorScheme
+                                    .error
+                        )
+
+                        Spacer(
+                            modifier =
+                                Modifier.width(8.dp)
+                        )
+
+                        Column(
+                            modifier =
+                                Modifier.weight(1f)
+                        ) {
+
+                            Text(
+                                text =
+                                    "Delete account",
+
+                                style =
+                                    MaterialTheme
+                                        .typography
+                                        .titleMedium,
+
+                                fontWeight =
+                                    FontWeight.Bold,
+
+                                color =
+                                    textDark
+                            )
+
+                            Spacer(
+                                modifier =
+                                    Modifier.height(4.dp)
+                            )
+
+                            Text(
+                                text =
+                                    "Permanently delete your account and its authentication profile.",
+
+                                style =
+                                    MaterialTheme
+                                        .typography
+                                        .bodyMedium,
+
+                                color =
+                                    MaterialTheme
+                                        .colorScheme
+                                        .onSurfaceVariant
+                            )
+                        }
+                    }
+
+                    Spacer(
+                        modifier =
+                            Modifier.height(16.dp)
+                    )
+
+                    OutlinedButton(
+
+                        onClick = {
+                            showDeleteAccountDialog = true
+                        },
+
+                        modifier =
+                            Modifier.fillMaxWidth(),
+
+                        colors =
+                            ButtonDefaults.outlinedButtonColors(
+                                contentColor =
+                                    MaterialTheme
+                                        .colorScheme
+                                        .error
+                            )
+                    ) {
+
+                        Icon(
+                            imageVector =
+                                Icons.Default.Delete,
+
+                            contentDescription =
+                                null
+                        )
+
+                        Spacer(
+                            modifier =
+                                Modifier.width(8.dp)
+                        )
+
+                        Text(
+                            text =
+                                "Delete account"
+                        )
+                    }
+                }
+            }
+
+
+            Spacer(
+                modifier =
                     Modifier.height(20.dp)
             )
         }
+    }
+
+
+    /*
+     * --------------------------------------------------
+     * DELETE ALL DATA CONFIRMATION
+     * --------------------------------------------------
+     */
+
+    if (showDeleteAllDataDialog) {
+
+        AlertDialog(
+
+            onDismissRequest = {
+                showDeleteAllDataDialog = false
+            },
+
+            title = {
+                Text(
+                    text =
+                        "Delete all data?"
+                )
+            },
+
+            text = {
+                Text(
+                    text =
+                        "This will permanently delete your saved moods, journals, assessment results, CBT progress, scheduled CBT activities, and other saved app data. This action cannot be undone."
+                )
+            },
+
+            confirmButton = {
+
+                TextButton(
+                    onClick = {
+
+                        userId?.let {
+
+                            settingsViewModel
+                                .deleteAllUserData(it)
+                        }
+
+                        showDeleteAllDataDialog =
+                            false
+                    }
+                ) {
+
+                    Text(
+                        text =
+                            "Delete",
+
+                        color =
+                            MaterialTheme
+                                .colorScheme
+                                .error
+                    )
+                }
+            },
+
+            dismissButton = {
+
+                TextButton(
+                    onClick = {
+                        showDeleteAllDataDialog = false
+                    }
+                ) {
+
+                    Text(
+                        text =
+                            "Cancel"
+                    )
+                }
+            }
+        )
+    }
+
+
+    /*
+     * --------------------------------------------------
+     * DELETE ACCOUNT CONFIRMATION
+     * --------------------------------------------------
+     */
+
+    if (showDeleteAccountDialog) {
+
+        AlertDialog(
+
+            onDismissRequest = {
+                showDeleteAccountDialog = false
+            },
+
+            title = {
+                Text(
+                    text =
+                        "Delete account?"
+                )
+            },
+
+            text = {
+                Text(
+                    text =
+                        "This will permanently delete your account. Your authentication account will be removed and you will no longer be able to sign in with it. This action cannot be undone."
+                )
+            },
+
+            confirmButton = {
+
+                TextButton(
+                    onClick = {
+
+                        showDeleteAccountDialog =
+                            false
+
+                        onAccountDeleted()
+                    }
+                ) {
+
+                    Text(
+                        text =
+                            "Delete account",
+
+                        color =
+                            MaterialTheme
+                                .colorScheme
+                                .error
+                    )
+                }
+            },
+
+            dismissButton = {
+
+                TextButton(
+                    onClick = {
+                        showDeleteAccountDialog = false
+                    }
+                ) {
+
+                    Text(
+                        text =
+                            "Cancel"
+                    )
+                }
+            }
+        )
     }
 }
 
@@ -979,4 +1424,3 @@ private fun ReminderRow(
         )
     }
 }
-

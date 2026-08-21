@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.moodselector.data.preferences.UserPreferencesRepository
+import com.example.moodselector.domain.repository.UserDataDeletionRepository
 import com.example.moodselector.notifications.ReminderScheduler
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -27,7 +28,8 @@ data class SettingsUiState(
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     application: Application,
-    private val userPreferencesRepository: UserPreferencesRepository
+    private val userPreferencesRepository: UserPreferencesRepository,
+    private val userDataDeletionRepository: UserDataDeletionRepository
 ) : AndroidViewModel(application) {
 
     private var currentUserId: String? = null
@@ -517,4 +519,61 @@ class SettingsViewModel @Inject constructor(
                 )
         }
     }
+
+
+    /*
+     * --------------------------------------------------
+     * DELETE ALL USER DATA
+     * --------------------------------------------------
+     */
+
+    fun deleteAllUserData(
+        userId: String
+    ) {
+
+        viewModelScope.launch {
+
+            ReminderScheduler.cancel(
+                getApplication(),
+                ReminderScheduler.MOOD
+            )
+
+            ReminderScheduler.cancel(
+                getApplication(),
+                ReminderScheduler.JOURNAL
+            )
+
+            ReminderScheduler.cancel(
+                getApplication(),
+                ReminderScheduler.WELLBEING
+            )
+
+            userDataDeletionRepository
+                .deleteAllUserData(
+                    userId
+                )
+
+            moodReminderEnabled.value =
+                false
+
+            journalReminderEnabled.value =
+                false
+
+            wellbeingReminderEnabled.value =
+                false
+
+            moodReminderTime.value =
+                "09:00"
+
+            journalReminderTime.value =
+                "20:00"
+
+            wellbeingReminderTime.value =
+                "12:00"
+
+            themeMode.value =
+                "system"
+        }
+    }
 }
+

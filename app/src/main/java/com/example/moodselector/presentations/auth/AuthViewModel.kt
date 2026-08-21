@@ -3,6 +3,7 @@ package com.example.moodselector.presentations.auth
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.moodselector.domain.repository.AuthRepository
+import com.example.moodselector.domain.repository.UserDataDeletionRepository
 import com.google.firebase.auth.FirebaseUser
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,7 +21,9 @@ data class AuthUiState(
 
 @HiltViewModel
 class AuthViewModel @Inject constructor(
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val userDataDeletionRepository:
+    UserDataDeletionRepository
 ) : ViewModel() {
 
     private val _uiState =
@@ -269,6 +272,159 @@ class AuthViewModel @Inject constructor(
 
     /*
      * --------------------------------------------------
+     * RE-AUTHENTICATION WITH EMAIL / PASSWORD
+     * --------------------------------------------------
+     *
+     * This is separate from normal sign-in.
+     *
+     * The user is already authenticated. This operation
+     * simply refreshes their Firebase authentication so
+     * sensitive operations such as account deletion can
+     * be performed.
+     */
+
+    fun reauthenticateWithEmail(
+        email: String,
+        password: String,
+        onSuccess: () -> Unit
+    ) {
+
+        val cleanEmail =
+            email.trim()
+
+        if (cleanEmail.isBlank()) {
+
+            setError(
+                "Please enter your email address."
+            )
+
+            return
+        }
+
+        if (password.isBlank()) {
+
+            setError(
+                "Please enter your password."
+            )
+
+            return
+        }
+
+        viewModelScope.launch {
+
+            _uiState.value =
+                _uiState.value.copy(
+                    isLoading = true,
+                    errorMessage = null
+                )
+
+            val result =
+                authRepository
+                    .reauthenticateWithEmail(
+                        email = cleanEmail,
+                        password = password
+                    )
+
+            result.fold(
+
+                onSuccess = {
+
+                    _uiState.value =
+                        _uiState.value.copy(
+                            isLoading = false,
+                            errorMessage = null
+                        )
+
+                    onSuccess()
+                },
+
+                onFailure = { exception ->
+
+                    _uiState.value =
+                        _uiState.value.copy(
+                            isLoading = false,
+                            errorMessage =
+                                authenticationErrorMessage(
+                                    exception
+                                )
+                        )
+                }
+            )
+        }
+    }
+
+
+    /*
+     * --------------------------------------------------
+     * RE-AUTHENTICATION WITH GOOGLE
+     * --------------------------------------------------
+     *
+     * This is separate from normal Google sign-in.
+     *
+     * The user is already authenticated. A fresh Google
+     * ID token is used to re-authenticate that existing
+     * Firebase account.
+     */
+
+    fun reauthenticateWithGoogle(
+        idToken: String,
+        onSuccess: () -> Unit
+    ) {
+
+        if (idToken.isBlank()) {
+
+            setError(
+                "Google re-authentication could not be completed."
+            )
+
+            return
+        }
+
+        viewModelScope.launch {
+
+            _uiState.value =
+                _uiState.value.copy(
+                    isLoading = true,
+                    errorMessage = null
+                )
+
+            val result =
+                authRepository
+                    .reauthenticateWithGoogle(
+                        idToken = idToken
+                    )
+
+            result.fold(
+
+                onSuccess = {
+
+                    _uiState.value =
+                        _uiState.value.copy(
+                            isLoading = false,
+                            errorMessage = null
+                        )
+
+                    onSuccess()
+                },
+
+                onFailure = { exception ->
+
+                    _uiState.value =
+                        _uiState.value.copy(
+                            isLoading = false,
+                            errorMessage =
+                                authenticationErrorMessage(
+                                    exception
+                                )
+                        )
+                }
+            )
+        }
+    }
+
+
+    /*
+     * --------------------------------------------------
      * AUTHENTICATION SUCCESS
      * --------------------------------------------------
      */
@@ -302,6 +458,113 @@ class AuthViewModel @Inject constructor(
 
         _uiState.value =
             AuthUiState()
+    }
+
+
+    /*
+     * --------------------------------------------------
+     * DELETE ACCOUNT
+     * --------------------------------------------------
+     *
+     * Application data is deleted first.
+     * Firebase Authentication account is deleted only after
+     * application data deletion succeeds.
+     *
+     * The user's uid is captured before deletion so it
+     * remains available while application data is removed.
+     */
+
+    fun deleteAccount(
+        onSuccess: () -> Unit
+    ) {
+
+        val user =
+            authRepository.currentUser
+
+        if (user == null) {
+
+            setError(
+                "No authenticated user is available."
+            )
+
+            return
+        }
+
+        val userId =
+            user.uid
+
+        viewModelScope.launch {
+
+            _uiState.value =
+                _uiState.value.copy(
+                    isLoading = true,
+                    errorMessage = null
+                )
+
+            try {
+
+                /*
+                 * --------------------------------------------------
+                 * DELETE APPLICATION DATA FIRST
+                 * --------------------------------------------------
+                 *
+                 * This removes the user's local Room data,
+                 * user-specific preferences, and Firestore
+                 * cloud backup data.
+                 *
+                 * If cloud deletion fails, the exception
+                 * propagates and the Firebase Authentication
+                 * account remains intact so deletion can be
+                 * retried.
+                 */
+
+                userDataDeletionRepository
+                    .deleteAllUserData(
+                        userId
+                    )
+
+
+                /*
+                 * --------------------------------------------------
+                 * DELETE FIREBASE AUTHENTICATION ACCOUNT
+                 * --------------------------------------------------
+                 *
+                 * This is intentionally performed only after
+                 * all application data has been successfully
+                 * deleted.
+                 */
+
+                val accountDeletionResult =
+                    authRepository
+                        .deleteAccount()
+
+                accountDeletionResult
+                    .getOrThrow()
+
+
+                /*
+                 * --------------------------------------------------
+                 * CLEAR AUTH STATE
+                 * --------------------------------------------------
+                 */
+
+                _uiState.value =
+                    AuthUiState()
+
+                onSuccess()
+
+            } catch (exception: Exception) {
+
+                _uiState.value =
+                    _uiState.value.copy(
+                        isLoading = false,
+                        errorMessage =
+                            authenticationErrorMessage(
+                                exception
+                            )
+                    )
+            }
+        }
     }
 
 
@@ -389,4 +652,3 @@ class AuthViewModel @Inject constructor(
         }
     }
 }
-
