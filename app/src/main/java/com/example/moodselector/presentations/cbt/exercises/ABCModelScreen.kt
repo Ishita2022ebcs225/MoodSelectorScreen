@@ -26,6 +26,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -46,19 +47,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.moodselector.R
-
-private val BackgroundTop = Color(0xFFEDEBFF)
-private val BackgroundMiddle = Color(0xFFF6EAF7)
-private val BackgroundBottom = Color(0xFFE7F6F3)
-
-private val DeepPurple = Color(0xFF5E4275)
-private val Purple = Color(0xFF765A86)
-private val SoftPurple = Color(0xFFE7D9F0)
-
-private val TextPrimary = Color(0xFF292638)
-private val TextSecondary = Color(0xFF777282)
-
-private val SurfaceWhite = Color.White.copy(alpha = 0.80f)
 
 @Composable
 fun ABCModelScreen(
@@ -90,13 +78,52 @@ fun ABCModelScreen(
 
     val uiState by viewModel.uiState.collectAsState()
 
-    val backgroundBrush = Brush.verticalGradient(
-        colors = listOf(
-            BackgroundTop,
-            BackgroundMiddle,
-            BackgroundBottom
+    /*
+     * --------------------------------------------------
+     * THEME COLORS
+     * --------------------------------------------------
+     *
+     * These use the app's Material 3 color scheme so
+     * the screen responds to the app theme toggle.
+     */
+
+    val backgroundTop =
+        MaterialTheme.colorScheme.primaryContainer
+
+    val backgroundMiddle =
+        MaterialTheme.colorScheme.secondaryContainer
+
+    val backgroundBottom =
+        MaterialTheme.colorScheme.tertiaryContainer
+
+    val deepPurple =
+        MaterialTheme.colorScheme.primary
+
+    val purple =
+        MaterialTheme.colorScheme.primary
+
+    val softPurple =
+        MaterialTheme.colorScheme.secondaryContainer
+
+    val textPrimary =
+        MaterialTheme.colorScheme.onBackground
+
+    val textSecondary =
+        MaterialTheme.colorScheme.onSurfaceVariant
+
+    val surfaceWhite =
+        MaterialTheme.colorScheme.surface.copy(
+            alpha = 0.80f
         )
-    )
+
+    val backgroundBrush =
+        Brush.verticalGradient(
+            colors = listOf(
+                backgroundTop,
+                backgroundMiddle,
+                backgroundBottom
+            )
+        )
 
     /*
      * --------------------------------------------------
@@ -154,7 +181,7 @@ fun ABCModelScreen(
                             "Back",
 
                         tint =
-                            TextPrimary
+                            textPrimary
                     )
                 }
 
@@ -172,7 +199,7 @@ fun ABCModelScreen(
                         },
 
                     color =
-                        TextSecondary,
+                        textSecondary,
 
                     fontSize =
                         13.sp,
@@ -206,7 +233,7 @@ fun ABCModelScreen(
                         "ABC Model",
 
                     color =
-                        TextPrimary,
+                        textPrimary,
 
                     fontSize =
                         27.sp,
@@ -225,7 +252,7 @@ fun ABCModelScreen(
                         "Understand what happens between an event and your response.",
 
                     color =
-                        TextSecondary,
+                        textSecondary,
 
                     fontSize =
                         14.sp
@@ -265,9 +292,9 @@ fun ABCModelScreen(
                                     )
                                     .background(
                                         if (index < currentPage) {
-                                            Purple
+                                            purple
                                         } else {
-                                            SoftPurple
+                                            softPurple
                                         }
                                     )
                         )
@@ -330,7 +357,7 @@ fun ABCModelScreen(
                                     "How the ABC Model works",
 
                                 color =
-                                    DeepPurple,
+                                    deepPurple,
 
                                 fontSize =
                                     22.sp,
@@ -352,7 +379,7 @@ fun ABCModelScreen(
                                             RoundedCornerShape(24.dp)
                                         )
                                         .background(
-                                            SurfaceWhite
+                                            surfaceWhite
                                         )
                             ) {
 
@@ -388,7 +415,7 @@ fun ABCModelScreen(
                                             "your emotional and behavioural responses.",
 
                                 color =
-                                    TextSecondary,
+                                    textSecondary,
 
                                 fontSize =
                                     15.sp,
@@ -545,10 +572,10 @@ fun ABCModelScreen(
                 colors =
                     ButtonDefaults.buttonColors(
                         containerColor =
-                            DeepPurple,
+                            deepPurple,
 
                         disabledContainerColor =
-                            DeepPurple.copy(
+                            deepPurple.copy(
                                 alpha = 0.35f
                             )
                     )
@@ -619,6 +646,23 @@ private fun ABCResponsePage(
     onValueChange: (String) -> Unit
 ) {
 
+    val deepPurple =
+        MaterialTheme.colorScheme.primary
+
+    val softPurple =
+        MaterialTheme.colorScheme.secondaryContainer
+
+    val textPrimary =
+        MaterialTheme.colorScheme.onBackground
+
+    val textSecondary =
+        MaterialTheme.colorScheme.onSurfaceVariant
+
+    val surfaceWhite =
+        MaterialTheme.colorScheme.surface.copy(
+            alpha = 0.80f
+        )
+
     Column(
         modifier =
             Modifier.fillMaxWidth(),
@@ -639,7 +683,7 @@ private fun ABCResponsePage(
                         RoundedCornerShape(28.dp)
                     )
                     .background(
-                        SoftPurple
+                        softPurple
                     ),
 
             contentAlignment =
@@ -651,7 +695,7 @@ private fun ABCResponsePage(
                     letter,
 
                 color =
-                    DeepPurple,
+                    deepPurple,
 
                 fontSize =
                     48.sp,
@@ -671,7 +715,7 @@ private fun ABCResponsePage(
                 title,
 
             color =
-                DeepPurple,
+                deepPurple,
 
             fontSize =
                 23.sp,
@@ -690,7 +734,7 @@ private fun ABCResponsePage(
                 instruction,
 
             color =
-                TextSecondary,
+                textSecondary,
 
             fontSize =
                 15.sp,
@@ -717,7 +761,7 @@ private fun ABCResponsePage(
                         RoundedCornerShape(22.dp)
                     )
                     .background(
-                        SurfaceWhite
+                        surfaceWhite
                     )
                     .padding(18.dp)
         ) {
@@ -735,7 +779,7 @@ private fun ABCResponsePage(
                 textStyle =
                     TextStyle(
                         color =
-                            TextPrimary,
+                            textPrimary,
 
                         fontSize =
                             15.sp,
@@ -753,7 +797,7 @@ private fun ABCResponsePage(
                                 hint,
 
                             color =
-                                TextSecondary.copy(
+                                textSecondary.copy(
                                     alpha = 0.65f
                                 ),
 

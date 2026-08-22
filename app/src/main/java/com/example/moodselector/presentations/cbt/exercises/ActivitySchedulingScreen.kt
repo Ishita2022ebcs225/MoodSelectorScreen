@@ -6,13 +6,13 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -23,12 +23,9 @@ import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Psychology
-import androidx.compose.material.icons.filled.SelfImprovement
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.TaskAlt
 import androidx.compose.material3.Button
@@ -39,10 +36,10 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -64,22 +61,6 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.moodselector.domain.cbt.model.CBTActivity
 
-private val Lavender = Color(0xFF6C63FF)
-private val SoftLavender = Color(0xFFEDEBFF)
-private val PaleLavender = Color(0xFFF7F5FF)
-
-private val SoftRose = Color(0xFFFFEEF4)
-private val Rose = Color(0xFFE88BA5)
-
-private val SoftTeal = Color(0xFFE8F7F5)
-private val Teal = Color(0xFF4BA89C)
-
-private val TextPrimary = Color(0xFF292638)
-private val TextSecondary = Color(0xFF777282)
-
-private val SurfaceWhite = Color.White
-private val Background = Color(0xFFFAF9FD)
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ActivitySchedulingScreen(
@@ -93,22 +74,44 @@ fun ActivitySchedulingScreen(
 
     /*
      * --------------------------------------------------
+     * Theme colors
+     * --------------------------------------------------
+     */
+
+    val lavender =
+        MaterialTheme.colorScheme.primary
+
+    val softLavender =
+        MaterialTheme.colorScheme.secondaryContainer
+
+    val paleLavender =
+        MaterialTheme.colorScheme.surfaceVariant
+
+    val softRose =
+        MaterialTheme.colorScheme.tertiaryContainer
+
+    val rose =
+        MaterialTheme.colorScheme.tertiary
+
+    val softTeal =
+        MaterialTheme.colorScheme.secondaryContainer
+
+    val teal =
+        MaterialTheme.colorScheme.secondary
+
+    val textPrimary =
+        MaterialTheme.colorScheme.onBackground
+
+    val textSecondary =
+        MaterialTheme.colorScheme.onSurfaceVariant
+
+    val background =
+        MaterialTheme.colorScheme.background
+
+    /*
+     * --------------------------------------------------
      * State
      * --------------------------------------------------
-     *
-     * IMPORTANT:
-     *
-     * This screen is ONLY for creating/editing a schedule.
-     *
-     * Completion is intentionally NOT part of this screen.
-     *
-     * There is no:
-     * - completed state
-     * - completion checkbox
-     * - completion persistence
-     * - reflection step
-     *
-     * Those belong to the separate completion flow.
      */
 
     var currentStep by remember {
@@ -237,7 +240,7 @@ fun ActivitySchedulingScreen(
     if (isLoading) {
 
         Scaffold(
-            containerColor = Background
+            containerColor = background
         ) { paddingValues ->
 
             Box(
@@ -250,7 +253,7 @@ fun ActivitySchedulingScreen(
 
                 Text(
                     text = "Loading your plan...",
-                    color = TextSecondary
+                    color = textSecondary
                 )
             }
         }
@@ -266,7 +269,7 @@ fun ActivitySchedulingScreen(
 
     Scaffold(
 
-        containerColor = Background,
+        containerColor = background,
 
         topBar = {
 
@@ -293,7 +296,7 @@ fun ActivitySchedulingScreen(
                                     "Behavioral Activation"
                                 },
                             color =
-                                TextSecondary,
+                                textSecondary,
                             fontSize =
                                 12.sp
                         )
@@ -316,28 +319,10 @@ fun ActivitySchedulingScreen(
                     }
                 },
 
-                actions = {
-
-                    IconButton(
-                        onClick =
-                            onViewScheduledActivities
-                    ) {
-
-                        Icon(
-                            imageVector =
-                                Icons.Default.CalendarToday,
-                            contentDescription =
-                                "Scheduled activities",
-                            tint =
-                                Lavender
-                        )
-                    }
-                },
-
                 colors =
                     TopAppBarDefaults.topAppBarColors(
                         containerColor =
-                            Background
+                            background
                     )
             )
         }
@@ -352,6 +337,136 @@ fun ActivitySchedulingScreen(
                     .padding(paddingValues)
                     .navigationBarsPadding()
         ) {
+
+            /*
+             * --------------------------------------------------
+             * Scheduled Activities shortcut
+             *
+             * This is the only calendar icon on the screen.
+             * --------------------------------------------------
+             */
+
+            if (
+                scheduledActivityId == null
+            ) {
+
+                Card(
+
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(
+                                horizontal = 20.dp,
+                                vertical = 12.dp
+                            )
+                            .clickable(
+                                onClick =
+                                    onViewScheduledActivities
+                            ),
+
+                    shape =
+                        RoundedCornerShape(18.dp),
+
+                    colors =
+                        CardDefaults.cardColors(
+                            containerColor =
+                                paleLavender
+                        ),
+
+                    elevation =
+                        CardDefaults.cardElevation(
+                            defaultElevation = 1.dp
+                        )
+                ) {
+
+                    Row(
+
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+
+                        verticalAlignment =
+                            Alignment.CenterVertically
+                    ) {
+
+                        Box(
+
+                            modifier =
+                                Modifier
+                                    .size(44.dp)
+                                    .clip(
+                                        CircleShape
+                                    )
+                                    .background(
+                                        softLavender
+                                    ),
+
+                            contentAlignment =
+                                Alignment.Center
+                        ) {
+
+                            Icon(
+                                imageVector =
+                                    Icons.Default.CalendarToday,
+
+                                contentDescription =
+                                    null,
+
+                                tint =
+                                    lavender,
+
+                                modifier =
+                                    Modifier.size(22.dp)
+                            )
+                        }
+
+                        Spacer(
+                            modifier =
+                                Modifier.width(12.dp)
+                        )
+
+                        Column(
+                            modifier =
+                                Modifier.weight(1f)
+                        ) {
+
+                            Text(
+                                text =
+                                    "Scheduled Activities",
+
+                                color =
+                                    textPrimary,
+
+                                fontWeight =
+                                    FontWeight.SemiBold,
+
+                                fontSize =
+                                    15.sp
+                            )
+
+                            Spacer(
+                                modifier =
+                                    Modifier.height(3.dp)
+                            )
+
+                            Text(
+                                text =
+                                    "View and manage the activities you have planned.",
+
+                                color =
+                                    textSecondary,
+
+                                fontSize =
+                                    12.sp,
+
+                                lineHeight =
+                                    17.sp
+                            )
+                        }
+                    }
+                }
+            }
 
             /*
              * --------------------------------------------------
@@ -373,10 +488,10 @@ fun ActivitySchedulingScreen(
                         .height(4.dp),
 
                 color =
-                    Lavender,
+                    lavender,
 
                 trackColor =
-                    SoftLavender
+                    softLavender
             )
 
             Column(
@@ -496,9 +611,9 @@ fun ActivitySchedulingScreen(
                                 ButtonDefaults
                                     .buttonColors(
                                         containerColor =
-                                            SoftLavender,
+                                            softLavender,
                                         contentColor =
-                                            Lavender
+                                            lavender
                                     ),
 
                             shape =
@@ -519,12 +634,6 @@ fun ActivitySchedulingScreen(
 
                         onClick = {
 
-                            /*
-                             * --------------------------------------
-                             * Step 1 -> Step 2
-                             * --------------------------------------
-                             */
-
                             if (
                                 currentStep <
                                 totalSteps - 1
@@ -534,20 +643,6 @@ fun ActivitySchedulingScreen(
 
                                 return@Button
                             }
-
-                            /*
-                             * --------------------------------------
-                             * Final step
-                             * --------------------------------------
-                             *
-                             * This ONLY saves the schedule.
-                             *
-                             * It does NOT:
-                             * - mark the activity complete
-                             * - save CBT completion
-                             * - create a progress entry
-                             * - ask for reflection
-                             */
 
                             if (isSaving) {
                                 return@Button
@@ -582,16 +677,6 @@ fun ActivitySchedulingScreen(
                                     whereText.text,
 
                                 onSaved = {
-
-                                    /*
-                                     * The schedule has been saved.
-                                     *
-                                     * We return to the previous flow.
-                                     *
-                                     * Completion will happen later,
-                                     * after the user actually performs
-                                     * the scheduled activity.
-                                     */
 
                                     isSaving = false
 
@@ -633,16 +718,18 @@ fun ActivitySchedulingScreen(
                                 .buttonColors(
 
                                     containerColor =
-                                        Lavender,
+                                        lavender,
 
                                     contentColor =
-                                        Color.White,
+                                        MaterialTheme
+                                            .colorScheme
+                                            .onPrimary,
 
                                     disabledContainerColor =
-                                        SoftLavender,
+                                        softLavender,
 
                                     disabledContentColor =
-                                        TextSecondary
+                                        textSecondary
                                 ),
 
                         shape =
@@ -675,58 +762,6 @@ fun ActivitySchedulingScreen(
                         )
                     }
                 }
-
-                /*
-                 * --------------------------------------------------
-                 * Scheduled activity shortcut
-                 * --------------------------------------------------
-                 */
-
-                if (
-                    currentStep == 0 &&
-                    scheduledActivityId == null
-                ) {
-
-                    Spacer(
-                        modifier =
-                            Modifier.height(14.dp)
-                    )
-
-                    TextButton(
-
-                        onClick =
-                            onViewScheduledActivities,
-
-                        modifier =
-                            Modifier.fillMaxWidth()
-                    ) {
-
-                        Icon(
-                            imageVector =
-                                Icons.Default.CalendarToday,
-                            contentDescription =
-                                null,
-                            tint =
-                                Lavender,
-                            modifier =
-                                Modifier.size(
-                                    18.dp
-                                )
-                        )
-
-                        Spacer(
-                            modifier =
-                                Modifier.width(6.dp)
-                        )
-
-                        Text(
-                            text =
-                                "View my scheduled activities",
-                            color =
-                                Lavender
-                        )
-                    }
-                }
             }
         }
     }
@@ -745,6 +780,12 @@ private fun StepHeader(
     totalSteps: Int
 ) {
 
+    val lavender =
+        MaterialTheme.colorScheme.primary
+
+    val textSecondary =
+        MaterialTheme.colorScheme.onSurfaceVariant
+
     Row(
 
         modifier =
@@ -762,7 +803,7 @@ private fun StepHeader(
                 "Step $step of $totalSteps",
 
             color =
-                Lavender,
+                lavender,
 
             fontWeight =
                 FontWeight.Bold,
@@ -784,7 +825,7 @@ private fun StepHeader(
                 },
 
             color =
-                TextSecondary,
+                textSecondary,
 
             fontSize =
                 13.sp
@@ -811,6 +852,27 @@ private fun ActivitySelectionStep(
     onMasteryChange:
         (Boolean) -> Unit
 ) {
+
+    val lavender =
+        MaterialTheme.colorScheme.primary
+
+    val softLavender =
+        MaterialTheme.colorScheme.secondaryContainer
+
+    val softRose =
+        MaterialTheme.colorScheme.tertiaryContainer
+
+    val rose =
+        MaterialTheme.colorScheme.tertiary
+
+    val softTeal =
+        MaterialTheme.colorScheme.secondaryContainer
+
+    val teal =
+        MaterialTheme.colorScheme.secondary
+
+    val textPrimary =
+        MaterialTheme.colorScheme.onBackground
 
     ExerciseIntroCard(
 
@@ -878,7 +940,7 @@ private fun ActivitySelectionStep(
             "How would you classify this activity?",
 
         color =
-            TextPrimary,
+            textPrimary,
 
         fontWeight =
             FontWeight.SemiBold,
@@ -919,10 +981,10 @@ private fun ActivitySelectionStep(
             },
 
             selectedColor =
-                SoftRose,
+                softRose,
 
             iconColor =
-                Rose,
+                rose,
 
             modifier =
                 Modifier.weight(1f)
@@ -946,10 +1008,10 @@ private fun ActivitySelectionStep(
             },
 
             selectedColor =
-                SoftTeal,
+                softTeal,
 
             iconColor =
-                Teal,
+                teal,
 
             modifier =
                 Modifier.weight(1f)
@@ -974,10 +1036,19 @@ private fun SchedulingStep(
         (TextFieldValue) -> Unit
 ) {
 
+    val lavender =
+        MaterialTheme.colorScheme.primary
+
+    val paleLavender =
+        MaterialTheme.colorScheme.surfaceVariant
+
+    val textSecondary =
+        MaterialTheme.colorScheme.onSurfaceVariant
+
     ExerciseIntroCard(
 
         icon =
-            Icons.Default.CalendarToday,
+            Icons.Default.Lightbulb,
 
         title =
             "Make your plan specific",
@@ -1032,7 +1103,7 @@ private fun SchedulingStep(
                 contentDescription =
                     null,
                 tint =
-                    Lavender
+                    lavender
             )
         },
 
@@ -1102,7 +1173,7 @@ private fun SchedulingStep(
         colors =
             CardDefaults.cardColors(
                 containerColor =
-                    PaleLavender
+                    paleLavender
             )
     ) {
 
@@ -1124,7 +1195,7 @@ private fun SchedulingStep(
                     null,
 
                 tint =
-                    Lavender
+                    lavender
             )
 
             Spacer(
@@ -1138,7 +1209,7 @@ private fun SchedulingStep(
                     "You are creating a plan, not completing the activity yet. Once saved, your plan will appear in Scheduled Activities.",
 
                 color =
-                    TextSecondary,
+                    textSecondary,
 
                 fontSize =
                     13.sp,
@@ -1164,6 +1235,21 @@ private fun ExerciseIntroCard(
     description: String
 ) {
 
+    val lavender =
+        MaterialTheme.colorScheme.primary
+
+    val softLavender =
+        MaterialTheme.colorScheme.secondaryContainer
+
+    val paleLavender =
+        MaterialTheme.colorScheme.surfaceVariant
+
+    val textPrimary =
+        MaterialTheme.colorScheme.onSurface
+
+    val textSecondary =
+        MaterialTheme.colorScheme.onSurfaceVariant
+
     Card(
 
         modifier =
@@ -1175,7 +1261,7 @@ private fun ExerciseIntroCard(
         colors =
             CardDefaults.cardColors(
                 containerColor =
-                    PaleLavender
+                    paleLavender
             )
     ) {
 
@@ -1197,7 +1283,7 @@ private fun ExerciseIntroCard(
                             CircleShape
                         )
                         .background(
-                            SoftLavender
+                            softLavender
                         ),
 
                 contentAlignment =
@@ -1212,7 +1298,7 @@ private fun ExerciseIntroCard(
                         null,
 
                     tint =
-                        Lavender
+                        lavender
                 )
             }
 
@@ -1228,7 +1314,7 @@ private fun ExerciseIntroCard(
                         title,
 
                     color =
-                        TextPrimary,
+                        textPrimary,
 
                     fontWeight =
                         FontWeight.Bold,
@@ -1247,7 +1333,7 @@ private fun ExerciseIntroCard(
                         description,
 
                     color =
-                        TextSecondary,
+                        textSecondary,
 
                     fontSize =
                         13.sp,
@@ -1272,6 +1358,15 @@ private fun ActivityTypeCard(
     modifier: Modifier
 ) {
 
+    val textPrimary =
+        MaterialTheme.colorScheme.onSurface
+
+    val textSecondary =
+        MaterialTheme.colorScheme.onSurfaceVariant
+
+    val surface =
+        MaterialTheme.colorScheme.surface
+
     Card(
 
         modifier =
@@ -1288,7 +1383,7 @@ private fun ActivityTypeCard(
                     if (selected) {
                         selectedColor
                     } else {
-                        SurfaceWhite
+                        surface
                     }
             ),
 
@@ -1322,9 +1417,12 @@ private fun ActivityTypeCard(
                         )
                         .background(
                             if (selected) {
-                                Color.White.copy(
-                                    alpha = 0.7f
-                                )
+                                MaterialTheme
+                                    .colorScheme
+                                    .onSurface
+                                    .copy(
+                                        alpha = 0.10f
+                                    )
                             } else {
                                 selectedColor
                             }
@@ -1364,7 +1462,7 @@ private fun ActivityTypeCard(
                     title,
 
                 color =
-                    TextPrimary,
+                    textPrimary,
 
                 fontWeight =
                     FontWeight.Bold
@@ -1380,7 +1478,7 @@ private fun ActivityTypeCard(
                     description,
 
                 color =
-                    TextSecondary,
+                    textSecondary,
 
                 fontSize =
                     12.sp

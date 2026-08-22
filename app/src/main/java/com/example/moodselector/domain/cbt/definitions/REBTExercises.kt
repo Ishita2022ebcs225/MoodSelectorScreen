@@ -23,7 +23,6 @@ object REBTExercises {
     val activities: List<CBTActivity>
         get() = listOf(
             abcModel,
-            balancedThinking,
             selfCompassionReflection
         )
 
@@ -75,59 +74,6 @@ object REBTExercises {
             RecommendationTarget.MODERATE_DEPRESSION,
             RecommendationTarget.MILD_ANXIETY,
             RecommendationTarget.MODERATE_ANXIETY
-        )
-    )
-
-    /**
-     * Helps users examine negative automatic thoughts and develop
-     * more realistic and balanced alternatives.
-     */
-    val balancedThinking = CBTActivity(
-        id = "balanced_thinking",
-        title = "Balanced Thinking",
-        description =
-            "Examine an unhelpful thought and develop a more realistic and balanced perspective.",
-        category = CBTCategory.COGNITIVE,
-        steps = listOf(
-            ActivityStep(
-                id = "balanced_step_1",
-                instruction =
-                    "Notice a negative or upsetting automatic thought."
-            ),
-            ActivityStep(
-                id = "balanced_step_2",
-                instruction =
-                    "Identify any thinking trap or cognitive distortion that may be influencing the thought."
-            ),
-            ActivityStep(
-                id = "balanced_step_3",
-                instruction =
-                    "Look at the facts that support the thought and the facts that do not support it."
-            ),
-            ActivityStep(
-                id = "balanced_step_4",
-                instruction =
-                    "Write a more realistic, balanced and compassionate interpretation."
-            ),
-            ActivityStep(
-                id = "balanced_step_5",
-                instruction =
-                    "Reflect on how this new perspective changes how you feel or what you might do."
-            )
-        ),
-        benefits = listOf(
-            "Reduces negative thinking",
-            "Recognises cognitive distortions",
-            "Encourages realistic perspectives",
-            "Builds emotional resilience"
-        ),
-        recommendedFor = listOf(
-            RecommendationTarget.MILD_DEPRESSION,
-            RecommendationTarget.MODERATE_DEPRESSION,
-            RecommendationTarget.MILD_ANXIETY,
-            RecommendationTarget.MODERATE_ANXIETY,
-            RecommendationTarget.STRESS,
-            RecommendationTarget.OVERWHELM
         )
     )
 
@@ -184,3 +130,4 @@ object REBTExercises {
         )
     )
 }
+

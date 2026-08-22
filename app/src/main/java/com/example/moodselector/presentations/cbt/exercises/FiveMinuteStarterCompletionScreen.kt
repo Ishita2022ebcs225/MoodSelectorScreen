@@ -25,6 +25,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -40,16 +41,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-
-private val Lavender = Color(0xFF6C63FF)
-private val SoftLavender = Color(0xFFEDEBFF)
-private val PaleLavender = Color(0xFFF7F5FF)
-
-private val TextPrimary = Color(0xFF292638)
-private val TextSecondary = Color(0xFF777282)
-
-private val Background = Color(0xFFFAF9FD)
-private val SurfaceWhite = Color.White
 
 @Composable
 fun FiveMinuteStarterCompletionScreen(
@@ -73,8 +64,20 @@ fun FiveMinuteStarterCompletionScreen(
         mutableStateOf(false)
     }
 
+    val colorScheme = MaterialTheme.colorScheme
+
+    val lavender = colorScheme.primary
+    val softLavender = colorScheme.primaryContainer
+    val paleLavender = colorScheme.surfaceVariant
+
+    val textPrimary = colorScheme.onBackground
+    val textSecondary = colorScheme.onSurfaceVariant
+
+    val background = colorScheme.background
+    val surface = colorScheme.surface
+
     Scaffold(
-        containerColor = Background
+        containerColor = background
     ) { paddingValues ->
 
         Column(
@@ -107,7 +110,7 @@ fun FiveMinuteStarterCompletionScreen(
                     Icon(
                         imageVector = Icons.Default.ArrowBack,
                         contentDescription = "Back",
-                        tint = TextPrimary
+                        tint = textPrimary
                     )
                 }
 
@@ -117,14 +120,14 @@ fun FiveMinuteStarterCompletionScreen(
 
                     Text(
                         text = "Exercise Complete",
-                        color = TextPrimary,
+                        color = textPrimary,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 18.sp
                     )
 
                     Text(
                         text = "Five-Minute Starter",
-                        color = TextSecondary,
+                        color = textSecondary,
                         fontSize = 12.sp
                     )
                 }
@@ -159,7 +162,7 @@ fun FiveMinuteStarterCompletionScreen(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(22.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = PaleLavender
+                        containerColor = paleLavender
                     )
                 ) {
 
@@ -175,7 +178,7 @@ fun FiveMinuteStarterCompletionScreen(
                             imageVector =
                                 Icons.Default.CheckCircle,
                             contentDescription = null,
-                            tint = Lavender,
+                            tint = lavender,
                             modifier = Modifier.size(42.dp)
                         )
 
@@ -185,7 +188,7 @@ fun FiveMinuteStarterCompletionScreen(
 
                         Text(
                             text = "You got started",
-                            color = TextPrimary,
+                            color = textPrimary,
                             fontWeight = FontWeight.Bold,
                             fontSize = 20.sp
                         )
@@ -197,7 +200,7 @@ fun FiveMinuteStarterCompletionScreen(
                         Text(
                             text =
                                 "Take a moment to record what happened. Your experience matters more than how much you accomplished.",
-                            color = TextSecondary,
+                            color = textSecondary,
                             fontSize = 13.sp,
                             lineHeight = 19.sp
                         )
@@ -244,7 +247,7 @@ fun FiveMinuteStarterCompletionScreen(
 
                 Text(
                     text = "What happened?",
-                    color = TextPrimary,
+                    color = textPrimary,
                     fontWeight = FontWeight.Bold,
                     fontSize = 17.sp
                 )
@@ -256,7 +259,7 @@ fun FiveMinuteStarterCompletionScreen(
                 Text(
                     text =
                         "Describe what you managed to do during the five minutes. It is completely okay if you stopped early.",
-                    color = TextSecondary,
+                    color = textSecondary,
                     fontSize = 13.sp,
                     lineHeight = 19.sp
                 )
@@ -305,7 +308,7 @@ fun FiveMinuteStarterCompletionScreen(
 
                 Text(
                     text = "Reflection",
-                    color = TextPrimary,
+                    color = textPrimary,
                     fontWeight = FontWeight.Bold,
                     fontSize = 17.sp
                 )
@@ -317,7 +320,7 @@ fun FiveMinuteStarterCompletionScreen(
                 Text(
                     text =
                         "What did you notice about your motivation, thoughts, or feelings after getting started?",
-                    color = TextSecondary,
+                    color = textSecondary,
                     fontSize = 13.sp,
                     lineHeight = 19.sp
                 )
@@ -370,9 +373,9 @@ fun FiveMinuteStarterCompletionScreen(
                     colors = CardDefaults.cardColors(
                         containerColor =
                             if (completed) {
-                                SoftLavender
+                                softLavender
                             } else {
-                                SurfaceWhite
+                                surface
                             }
                     )
                 ) {
@@ -401,7 +404,7 @@ fun FiveMinuteStarterCompletionScreen(
                                 "I've completed this exercise",
                             modifier =
                                 Modifier.weight(1f),
-                            color = TextPrimary,
+                            color = textPrimary,
                             fontWeight = FontWeight.SemiBold
                         )
 
@@ -411,7 +414,7 @@ fun FiveMinuteStarterCompletionScreen(
                                 imageVector =
                                     Icons.Default.CheckCircle,
                                 contentDescription = null,
-                                tint = Lavender,
+                                tint = lavender,
                                 modifier = Modifier.size(24.dp)
                             )
                         }
@@ -456,12 +459,12 @@ fun FiveMinuteStarterCompletionScreen(
                         .height(54.dp),
                     shape = RoundedCornerShape(16.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Lavender,
-                        contentColor = Color.White,
+                        containerColor = lavender,
+                        contentColor = colorScheme.onPrimary,
                         disabledContainerColor =
-                            SoftLavender,
+                            softLavender,
                         disabledContentColor =
-                            TextSecondary
+                            textSecondary
                     )
                 ) {
 
@@ -504,11 +507,13 @@ private fun CompletionInfoCard(
     value: String
 ) {
 
+    val colorScheme = MaterialTheme.colorScheme
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(
-            containerColor = SurfaceWhite
+            containerColor = colorScheme.surface
         )
     ) {
 
@@ -518,7 +523,7 @@ private fun CompletionInfoCard(
 
             Text(
                 text = title,
-                color = Lavender,
+                color = colorScheme.primary,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 13.sp
             )
@@ -531,7 +536,7 @@ private fun CompletionInfoCard(
                 text = value.ifBlank {
                     "Not provided"
                 },
-                color = TextPrimary,
+                color = colorScheme.onSurface,
                 fontSize = 14.sp,
                 lineHeight = 20.sp
             )

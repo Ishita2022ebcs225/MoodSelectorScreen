@@ -86,6 +86,23 @@ fun CBTHomeScreen(
             LavenderBackground
         }
 
+
+    val visibleActivities =
+        uiState.allActivities.filterNot {
+            it.title.equals(
+                "Balanced Thinking",
+                ignoreCase = true
+            )
+        }
+
+    val visibleRecommendedActivities =
+        uiState.activities.filterNot {
+            it.title.equals(
+                "Balanced Thinking",
+                ignoreCase = true
+            )
+        }
+
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
@@ -111,7 +128,7 @@ fun CBTHomeScreen(
         item {
             ProgressCard(
                 completedCount = completedCount,
-                totalCount = uiState.allActivities.size,
+                totalCount = visibleActivities.size,
                 isDarkTheme = isDarkTheme
             )
         }
@@ -153,7 +170,7 @@ fun CBTHomeScreen(
                 }
             }
 
-            uiState.activities.isEmpty() -> {
+            visibleRecommendedActivities.isEmpty() -> {
 
                 item {
                     EmptyPlanCard(
@@ -165,7 +182,7 @@ fun CBTHomeScreen(
             else -> {
 
                 items(
-                    items = uiState.activities,
+                    items = visibleRecommendedActivities,
                     key = { "recommended_${it.id}" }
                 ) { activity ->
 
@@ -196,7 +213,7 @@ fun CBTHomeScreen(
         }
 
         items(
-            items = uiState.allActivities,
+            items = visibleActivities,
             key = { "all_${it.id}" }
         ) { activity ->
 
@@ -300,14 +317,7 @@ private fun CBTHeader(
                     )
         ) {
 
-            /*
-             * --------------------------------------------------
-             * TITLE
-             * --------------------------------------------------
-             */
-
             Text(
-
                 text =
                     "Your CBT Plan",
 
@@ -328,14 +338,7 @@ private fun CBTHeader(
                     Modifier.height(5.dp)
             )
 
-            /*
-             * --------------------------------------------------
-             * SUBTITLE
-             * --------------------------------------------------
-             */
-
             Text(
-
                 text =
                     "A little time for yourself",
 
@@ -355,14 +358,7 @@ private fun CBTHeader(
                     Modifier.height(14.dp)
             )
 
-            /*
-             * --------------------------------------------------
-             * DESCRIPTION
-             * --------------------------------------------------
-             */
-
             Text(
-
                 text =
                     "Take things one step at a time. " +
                             "Choose an exercise that feels right for you today.",

@@ -1,5 +1,6 @@
 package com.example.moodselector.presentations.reading
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -8,10 +9,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -19,7 +24,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -30,17 +39,44 @@ fun ReadingStoryScreen(
     onBackClick: () -> Unit
 ) {
 
+    val isLightTheme =
+        MaterialTheme.colorScheme.background.luminance() > 0.5f
+
+
+    /*
+     * ==================================================
+     * THEME COLORS
+     * ==================================================
+     */
+
     val background =
-        MaterialTheme.colorScheme.background
+        if (isLightTheme) {
+            Color(0xFFF4E8FA)
+        } else {
+            Color(0xFF241B32)
+        }
 
     val primaryText =
-        MaterialTheme.colorScheme.onSurface
+        if (isLightTheme) {
+            Color(0xFF3E294D)
+        } else {
+            Color(0xFFF6EAFB)
+        }
 
     val secondaryText =
-        MaterialTheme.colorScheme.onSurfaceVariant
+        if (isLightTheme) {
+            Color(0xFF765477)
+        } else {
+            Color(0xFFD8B9DC)
+        }
 
-    val accentPurple =
-        Color(0xFF6E63A8)
+    val accentPinkViolet =
+        if (isLightTheme) {
+            Color(0xFFB04A91)
+        } else {
+            Color(0xFFE19ACB)
+        }
+
 
     Column(
         modifier =
@@ -80,7 +116,7 @@ fun ReadingStoryScreen(
                         "Back",
 
                     tint =
-                        primaryText
+                        accentPinkViolet
                 )
             }
 
@@ -102,7 +138,7 @@ fun ReadingStoryScreen(
                     FontWeight.SemiBold,
 
                 color =
-                    secondaryText
+                    accentPinkViolet
             )
 
             Spacer(
@@ -112,9 +148,7 @@ fun ReadingStoryScreen(
 
             Spacer(
                 modifier =
-                    Modifier.padding(
-                        horizontal = 24.dp
-                    )
+                    Modifier.size(48.dp)
             )
         }
 
@@ -134,12 +168,93 @@ fun ReadingStoryScreen(
                     )
                     .padding(
                         horizontal = 24.dp
-                    )
+                    ),
+
+            horizontalAlignment =
+                Alignment.CenterHorizontally
         ) {
 
             Spacer(
                 modifier =
-                    Modifier.height(20.dp)
+                    Modifier.height(18.dp)
+            )
+
+
+            /*
+             * ==================================================
+             * BOOK COVER
+             * ==================================================
+             *
+             * The drawable resource is already stored directly
+             * inside ReadingStory as coverResId.
+             *
+             * No Internet connection is required.
+             */
+
+            story.coverResId?.let { coverResId ->
+
+                Card(
+                    modifier =
+                        Modifier
+                            .size(
+                                width = 180.dp,
+                                height = 270.dp
+                            ),
+
+                    shape =
+                        RoundedCornerShape(
+                            18.dp
+                        ),
+
+                    colors =
+                        CardDefaults.cardColors(
+                            containerColor =
+                                if (isLightTheme) {
+                                    Color.White.copy(
+                                        alpha = 0.75f
+                                    )
+                                } else {
+                                    Color.White.copy(
+                                        alpha = 0.08f
+                                    )
+                                }
+                        ),
+
+                    elevation =
+                        CardDefaults.cardElevation(
+                            defaultElevation =
+                                8.dp
+                        )
+                ) {
+
+                    Image(
+                        painter =
+                            painterResource(
+                                id = coverResId
+                            ),
+
+                        contentDescription =
+                            "${story.title} book cover",
+
+                        modifier =
+                            Modifier
+                                .fillMaxSize()
+                                .clip(
+                                    RoundedCornerShape(
+                                        18.dp
+                                    )
+                                ),
+
+                        contentScale =
+                            ContentScale.Crop
+                    )
+                }
+            }
+
+
+            Spacer(
+                modifier =
+                    Modifier.height(26.dp)
             )
 
 
@@ -197,7 +312,7 @@ fun ReadingStoryScreen(
                     FontWeight.Medium,
 
                 color =
-                    accentPurple,
+                    accentPinkViolet,
 
                 modifier =
                     Modifier.fillMaxWidth(),
@@ -243,4 +358,3 @@ fun ReadingStoryScreen(
         }
     }
 }
-

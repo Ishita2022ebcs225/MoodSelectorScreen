@@ -53,6 +53,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -60,22 +61,6 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.moodselector.data.local.entity.ScheduledCBTActivityEntity
-
-private val Lavender = Color(0xFF6C63FF)
-private val SoftLavender = Color(0xFFEDEBFF)
-private val PaleLavender = Color(0xFFF7F5FF)
-
-private val SoftRose = Color(0xFFFFEEF4)
-private val Rose = Color(0xFFE88BA5)
-
-private val SoftTeal = Color(0xFFE8F7F5)
-private val Teal = Color(0xFF4BA89C)
-
-private val TextPrimary = Color(0xFF292638)
-private val TextSecondary = Color(0xFF777282)
-
-private val SurfaceWhite = Color.White
-private val Background = Color(0xFFFAF9FD)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -86,6 +71,55 @@ fun ScheduledActivitiesScreen(
     onCompleteActivity: (ScheduledCBTActivityEntity) -> Unit,
     viewModel: ScheduledCBTActivityViewModel = hiltViewModel()
 ) {
+
+    /*
+     * ----------------------------------------------------------
+     * THEME COLORS
+     * ----------------------------------------------------------
+     *
+     * These values come from MaterialTheme so the screen
+     * automatically responds to the application's light/dark
+     * theme.
+     */
+
+    val colorScheme = MaterialTheme.colorScheme
+
+    val lavender = colorScheme.primary
+    val softLavender = colorScheme.surfaceVariant
+    val paleLavender = colorScheme.surfaceVariant
+
+    val softRose =
+        if (colorScheme.background.luminance() < 0.5f) {
+            Color(0xFF4A2635)
+        } else {
+            Color(0xFFFFEEF4)
+        }
+
+    val rose =
+        if (colorScheme.background.luminance() < 0.5f) {
+            Color(0xFFFFA9C1)
+        } else {
+            Color(0xFFE88BA5)
+        }
+
+    val softTeal =
+        if (colorScheme.background.luminance() < 0.5f) {
+            Color(0xFF203C3A)
+        } else {
+            Color(0xFFE8F7F5)
+        }
+
+    val teal =
+        if (colorScheme.background.luminance() < 0.5f) {
+            Color(0xFF7ACBC0)
+        } else {
+            Color(0xFF4BA89C)
+        }
+
+    val textPrimary = colorScheme.onBackground
+    val textSecondary = colorScheme.onSurfaceVariant
+    val surfaceWhite = colorScheme.surface
+    val background = colorScheme.background
 
     /*
      * ----------------------------------------------------------
@@ -105,7 +139,6 @@ fun ScheduledActivitiesScreen(
             initialValue = emptyList()
         )
 
-
     /*
      * ----------------------------------------------------------
      * DELETE STATE
@@ -116,7 +149,6 @@ fun ScheduledActivitiesScreen(
         mutableStateOf<ScheduledCBTActivityEntity?>(null)
     }
 
-
     /*
      * ----------------------------------------------------------
      * SCREEN
@@ -125,7 +157,7 @@ fun ScheduledActivitiesScreen(
 
     Scaffold(
 
-        containerColor = Background,
+        containerColor = background,
 
         topBar = {
 
@@ -138,12 +170,13 @@ fun ScheduledActivitiesScreen(
                         Text(
                             text = "Scheduled Activities",
                             fontWeight = FontWeight.SemiBold,
-                            fontSize = 18.sp
+                            fontSize = 18.sp,
+                            color = textPrimary
                         )
 
                         Text(
                             text = "Your plans at a glance",
-                            color = TextSecondary,
+                            color = textSecondary,
                             fontSize = 12.sp
                         )
                     }
@@ -157,13 +190,16 @@ fun ScheduledActivitiesScreen(
 
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "Back"
+                            contentDescription = "Back",
+                            tint = textPrimary
                         )
                     }
                 },
 
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Background
+                    containerColor = background,
+                    titleContentColor = textPrimary,
+                    navigationIconContentColor = textPrimary
                 )
             )
         }
@@ -176,6 +212,12 @@ fun ScheduledActivitiesScreen(
 
                 paddingValues = paddingValues,
 
+                lavender = lavender,
+                softLavender = softLavender,
+                textPrimary = textPrimary,
+                textSecondary = textSecondary,
+                background = background,
+
                 onScheduleActivityClick =
                     onScheduleActivityClick
             )
@@ -187,6 +229,18 @@ fun ScheduledActivitiesScreen(
                 paddingValues = paddingValues,
 
                 activities = scheduledActivities,
+
+                lavender = lavender,
+                softLavender = softLavender,
+                paleLavender = paleLavender,
+                softRose = softRose,
+                rose = rose,
+                softTeal = softTeal,
+                teal = teal,
+                textPrimary = textPrimary,
+                textSecondary = textSecondary,
+                surfaceWhite = surfaceWhite,
+                background = background,
 
                 onEditActivity = onEditActivity,
 
@@ -209,7 +263,6 @@ fun ScheduledActivitiesScreen(
         }
     }
 
-
     /*
      * ----------------------------------------------------------
      * DELETE CONFIRMATION
@@ -221,6 +274,11 @@ fun ScheduledActivitiesScreen(
         DeleteScheduledActivityDialog(
 
             activity = activity,
+
+            textPrimary = textPrimary,
+            textSecondary = textSecondary,
+            surfaceWhite = surfaceWhite,
+            rose = rose,
 
             onDismiss = {
                 activityToDelete = null
@@ -249,6 +307,19 @@ fun ScheduledActivitiesScreen(
 private fun ScheduledActivitiesContent(
     paddingValues: PaddingValues,
     activities: List<ScheduledCBTActivityEntity>,
+
+    lavender: Color,
+    softLavender: Color,
+    paleLavender: Color,
+    softRose: Color,
+    rose: Color,
+    softTeal: Color,
+    teal: Color,
+    textPrimary: Color,
+    textSecondary: Color,
+    surfaceWhite: Color,
+    background: Color,
+
     onEditActivity: (ScheduledCBTActivityEntity) -> Unit,
     onDeleteActivity: (ScheduledCBTActivityEntity) -> Unit,
     onCompleteActivity: (ScheduledCBTActivityEntity) -> Unit,
@@ -260,7 +331,7 @@ private fun ScheduledActivitiesContent(
         modifier =
             Modifier
                 .fillMaxSize()
-                .background(Background)
+                .background(background)
                 .padding(paddingValues)
                 .navigationBarsPadding(),
 
@@ -279,10 +350,14 @@ private fun ScheduledActivitiesContent(
         item {
 
             ScheduledActivitiesHeader(
-                count = activities.size
+                count = activities.size,
+                lavender = lavender,
+                softLavender = softLavender,
+                paleLavender = paleLavender,
+                textPrimary = textPrimary,
+                textSecondary = textSecondary
             )
         }
-
 
         items(
 
@@ -298,6 +373,17 @@ private fun ScheduledActivitiesContent(
 
                 activity = activity,
 
+                lavender = lavender,
+                softLavender = softLavender,
+                paleLavender = paleLavender,
+                softRose = softRose,
+                rose = rose,
+                softTeal = softTeal,
+                teal = teal,
+                textPrimary = textPrimary,
+                textSecondary = textSecondary,
+                surfaceWhite = surfaceWhite,
+
                 onEdit = {
                     onEditActivity(activity)
                 },
@@ -312,7 +398,6 @@ private fun ScheduledActivitiesContent(
             )
         }
 
-
         item {
 
             Spacer(
@@ -320,6 +405,11 @@ private fun ScheduledActivitiesContent(
             )
 
             ScheduleAnotherActivityCard(
+
+                softTeal = softTeal,
+                teal = teal,
+                textPrimary = textPrimary,
+                textSecondary = textSecondary,
 
                 onClick =
                     onScheduleActivityClick
@@ -337,7 +427,12 @@ private fun ScheduledActivitiesContent(
 
 @Composable
 private fun ScheduledActivitiesHeader(
-    count: Int
+    count: Int,
+    lavender: Color,
+    softLavender: Color,
+    paleLavender: Color,
+    textPrimary: Color,
+    textSecondary: Color
 ) {
 
     Column(
@@ -355,7 +450,7 @@ private fun ScheduledActivitiesHeader(
                     Modifier
                         .size(48.dp)
                         .clip(CircleShape)
-                        .background(SoftLavender),
+                        .background(softLavender),
 
                 contentAlignment =
                     Alignment.Center
@@ -368,7 +463,7 @@ private fun ScheduledActivitiesHeader(
 
                     contentDescription = null,
 
-                    tint = Lavender,
+                    tint = lavender,
 
                     modifier =
                         Modifier.size(25.dp)
@@ -398,7 +493,7 @@ private fun ScheduledActivitiesHeader(
                         FontWeight.SemiBold,
 
                     color =
-                        TextPrimary
+                        textPrimary
                 )
 
                 Spacer(
@@ -415,7 +510,7 @@ private fun ScheduledActivitiesHeader(
                         MaterialTheme.typography.bodyMedium,
 
                     color =
-                        TextSecondary
+                        textSecondary
                 )
             }
         }
@@ -424,7 +519,6 @@ private fun ScheduledActivitiesHeader(
             modifier =
                 Modifier.height(16.dp)
         )
-
 
         /*
          * --------------------------------------------------
@@ -443,7 +537,7 @@ private fun ScheduledActivitiesHeader(
             colors =
                 CardDefaults.cardColors(
                     containerColor =
-                        PaleLavender
+                        paleLavender
                 ),
 
             elevation =
@@ -470,7 +564,7 @@ private fun ScheduledActivitiesHeader(
                         null,
 
                     tint =
-                        Lavender,
+                        lavender,
 
                     modifier =
                         Modifier.size(22.dp)
@@ -487,7 +581,7 @@ private fun ScheduledActivitiesHeader(
                         "When you are ready, open an activity to complete it and reflect on your experience. Completed activities will appear in CBT Progress.",
 
                     color =
-                        TextSecondary,
+                        textSecondary,
 
                     fontSize =
                         13.sp,
@@ -510,6 +604,18 @@ private fun ScheduledActivitiesHeader(
 @Composable
 private fun ScheduledActivityCard(
     activity: ScheduledCBTActivityEntity,
+
+    lavender: Color,
+    softLavender: Color,
+    paleLavender: Color,
+    softRose: Color,
+    rose: Color,
+    softTeal: Color,
+    teal: Color,
+    textPrimary: Color,
+    textSecondary: Color,
+    surfaceWhite: Color,
+
     onEdit: () -> Unit,
     onDelete: () -> Unit,
     onComplete: () -> Unit
@@ -527,7 +633,6 @@ private fun ScheduledActivityCard(
             ignoreCase = true
         )
 
-
     Card(
 
         modifier =
@@ -539,7 +644,7 @@ private fun ScheduledActivityCard(
         colors =
             CardDefaults.cardColors(
                 containerColor =
-                    SurfaceWhite
+                    surfaceWhite
             ),
 
         elevation =
@@ -575,7 +680,7 @@ private fun ScheduledActivityCard(
                                 RoundedCornerShape(16.dp)
                             )
                             .background(
-                                SoftLavender
+                                softLavender
                             ),
 
                     contentAlignment =
@@ -591,7 +696,7 @@ private fun ScheduledActivityCard(
                             null,
 
                         tint =
-                            Lavender,
+                            lavender,
 
                         modifier =
                             Modifier.size(25.dp)
@@ -621,7 +726,7 @@ private fun ScheduledActivityCard(
                             FontWeight.Bold,
 
                         color =
-                            TextPrimary
+                            textPrimary
                     )
 
                     Spacer(
@@ -638,17 +743,15 @@ private fun ScheduledActivityCard(
                             MaterialTheme.typography.bodySmall,
 
                         color =
-                            TextSecondary
+                            textSecondary
                     )
                 }
             }
-
 
             Spacer(
                 modifier =
                     Modifier.height(16.dp)
             )
-
 
             /*
              * --------------------------------------------------
@@ -665,15 +768,18 @@ private fun ScheduledActivityCard(
                     "When",
 
                 value =
-                    activity.scheduledWhen
-            )
+                    activity.scheduledWhen,
 
+                lavender = lavender,
+                paleLavender = paleLavender,
+                textPrimary = textPrimary,
+                textSecondary = textSecondary
+            )
 
             Spacer(
                 modifier =
                     Modifier.height(10.dp)
             )
-
 
             /*
              * --------------------------------------------------
@@ -690,9 +796,13 @@ private fun ScheduledActivityCard(
                     "Where",
 
                 value =
-                    activity.scheduledWhere
-            )
+                    activity.scheduledWhere,
 
+                lavender = lavender,
+                paleLavender = paleLavender,
+                textPrimary = textPrimary,
+                textSecondary = textSecondary
+            )
 
             /*
              * --------------------------------------------------
@@ -720,10 +830,10 @@ private fun ScheduledActivityCard(
                             text = "Pleasure",
 
                             backgroundColor =
-                                SoftRose,
+                                softRose,
 
                             textColor =
-                                Rose,
+                                rose,
 
                             icon =
                                 Icons.Default.Star
@@ -737,10 +847,10 @@ private fun ScheduledActivityCard(
                             text = "Mastery",
 
                             backgroundColor =
-                                SoftTeal,
+                                softTeal,
 
                             textColor =
-                                Teal,
+                                teal,
 
                             icon =
                                 Icons.Default.TaskAlt
@@ -749,23 +859,15 @@ private fun ScheduledActivityCard(
                 }
             }
 
-
             Spacer(
                 modifier =
                     Modifier.height(18.dp)
             )
 
-
             /*
              * --------------------------------------------------
              * COMPLETE & REFLECT
              * --------------------------------------------------
-             *
-             * This button does NOT complete the activity itself.
-             *
-             * It opens the dedicated completion screen, which
-             * collects the user's reflection and then calls the
-             * completion repository flow.
              */
 
             Button(
@@ -779,7 +881,7 @@ private fun ScheduledActivityCard(
                     ButtonDefaults.buttonColors(
 
                         containerColor =
-                            Teal,
+                            teal,
 
                         contentColor =
                             Color.White
@@ -816,12 +918,10 @@ private fun ScheduledActivityCard(
                 )
             }
 
-
             Spacer(
                 modifier =
                     Modifier.height(10.dp)
             )
-
 
             /*
              * --------------------------------------------------
@@ -849,10 +949,10 @@ private fun ScheduledActivityCard(
                         ButtonDefaults.buttonColors(
 
                             containerColor =
-                                SoftLavender,
+                                softLavender,
 
                             contentColor =
-                                Lavender
+                                lavender
                         ),
 
                     shape =
@@ -881,7 +981,6 @@ private fun ScheduledActivityCard(
                     )
                 }
 
-
                 Button(
 
                     onClick = onDelete,
@@ -893,10 +992,10 @@ private fun ScheduledActivityCard(
                         ButtonDefaults.buttonColors(
 
                             containerColor =
-                                SoftRose,
+                                softRose,
 
                             contentColor =
-                                Rose
+                                rose
                         ),
 
                     shape =
@@ -940,7 +1039,11 @@ private fun ScheduledActivityCard(
 private fun ScheduledDetailRow(
     icon: ImageVector,
     title: String,
-    value: String
+    value: String,
+    lavender: Color,
+    paleLavender: Color,
+    textPrimary: Color,
+    textSecondary: Color
 ) {
 
     Row(
@@ -955,7 +1058,7 @@ private fun ScheduledDetailRow(
                 Modifier
                     .size(34.dp)
                     .clip(CircleShape)
-                    .background(PaleLavender),
+                    .background(paleLavender),
 
             contentAlignment =
                 Alignment.Center
@@ -970,7 +1073,7 @@ private fun ScheduledDetailRow(
                     null,
 
                 tint =
-                    Lavender,
+                    lavender,
 
                 modifier =
                     Modifier.size(18.dp)
@@ -990,7 +1093,7 @@ private fun ScheduledDetailRow(
                     title,
 
                 color =
-                    TextSecondary,
+                    textSecondary,
 
                 fontSize =
                     11.sp,
@@ -1005,7 +1108,7 @@ private fun ScheduledDetailRow(
                     value,
 
                 color =
-                    TextPrimary,
+                    textPrimary,
 
                 fontSize =
                     14.sp,
@@ -1102,6 +1205,11 @@ private fun ScheduledTypeTag(
 @Composable
 private fun EmptyScheduledActivitiesState(
     paddingValues: PaddingValues,
+    lavender: Color,
+    softLavender: Color,
+    textPrimary: Color,
+    textSecondary: Color,
+    background: Color,
     onScheduleActivityClick: () -> Unit
 ) {
 
@@ -1110,7 +1218,7 @@ private fun EmptyScheduledActivitiesState(
         modifier =
             Modifier
                 .fillMaxSize()
-                .background(Background)
+                .background(background)
                 .padding(paddingValues)
                 .navigationBarsPadding()
                 .padding(horizontal = 24.dp),
@@ -1128,7 +1236,7 @@ private fun EmptyScheduledActivitiesState(
                 Modifier
                     .size(78.dp)
                     .clip(CircleShape)
-                    .background(SoftLavender),
+                    .background(softLavender),
 
             contentAlignment =
                 Alignment.Center
@@ -1143,7 +1251,7 @@ private fun EmptyScheduledActivitiesState(
                     null,
 
                 tint =
-                    Lavender,
+                    lavender,
 
                 modifier =
                     Modifier.size(38.dp)
@@ -1167,7 +1275,7 @@ private fun EmptyScheduledActivitiesState(
                 FontWeight.SemiBold,
 
             color =
-                TextPrimary
+                textPrimary
         )
 
         Spacer(
@@ -1184,7 +1292,7 @@ private fun EmptyScheduledActivitiesState(
                 MaterialTheme.typography.bodyMedium,
 
             color =
-                TextSecondary
+                textSecondary
         )
 
         Spacer(
@@ -1200,7 +1308,7 @@ private fun EmptyScheduledActivitiesState(
             colors =
                 ButtonDefaults.buttonColors(
                     containerColor =
-                        Lavender
+                        lavender
                 ),
 
             shape =
@@ -1241,6 +1349,10 @@ private fun EmptyScheduledActivitiesState(
 
 @Composable
 private fun ScheduleAnotherActivityCard(
+    softTeal: Color,
+    teal: Color,
+    textPrimary: Color,
+    textSecondary: Color,
     onClick: () -> Unit
 ) {
 
@@ -1259,7 +1371,7 @@ private fun ScheduleAnotherActivityCard(
         colors =
             CardDefaults.cardColors(
                 containerColor =
-                    SoftTeal
+                    softTeal
             ),
 
         elevation =
@@ -1302,7 +1414,7 @@ private fun ScheduleAnotherActivityCard(
                         null,
 
                     tint =
-                        Teal,
+                        teal,
 
                     modifier =
                         Modifier.size(24.dp)
@@ -1326,7 +1438,7 @@ private fun ScheduleAnotherActivityCard(
                         "Schedule another activity",
 
                     color =
-                        TextPrimary,
+                        textPrimary,
 
                     fontWeight =
                         FontWeight.SemiBold,
@@ -1346,7 +1458,7 @@ private fun ScheduleAnotherActivityCard(
                         "Create a new plan for another meaningful activity.",
 
                     color =
-                        TextSecondary,
+                        textSecondary,
 
                     fontSize =
                         12.sp
@@ -1366,6 +1478,10 @@ private fun ScheduleAnotherActivityCard(
 @Composable
 private fun DeleteScheduledActivityDialog(
     activity: ScheduledCBTActivityEntity,
+    textPrimary: Color,
+    textSecondary: Color,
+    surfaceWhite: Color,
+    rose: Color,
     onDismiss: () -> Unit,
     onConfirm: () -> Unit
 ) {
@@ -1379,7 +1495,9 @@ private fun DeleteScheduledActivityDialog(
 
             Text(
                 text =
-                    "Remove this plan?"
+                    "Remove this plan?",
+                color =
+                    textPrimary
             )
         },
 
@@ -1387,7 +1505,9 @@ private fun DeleteScheduledActivityDialog(
 
             Text(
                 text =
-                    "Your scheduled plan for \"${activity.activityName}\" will be removed. This does not delete the CBT activity itself."
+                    "Your scheduled plan for \"${activity.activityName}\" will be removed. This does not delete the CBT activity itself.",
+                color =
+                    textSecondary
             )
         },
 
@@ -1404,7 +1524,7 @@ private fun DeleteScheduledActivityDialog(
                         "Remove",
 
                     color =
-                        Rose,
+                        rose,
 
                     fontWeight =
                         FontWeight.SemiBold
@@ -1425,16 +1545,15 @@ private fun DeleteScheduledActivityDialog(
                         "Cancel",
 
                     color =
-                        TextSecondary
+                        textSecondary
                 )
             }
         },
 
         containerColor =
-            SurfaceWhite,
+            surfaceWhite,
 
         shape =
             RoundedCornerShape(24.dp)
     )
 }
-

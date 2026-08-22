@@ -31,6 +31,7 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -125,7 +126,7 @@ fun SelfCompassionReflectionScreen(
     Scaffold(
 
         containerColor =
-            Background,
+            MaterialTheme.colorScheme.background,
 
         topBar = {
 
@@ -140,7 +141,7 @@ fun SelfCompassionReflectionScreen(
                                 "Self-Compassion",
 
                             color =
-                                TextPrimary,
+                                MaterialTheme.colorScheme.onBackground,
 
                             fontWeight =
                                 FontWeight.Bold,
@@ -157,7 +158,7 @@ fun SelfCompassionReflectionScreen(
                                     "A kinder way to respond to yourself",
 
                             color =
-                                TextSecondary,
+                                MaterialTheme.colorScheme.onSurfaceVariant,
 
                             fontSize =
                                 12.sp
@@ -191,7 +192,7 @@ fun SelfCompassionReflectionScreen(
                                 "Back",
 
                             tint =
-                                TextPrimary
+                                MaterialTheme.colorScheme.onBackground
                         )
                     }
                 },
@@ -200,7 +201,7 @@ fun SelfCompassionReflectionScreen(
                     TopAppBarDefaults.topAppBarColors(
 
                         containerColor =
-                            Background
+                            MaterialTheme.colorScheme.background
                     )
             )
         }
@@ -361,7 +362,7 @@ private fun SelfCompassionIntroduction(
                 Modifier
                     .fillMaxSize()
                     .background(
-                        Background.copy(
+                        MaterialTheme.colorScheme.background.copy(
                             alpha =
                                 0.82f
                         )
@@ -414,7 +415,7 @@ private fun SelfCompassionIntroduction(
                 colors =
                     CardDefaults.cardColors(
                         containerColor =
-                            Color.White.copy(
+                            MaterialTheme.colorScheme.surface.copy(
                                 alpha =
                                     0.94f
                             )
@@ -469,10 +470,16 @@ private fun SelfCompassionIntroduction(
                 colors =
                     CardDefaults.cardColors(
                         containerColor =
-                            PaleLavender.copy(
-                                alpha =
-                                    0.95f
-                            )
+                            if (MaterialTheme.colorScheme.background ==
+                                Color(0xFF201A36)
+                            ) {
+                                MaterialTheme.colorScheme.surfaceVariant
+                            } else {
+                                PaleLavender.copy(
+                                    alpha =
+                                        0.95f
+                                )
+                            }
                     )
             ) {
 
@@ -519,7 +526,7 @@ private fun SelfCompassionIntroduction(
                                 "Practice self-kindness",
 
                             color =
-                                TextPrimary,
+                                MaterialTheme.colorScheme.onSurface,
 
                             fontWeight =
                                 FontWeight.Bold,
@@ -543,7 +550,7 @@ private fun SelfCompassionIntroduction(
                                         "speak to someone we care about.",
 
                             color =
-                                TextSecondary,
+                                MaterialTheme.colorScheme.onSurfaceVariant,
 
                             fontSize =
                                 13.sp,
@@ -567,7 +574,7 @@ private fun SelfCompassionIntroduction(
                                         "offer yourself that same kindness.",
 
                             color =
-                                TextSecondary,
+                                MaterialTheme.colorScheme.onSurfaceVariant,
 
                             fontSize =
                                 13.sp,
@@ -599,10 +606,16 @@ private fun SelfCompassionIntroduction(
                 colors =
                     CardDefaults.cardColors(
                         containerColor =
-                            SoftRose.copy(
-                                alpha =
-                                    0.95f
-                            )
+                            if (MaterialTheme.colorScheme.background ==
+                                Color(0xFF201A36)
+                            ) {
+                                MaterialTheme.colorScheme.surfaceVariant
+                            } else {
+                                SoftRose.copy(
+                                    alpha =
+                                        0.95f
+                                )
+                            }
                     )
             ) {
 
@@ -625,7 +638,7 @@ private fun SelfCompassionIntroduction(
                             "In this reflection, you will:",
 
                         color =
-                            TextPrimary,
+                            MaterialTheme.colorScheme.onSurface,
 
                         fontWeight =
                             FontWeight.Bold,
@@ -642,7 +655,7 @@ private fun SelfCompassionIntroduction(
                                     "• Offer yourself that same kindness and understanding",
 
                         color =
-                            TextSecondary,
+                            MaterialTheme.colorScheme.onSurfaceVariant,
 
                         fontSize =
                             13.sp,
@@ -680,7 +693,7 @@ private fun SelfCompassionIntroduction(
                 colors =
                     ButtonDefaults.buttonColors(
                         containerColor =
-                            Lavender
+                            MaterialTheme.colorScheme.primary
                     )
             ) {
 
@@ -816,7 +829,7 @@ private fun SelfCompassionExercise(
                         "Describe the situation...",
 
                     color =
-                        TextSecondary
+                        MaterialTheme.colorScheme.onSurfaceVariant
                 )
             },
 
@@ -869,7 +882,7 @@ private fun SelfCompassionExercise(
                         "I would tell my friend...",
 
                     color =
-                        TextSecondary
+                        MaterialTheme.colorScheme.onSurfaceVariant
                 )
             },
 
@@ -921,7 +934,7 @@ private fun SelfCompassionExercise(
                         "I can remind myself...",
 
                     color =
-                        TextSecondary
+                        MaterialTheme.colorScheme.onSurfaceVariant
                 )
             },
 
@@ -954,7 +967,13 @@ private fun SelfCompassionExercise(
             colors =
                 CardDefaults.cardColors(
                     containerColor =
-                        SoftRose
+                        if (MaterialTheme.colorScheme.background ==
+                            Color(0xFF201A36)
+                        ) {
+                            MaterialTheme.colorScheme.surfaceVariant
+                        } else {
+                            SoftRose
+                        }
                 )
         ) {
 
@@ -995,7 +1014,7 @@ private fun SelfCompassionExercise(
                             "I've completed this reflection",
 
                         color =
-                            TextPrimary,
+                            MaterialTheme.colorScheme.onSurface,
 
                         fontWeight =
                             FontWeight.SemiBold,
@@ -1017,7 +1036,7 @@ private fun SelfCompassionExercise(
                             "Your reflection will be saved to your CBT progress.",
 
                         color =
-                            TextSecondary,
+                            MaterialTheme.colorScheme.onSurfaceVariant,
 
                         fontSize =
                             12.sp
@@ -1057,13 +1076,13 @@ private fun SelfCompassionExercise(
                 ButtonDefaults.buttonColors(
 
                     containerColor =
-                        Lavender,
+                        MaterialTheme.colorScheme.primary,
 
                     disabledContainerColor =
-                        SoftLavender,
+                        MaterialTheme.colorScheme.surfaceVariant,
 
                     disabledContentColor =
-                        TextSecondary
+                        MaterialTheme.colorScheme.onSurfaceVariant
                 )
         ) {
 
@@ -1161,7 +1180,7 @@ private fun ReflectionSection(
                     title,
 
                 color =
-                    TextPrimary,
+                    MaterialTheme.colorScheme.onBackground,
 
                 fontWeight =
                     FontWeight.Bold,
@@ -1183,7 +1202,7 @@ private fun ReflectionSection(
                     description,
 
                 color =
-                    TextSecondary,
+                    MaterialTheme.colorScheme.onSurfaceVariant,
 
                 fontSize =
                     13.sp,
@@ -1218,7 +1237,7 @@ private fun BoxNumber(
                     CircleShape
                 )
                 .background(
-                    SoftLavender
+                    MaterialTheme.colorScheme.surfaceVariant
                 ),
 
         contentAlignment =
@@ -1231,7 +1250,7 @@ private fun BoxNumber(
                 number,
 
             color =
-                Lavender,
+                MaterialTheme.colorScheme.primary,
 
             fontWeight =
                 FontWeight.Bold,

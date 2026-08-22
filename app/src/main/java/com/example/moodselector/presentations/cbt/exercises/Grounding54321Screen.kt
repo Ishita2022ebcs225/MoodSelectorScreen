@@ -31,6 +31,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -42,27 +43,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-
-private val BackgroundTop = Color(0xFFEDEBFF)
-private val BackgroundMiddle = Color(0xFFF6EAF7)
-private val BackgroundBottom = Color(0xFFE7F6F3)
-
-private val DeepPurple = Color(0xFF5E4275)
-private val Purple = Color(0xFF765A86)
-private val SoftPurple = Color(0xFFE7D9F0)
-
-private val TextPrimary = Color(0xFF292638)
-private val TextSecondary = Color(0xFF777282)
-
-private val SurfaceWhite = Color.White.copy(alpha = 0.80f)
 
 private data class GroundingSense(
     val number: Int,
@@ -78,6 +66,21 @@ fun Grounding54321Screen(
     onComplete: () -> Unit,
     viewModel: Grounding54321ViewModel = hiltViewModel()
 ) {
+
+    val colorScheme = MaterialTheme.colorScheme
+
+    val backgroundTop = colorScheme.primaryContainer
+    val backgroundMiddle = colorScheme.secondaryContainer
+    val backgroundBottom = colorScheme.tertiaryContainer
+
+    val deepPurple = colorScheme.primary
+    val purple = colorScheme.primary
+    val softPurple = colorScheme.primaryContainer
+
+    val textPrimary = colorScheme.onBackground
+    val textSecondary = colorScheme.onSurfaceVariant
+
+    val surface = colorScheme.surface
 
     val senses = remember {
         listOf(
@@ -157,9 +160,9 @@ fun Grounding54321Screen(
 
     val backgroundBrush = Brush.verticalGradient(
         colors = listOf(
-            BackgroundTop,
-            BackgroundMiddle,
-            BackgroundBottom
+            backgroundTop,
+            backgroundMiddle,
+            backgroundBottom
         )
     )
 
@@ -195,7 +198,7 @@ fun Grounding54321Screen(
                         imageVector =
                             Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Back",
-                        tint = TextPrimary
+                        tint = textPrimary
                     )
                 }
 
@@ -210,7 +213,7 @@ fun Grounding54321Screen(
                         } else {
                             "${currentStep + 1} / ${senses.size}"
                         },
-                    color = TextSecondary,
+                    color = textSecondary,
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Medium
                 )
@@ -231,7 +234,7 @@ fun Grounding54321Screen(
 
                 Text(
                     text = "5-4-3-2-1 Grounding",
-                    color = TextPrimary,
+                    color = textPrimary,
                     fontSize = 27.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -243,7 +246,7 @@ fun Grounding54321Screen(
                 Text(
                     text =
                         "Reconnect with the present, one sense at a time.",
-                    color = TextSecondary,
+                    color = textSecondary,
                     fontSize = 14.sp
                 )
             }
@@ -275,9 +278,9 @@ fun Grounding54321Screen(
                                     isCompleted ||
                                     index <= currentStep
                                 ) {
-                                    Purple
+                                    purple
                                 } else {
-                                    SoftPurple
+                                    softPurple
                                 }
                             )
                     )
@@ -306,14 +309,14 @@ fun Grounding54321Screen(
                         modifier = Modifier
                             .size(110.dp)
                             .clip(CircleShape)
-                            .background(SoftPurple),
+                            .background(softPurple),
                         contentAlignment = Alignment.Center
                     ) {
 
                         Icon(
                             imageVector = Icons.Default.Check,
                             contentDescription = null,
-                            tint = DeepPurple,
+                            tint = deepPurple,
                             modifier = Modifier.size(48.dp)
                         )
                     }
@@ -324,7 +327,7 @@ fun Grounding54321Screen(
 
                     Text(
                         text = "Grounding complete",
-                        color = DeepPurple,
+                        color = deepPurple,
                         fontSize = 23.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -338,7 +341,7 @@ fun Grounding54321Screen(
                             "Take a moment to notice how you feel now. " +
                                     "You have brought your attention back " +
                                     "to the present moment.",
-                        color = TextSecondary,
+                        color = textSecondary,
                         fontSize = 15.sp,
                         lineHeight = 23.sp
                     )
@@ -369,13 +372,13 @@ fun Grounding54321Screen(
                             modifier = Modifier
                                 .size(108.dp)
                                 .clip(CircleShape)
-                                .background(SoftPurple),
+                                .background(softPurple),
                             contentAlignment = Alignment.Center
                         ) {
 
                             Text(
                                 text = sense.number.toString(),
-                                color = DeepPurple,
+                                color = deepPurple,
                                 fontSize = 52.sp,
                                 fontWeight = FontWeight.Bold
                             )
@@ -388,7 +391,7 @@ fun Grounding54321Screen(
                         Icon(
                             imageVector = sense.icon,
                             contentDescription = null,
-                            tint = Purple,
+                            tint = purple,
                             modifier = Modifier.size(30.dp)
                         )
 
@@ -398,7 +401,7 @@ fun Grounding54321Screen(
 
                         Text(
                             text = sense.title,
-                            color = DeepPurple,
+                            color = deepPurple,
                             fontSize = 22.sp,
                             fontWeight = FontWeight.SemiBold
                         )
@@ -409,7 +412,7 @@ fun Grounding54321Screen(
 
                         Text(
                             text = sense.instruction,
-                            color = TextSecondary,
+                            color = textSecondary,
                             fontSize = 15.sp,
                             lineHeight = 23.sp
                         )
@@ -431,7 +434,9 @@ fun Grounding54321Screen(
                         .clip(
                             RoundedCornerShape(22.dp)
                         )
-                        .background(SurfaceWhite)
+                        .background(
+                            surface.copy(alpha = 0.80f)
+                        )
                         .padding(18.dp)
                 ) {
 
@@ -445,7 +450,7 @@ fun Grounding54321Screen(
                         modifier = Modifier.fillMaxSize(),
 
                         textStyle = TextStyle(
-                            color = TextPrimary,
+                            color = textPrimary,
                             fontSize = 15.sp,
                             lineHeight = 23.sp
                         ),
@@ -459,7 +464,7 @@ fun Grounding54321Screen(
                                 Text(
                                     text = currentSense.hint,
                                     color =
-                                        TextSecondary.copy(
+                                        textSecondary.copy(
                                             alpha = 0.65f
                                         ),
                                     fontSize = 14.sp
@@ -509,7 +514,8 @@ fun Grounding54321Screen(
                     shape = RoundedCornerShape(18.dp),
 
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = DeepPurple
+                        containerColor = deepPurple,
+                        contentColor = colorScheme.onPrimary
                     )
                 ) {
 
@@ -563,7 +569,8 @@ fun Grounding54321Screen(
                     shape = RoundedCornerShape(18.dp),
 
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = DeepPurple
+                        containerColor = deepPurple,
+                        contentColor = colorScheme.onPrimary
                     )
                 ) {
 
@@ -589,4 +596,3 @@ fun Grounding54321Screen(
         }
     }
 }
-

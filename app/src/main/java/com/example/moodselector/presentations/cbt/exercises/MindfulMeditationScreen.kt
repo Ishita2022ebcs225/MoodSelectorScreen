@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -23,12 +24,12 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.VolumeDown
-import androidx.compose.material.icons.filled.VolumeOff
 import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
@@ -38,12 +39,12 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -56,24 +57,10 @@ import com.example.moodselector.R
 import com.example.moodselector.presentations.cbt.media.MindfulMeditationMedia
 import kotlinx.coroutines.delay
 
-private val LavenderOverlay =
-    Color(0xFFDCCAF0).copy(alpha = 0.38f)
-
-private val DeepPurple =
-    Color(0xFF4A285C)
-
-private val DeepPurpleSecondary =
-    Color(0xFF5D3A70)
-
-private val SoftWhite =
-    Color.White.copy(alpha = 0.88f)
-
-
 private data class TranscriptSegment(
     val startTimeMillis: Long,
     val text: String
 )
-
 
 @Composable
 fun MindfulMeditationScreen(
@@ -91,6 +78,22 @@ fun MindfulMeditationScreen(
         .uiState
         .collectAsStateWithLifecycle()
 
+    /*
+     * --------------------------------------------------
+     * THEME-AWARE MEDITATION TEXT COLOR
+     * --------------------------------------------------
+     */
+
+    val meditationTextColor =
+        if (
+            MaterialTheme.colorScheme.background.luminance() < 0.5f
+        ) {
+            androidx.compose.ui.graphics.Color(
+                0xFF7A4FA3
+            )
+        } else {
+            MaterialTheme.colorScheme.onBackground
+        }
 
     /*
      * --------------------------------------------------
@@ -333,12 +336,10 @@ fun MindfulMeditationScreen(
             )
         }
 
-
     var currentTranscriptIndex by
     remember {
         mutableIntStateOf(0)
     }
-
 
     /*
      * --------------------------------------------------
@@ -346,26 +347,15 @@ fun MindfulMeditationScreen(
      * --------------------------------------------------
      */
 
-    var isNarrationEnabled by
-    remember {
-        mutableStateOf(true)
-    }
-
     var narrationVolume by
     remember {
         mutableFloatStateOf(1.0f)
-    }
-
-    var isMusicEnabled by
-    remember {
-        mutableStateOf(true)
     }
 
     var musicVolume by
     remember {
         mutableFloatStateOf(0.35f)
     }
-
 
     /*
      * --------------------------------------------------
@@ -390,15 +380,6 @@ fun MindfulMeditationScreen(
 
                 setOnCompletionListener {
 
-                    /*
-                     * The actual audio has reached its end.
-                     *
-                     * This does NOT save anything to Room.
-                     *
-                     * The user must still press the final
-                     * "Complete Meditation" button.
-                     */
-
                     viewModel.markCompleted()
 
                     currentTranscriptIndex =
@@ -406,7 +387,6 @@ fun MindfulMeditationScreen(
                 }
             }
         }
-
 
     /*
      * --------------------------------------------------
@@ -432,7 +412,6 @@ fun MindfulMeditationScreen(
                 )
             }
         }
-
 
     /*
      * --------------------------------------------------
@@ -466,29 +445,18 @@ fun MindfulMeditationScreen(
         }
     }
 
-
     /*
      * --------------------------------------------------
      * AUDIO PLAY / PAUSE / RESUME
      * --------------------------------------------------
-     *
-     * The ViewModel controls whether the meditation is
-     * running.
-     *
-     * The MediaPlayers preserve their current positions
-     * when paused.
      */
 
     LaunchedEffect(
         uiState.isRunning,
-        uiState.isCompleted,
-        isNarrationEnabled,
-        isMusicEnabled
+        uiState.isCompleted
     ) {
 
-        if (
-            uiState.isCompleted
-        ) {
+        if (uiState.isCompleted) {
 
             narrationPlayer?.let {
 
@@ -507,59 +475,23 @@ fun MindfulMeditationScreen(
             return@LaunchedEffect
         }
 
+        if (uiState.isRunning) {
 
-        if (
-            uiState.isRunning
-        ) {
+            narrationPlayer?.let {
 
-            if (isNarrationEnabled) {
-
-                narrationPlayer?.let {
-
-                    if (!it.isPlaying) {
-                        it.start()
-                    }
-                }
-
-            } else {
-
-                narrationPlayer?.let {
-
-                    if (it.isPlaying) {
-                        it.pause()
-                    }
+                if (!it.isPlaying) {
+                    it.start()
                 }
             }
 
+            musicPlayer?.let {
 
-            if (isMusicEnabled) {
-
-                musicPlayer?.let {
-
-                    if (!it.isPlaying) {
-                        it.start()
-                    }
-                }
-
-            } else {
-
-                musicPlayer?.let {
-
-                    if (it.isPlaying) {
-                        it.pause()
-                    }
+                if (!it.isPlaying) {
+                    it.start()
                 }
             }
 
         } else {
-
-            /*
-             * IMPORTANT:
-             *
-             * Pause only.
-             *
-             * We intentionally do not call seekTo(0).
-             */
 
             narrationPlayer?.let {
 
@@ -577,7 +509,6 @@ fun MindfulMeditationScreen(
         }
     }
 
-
     /*
      * --------------------------------------------------
      * VOLUME
@@ -592,7 +523,6 @@ fun MindfulMeditationScreen(
         )
     }
 
-
     LaunchedEffect(musicVolume) {
 
         musicPlayer?.setVolume(
@@ -601,17 +531,10 @@ fun MindfulMeditationScreen(
         )
     }
 
-
     /*
      * --------------------------------------------------
      * SYNCHRONIZE TRANSCRIPT
      * --------------------------------------------------
-     *
-     * The transcript follows the actual narration
-     * position.
-     *
-     * Because MediaPlayer is paused rather than reset,
-     * the transcript also resumes from the correct point.
      */
 
     LaunchedEffect(
@@ -652,7 +575,6 @@ fun MindfulMeditationScreen(
         }
     }
 
-
     /*
      * --------------------------------------------------
      * VIDEO BACKGROUND
@@ -661,13 +583,19 @@ fun MindfulMeditationScreen(
 
     Box(
         modifier =
-            Modifier.fillMaxSize()
+            Modifier
+                .fillMaxSize()
+                .background(
+                    MaterialTheme.colorScheme.background
+                )
     ) {
 
         AndroidView(
 
             modifier =
-                Modifier.fillMaxSize(),
+                Modifier
+                    .fillMaxSize()
+                    .scale(1.25f),
 
             factory = { ctx ->
 
@@ -696,28 +624,15 @@ fun MindfulMeditationScreen(
                             0f
                         )
 
+                        mediaPlayer.setVideoScalingMode(
+                            MediaPlayer.VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING
+                        )
+
                         start()
                     }
                 }
             }
         )
-
-
-        /*
-         * ------------------------------------------------
-         * LAVENDER OVERLAY
-         * ------------------------------------------------
-         */
-
-        Box(
-            modifier =
-                Modifier
-                    .fillMaxSize()
-                    .background(
-                        LavenderOverlay
-                    )
-        )
-
 
         /*
          * ------------------------------------------------
@@ -730,6 +645,7 @@ fun MindfulMeditationScreen(
             modifier =
                 Modifier
                     .fillMaxSize()
+                    .statusBarsPadding()
                     .padding(
                         horizontal = 24.dp
                     )
@@ -738,7 +654,6 @@ fun MindfulMeditationScreen(
             verticalArrangement =
                 Arrangement.Top
         ) {
-
 
             /*
              * --------------------------------------------
@@ -752,7 +667,7 @@ fun MindfulMeditationScreen(
                     Modifier
                         .fillMaxWidth()
                         .padding(
-                            top = 18.dp
+                            top = 4.dp
                         ),
 
                 verticalAlignment =
@@ -771,7 +686,7 @@ fun MindfulMeditationScreen(
                             "Back",
 
                         tint =
-                            DeepPurple
+                            meditationTextColor
                     )
                 }
 
@@ -779,65 +694,7 @@ fun MindfulMeditationScreen(
                     modifier =
                         Modifier.weight(1f)
                 )
-
-                IconButton(
-                    onClick = {
-
-                        isNarrationEnabled =
-                            !isNarrationEnabled
-                    }
-                ) {
-
-                    Icon(
-                        imageVector =
-                            if (isNarrationEnabled) {
-                                Icons.Default.VolumeUp
-                            } else {
-                                Icons.Default.VolumeOff
-                            },
-
-                        contentDescription =
-                            if (isNarrationEnabled) {
-                                "Mute narration"
-                            } else {
-                                "Enable narration"
-                            },
-
-                        tint =
-                            DeepPurple
-                    )
-                }
-
-
-                IconButton(
-                    onClick = {
-
-                        isMusicEnabled =
-                            !isMusicEnabled
-                    }
-                ) {
-
-                    Icon(
-                        imageVector =
-                            if (isMusicEnabled) {
-                                Icons.Default.VolumeDown
-                            } else {
-                                Icons.Default.VolumeOff
-                            },
-
-                        contentDescription =
-                            if (isMusicEnabled) {
-                                "Mute ambient music"
-                            } else {
-                                "Enable ambient music"
-                            },
-
-                        tint =
-                            DeepPurple
-                    )
-                }
             }
-
 
             /*
              * --------------------------------------------
@@ -851,7 +708,7 @@ fun MindfulMeditationScreen(
                     Modifier
                         .fillMaxWidth()
                         .padding(
-                            top = 8.dp
+                            top = 4.dp
                         ),
 
                 horizontalAlignment =
@@ -863,7 +720,7 @@ fun MindfulMeditationScreen(
                         "Mindful Meditation",
 
                     color =
-                        DeepPurple,
+                        meditationTextColor,
 
                     fontSize =
                         27.sp,
@@ -898,13 +755,12 @@ fun MindfulMeditationScreen(
                         },
 
                     color =
-                        DeepPurpleSecondary,
+                        MaterialTheme.colorScheme.onSurfaceVariant,
 
                     fontSize =
                         14.sp
                 )
             }
-
 
             /*
              * --------------------------------------------
@@ -946,7 +802,7 @@ fun MindfulMeditationScreen(
                                 null,
 
                             tint =
-                                DeepPurple,
+                                MaterialTheme.colorScheme.primary,
 
                             modifier =
                                 Modifier.size(44.dp)
@@ -962,7 +818,7 @@ fun MindfulMeditationScreen(
                                 "You have completed your meditation.",
 
                             color =
-                                DeepPurple,
+                                meditationTextColor,
 
                             fontSize =
                                 20.sp,
@@ -984,7 +840,7 @@ fun MindfulMeditationScreen(
                                 "Take a moment to notice how you feel.",
 
                             color =
-                                DeepPurpleSecondary,
+                                MaterialTheme.colorScheme.onSurfaceVariant,
 
                             fontSize =
                                 15.sp,
@@ -1045,7 +901,7 @@ fun MindfulMeditationScreen(
                             ].text,
 
                         color =
-                            DeepPurple,
+                            meditationTextColor,
 
                         fontSize =
                             19.sp,
@@ -1069,140 +925,179 @@ fun MindfulMeditationScreen(
                 }
             }
 
-
             /*
              * --------------------------------------------
              * AUDIO CONTROLS
              * --------------------------------------------
              */
 
-            if (
-                isNarrationEnabled &&
-                !uiState.isCompleted
-            ) {
+            if (!uiState.isCompleted) {
 
-                Row(
-
+                Column(
                     modifier =
-                        Modifier.fillMaxWidth(),
-
-                    verticalAlignment =
-                        Alignment.CenterVertically
+                        Modifier.fillMaxWidth()
                 ) {
 
-                    Icon(
-                        imageVector =
-                            Icons.Default.VolumeDown,
+                    Text(
+                        text =
+                            "Voice Volume",
 
-                        contentDescription =
-                            "Narration volume",
+                        color =
+                            meditationTextColor,
 
-                        tint =
-                            DeepPurple,
+                        fontSize =
+                            13.sp,
 
-                        modifier =
-                            Modifier.size(18.dp)
-                    )
-
-                    Slider(
-
-                        value =
-                            narrationVolume,
-
-                        onValueChange = {
-                            narrationVolume = it
-                        },
-
-                        valueRange =
-                            0f..1f,
+                        fontWeight =
+                            FontWeight.SemiBold,
 
                         modifier =
-                            Modifier.weight(1f)
+                            Modifier.padding(
+                                start = 4.dp,
+                                bottom = 2.dp
+                            )
                     )
 
-                    Icon(
-                        imageVector =
-                            Icons.Default.VolumeUp,
-
-                        contentDescription =
-                            null,
-
-                        tint =
-                            DeepPurple,
+                    Row(
 
                         modifier =
-                            Modifier.size(18.dp)
-                    )
+                            Modifier.fillMaxWidth(),
+
+                        verticalAlignment =
+                            Alignment.CenterVertically
+                    ) {
+
+                        Icon(
+                            imageVector =
+                                Icons.Default.VolumeDown,
+
+                            contentDescription =
+                                "Narration volume",
+
+                            tint =
+                                meditationTextColor,
+
+                            modifier =
+                                Modifier.size(18.dp)
+                        )
+
+                        Slider(
+
+                            value =
+                                narrationVolume,
+
+                            onValueChange = {
+                                narrationVolume = it
+                            },
+
+                            valueRange =
+                                0f..1f,
+
+                            modifier =
+                                Modifier.weight(1f)
+                        )
+
+                        Icon(
+                            imageVector =
+                                Icons.Default.VolumeUp,
+
+                            contentDescription =
+                                null,
+
+                            tint =
+                                meditationTextColor,
+
+                            modifier =
+                                Modifier.size(18.dp)
+                        )
+                    }
                 }
-            }
 
-
-            if (
-                isMusicEnabled &&
-                !uiState.isCompleted
-            ) {
-
-                Row(
-
+                Column(
                     modifier =
-                        Modifier.fillMaxWidth(),
-
-                    verticalAlignment =
-                        Alignment.CenterVertically
+                        Modifier.fillMaxWidth()
                 ) {
 
-                    Icon(
-                        imageVector =
-                            Icons.Default.VolumeDown,
+                    Text(
+                        text =
+                            "Music Volume",
 
-                        contentDescription =
-                            "Ambient music volume",
+                        color =
+                            meditationTextColor,
 
-                        tint =
-                            DeepPurple,
+                        fontSize =
+                            13.sp,
 
-                        modifier =
-                            Modifier.size(18.dp)
-                    )
-
-                    Slider(
-
-                        value =
-                            musicVolume,
-
-                        onValueChange = {
-                            musicVolume = it
-                        },
-
-                        valueRange =
-                            0f..1f,
+                        fontWeight =
+                            FontWeight.SemiBold,
 
                         modifier =
-                            Modifier.weight(1f)
+                            Modifier.padding(
+                                start = 4.dp,
+                                bottom = 2.dp
+                            )
                     )
 
-                    Icon(
-                        imageVector =
-                            Icons.Default.VolumeUp,
-
-                        contentDescription =
-                            null,
-
-                        tint =
-                            DeepPurple,
+                    Row(
 
                         modifier =
-                            Modifier.size(18.dp)
-                    )
+                            Modifier.fillMaxWidth(),
+
+                        verticalAlignment =
+                            Alignment.CenterVertically
+                    ) {
+
+                        Icon(
+                            imageVector =
+                                Icons.Default.VolumeDown,
+
+                            contentDescription =
+                                "Ambient music volume",
+
+                            tint =
+                                meditationTextColor,
+
+                            modifier =
+                                Modifier.size(18.dp)
+                        )
+
+                        Slider(
+
+                            value =
+                                musicVolume,
+
+                            onValueChange = {
+                                musicVolume = it
+                            },
+
+                            valueRange =
+                                0f..1f,
+
+                            modifier =
+                                Modifier.weight(1f)
+                        )
+
+                        Icon(
+                            imageVector =
+                                Icons.Default.VolumeUp,
+
+                            contentDescription =
+                                null,
+
+                            tint =
+                                meditationTextColor,
+
+                            modifier =
+                                Modifier.size(18.dp)
+                        )
+                    }
                 }
             }
-
 
             Spacer(
                 modifier =
                     Modifier.height(8.dp)
             )
-
 
             /*
              * --------------------------------------------
@@ -1216,25 +1111,10 @@ fun MindfulMeditationScreen(
 
                     when {
 
-                        /*
-                         * --------------------------------
-                         * ALREADY SAVED
-                         * --------------------------------
-                         */
-
                         uiState.isSaved -> {
 
                             onComplete()
                         }
-
-
-                        /*
-                         * --------------------------------
-                         * MEDITATION FINISHED
-                         * --------------------------------
-                         *
-                         * Persist only now.
-                         */
 
                         uiState.isCompleted -> {
 
@@ -1243,41 +1123,15 @@ fun MindfulMeditationScreen(
                             )
                         }
 
-
-                        /*
-                         * --------------------------------
-                         * MEDITATION CURRENTLY RUNNING
-                         * --------------------------------
-                         *
-                         * Pause without resetting audio.
-                         */
-
                         uiState.isRunning -> {
 
                             viewModel.pauseMeditation()
                         }
 
-
-                        /*
-                         * --------------------------------
-                         * MEDITATION WAS PAUSED
-                         * --------------------------------
-                         *
-                         * Resume from the current audio
-                         * position.
-                         */
-
                         uiState.hasStarted -> {
 
                             viewModel.resumeMeditation()
                         }
-
-
-                        /*
-                         * --------------------------------
-                         * FIRST START
-                         * --------------------------------
-                         */
 
                         else -> {
 
@@ -1303,7 +1157,7 @@ fun MindfulMeditationScreen(
                 colors =
                     ButtonDefaults.buttonColors(
                         containerColor =
-                            DeepPurple
+                            MaterialTheme.colorScheme.primary
                     )
             ) {
 
@@ -1362,10 +1216,9 @@ fun MindfulMeditationScreen(
                         FontWeight.SemiBold,
 
                     color =
-                        SoftWhite
+                        MaterialTheme.colorScheme.onPrimary
                 )
             }
-
 
             Spacer(
                 modifier =
@@ -1374,4 +1227,3 @@ fun MindfulMeditationScreen(
         }
     }
 }
-

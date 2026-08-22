@@ -45,6 +45,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.moodselector.data.local.entity.MoodEntry
@@ -327,6 +328,23 @@ fun MoodGraphScreen(
 
     val onSoftLavender =
         MaterialTheme.colorScheme.onSecondaryContainer
+
+
+    /*
+     * ======================================================
+     * LOCALE
+     * ======================================================
+     *
+     * Use Compose's observable configuration instead of
+     * calling Locale.getDefault() directly inside the
+     * composable.
+     */
+
+    val configuration =
+        LocalConfiguration.current
+
+    val currentLocale =
+        configuration.locales[0]
 
 
     /*
@@ -1326,7 +1344,7 @@ fun MoodGraphScreen(
                                             ) {
 
                                                 String.format(
-                                                    Locale.getDefault(),
+                                                    currentLocale,
                                                     "%.1f / 5",
                                                     averageMoodScore
                                                 )

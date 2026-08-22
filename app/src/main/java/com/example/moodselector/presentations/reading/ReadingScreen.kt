@@ -174,7 +174,7 @@ fun ReadingScreen(
 
         Text(
             text =
-                "Stories for quiet moments",
+                "Books for your wellbeing",
 
             style =
                 MaterialTheme
@@ -201,9 +201,9 @@ fun ReadingScreen(
 
         Text(
             text =
-                "Take a moment to slow down and read a story. " +
-                        "These gentle stories explore everyday experiences " +
-                        "like anxiety, self-doubt, and finding your way forward.",
+                "Explore books that offer practical ideas and " +
+                        "perspectives on mental wellbeing, self-compassion, " +
+                        "resilience, and navigating difficult emotions.",
 
             style =
                 MaterialTheme
@@ -233,7 +233,7 @@ fun ReadingScreen(
 
         /*
          * ==================================================
-         * STORY LIST
+         * BOOK LIST
          * ==================================================
          */
 
@@ -247,14 +247,14 @@ fun ReadingScreen(
                 )
         ) {
 
-            ReadingStories.stories.forEach { story ->
+            ReadingStories.stories.forEach { book ->
 
                 Card(
                     modifier =
                         Modifier
                             .fillMaxWidth()
                             .clickable {
-                                onStoryClick(story)
+                                onStoryClick(book)
                             },
 
                     shape =
@@ -336,7 +336,7 @@ fun ReadingScreen(
 
 
                         /*
-                         * STORY INFORMATION
+                         * BOOK INFORMATION
                          */
 
                         Column(
@@ -346,7 +346,7 @@ fun ReadingScreen(
 
                             Text(
                                 text =
-                                    story.title,
+                                    book.title,
 
                                 style =
                                     MaterialTheme
@@ -367,7 +367,7 @@ fun ReadingScreen(
 
                             Text(
                                 text =
-                                    story.subtitle,
+                                    book.subtitle,
 
                                 style =
                                     MaterialTheme
@@ -390,4 +390,3 @@ fun ReadingScreen(
         )
     }
 }
-

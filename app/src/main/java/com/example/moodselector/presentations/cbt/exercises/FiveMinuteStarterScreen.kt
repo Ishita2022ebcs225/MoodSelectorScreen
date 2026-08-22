@@ -34,6 +34,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -54,22 +55,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
 
-private val Lavender = Color(0xFF6C63FF)
-private val SoftLavender = Color(0xFFEDEBFF)
-private val PaleLavender = Color(0xFFF7F5FF)
-
-private val SoftRose = Color(0xFFFFEEF4)
-private val Rose = Color(0xFFE88BA5)
-
-private val SoftTeal = Color(0xFFE8F7F5)
-private val Teal = Color(0xFF4BA89C)
-
-private val TextPrimary = Color(0xFF292638)
-private val TextSecondary = Color(0xFF777282)
-
-private val SurfaceWhite = Color.White
-private val Background = Color(0xFFFAF9FD)
-
 @Composable
 fun FiveMinuteStarterScreen(
     onBackClick: () -> Unit,
@@ -84,6 +69,34 @@ fun FiveMinuteStarterScreen(
         firstStep: String
     ) -> Unit
 ) {
+
+    /*
+     * --------------------------------------------------
+     * Theme colors
+     * --------------------------------------------------
+     *
+     * These are derived from MaterialTheme so the screen
+     * automatically responds to the app's light/dark
+     * theme setting.
+     */
+
+    val colorScheme = MaterialTheme.colorScheme
+
+    val lavender = colorScheme.primary
+    val softLavender = colorScheme.primaryContainer
+    val paleLavender = colorScheme.surfaceVariant
+
+    val softRose = colorScheme.secondaryContainer
+    val rose = colorScheme.secondary
+
+    val softTeal = colorScheme.tertiaryContainer
+    val teal = colorScheme.tertiary
+
+    val textPrimary = colorScheme.onBackground
+    val textSecondary = colorScheme.onSurfaceVariant
+
+    val surface = colorScheme.surface
+    val background = colorScheme.background
 
     var task by remember {
         mutableStateOf("")
@@ -188,7 +201,7 @@ fun FiveMinuteStarterScreen(
     }
 
     Scaffold(
-        containerColor = Background
+        containerColor = background
     ) { paddingValues ->
 
         Column(
@@ -221,7 +234,7 @@ fun FiveMinuteStarterScreen(
                     Icon(
                         imageVector = Icons.Default.ArrowBack,
                         contentDescription = "Back",
-                        tint = TextPrimary
+                        tint = textPrimary
                     )
                 }
 
@@ -231,14 +244,14 @@ fun FiveMinuteStarterScreen(
 
                     Text(
                         text = "Five-Minute Starter",
-                        color = TextPrimary,
+                        color = textPrimary,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 18.sp
                     )
 
                     Text(
                         text = "Behavioral Activation",
-                        color = TextSecondary,
+                        color = textSecondary,
                         fontSize = 12.sp
                     )
                 }
@@ -297,7 +310,7 @@ fun FiveMinuteStarterScreen(
                 Text(
                     text =
                         "Choose something you've been putting off. It doesn't have to be a big task.",
-                    color = TextSecondary,
+                    color = textSecondary,
                     fontSize = 13.sp,
                     lineHeight = 19.sp
                 )
@@ -352,7 +365,7 @@ fun FiveMinuteStarterScreen(
                 Text(
                     text =
                         "What is the smallest action you can take to get started?",
-                    color = TextSecondary,
+                    color = textSecondary,
                     fontSize = 13.sp,
                     lineHeight = 19.sp
                 )
@@ -452,10 +465,10 @@ fun FiveMinuteStarterScreen(
                         .height(54.dp),
                     shape = RoundedCornerShape(16.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Lavender,
-                        contentColor = Color.White,
-                        disabledContainerColor = SoftLavender,
-                        disabledContentColor = TextSecondary
+                        containerColor = lavender,
+                        contentColor = colorScheme.onPrimary,
+                        disabledContainerColor = softLavender,
+                        disabledContentColor = textSecondary
                     )
                 ) {
 
@@ -490,7 +503,7 @@ fun FiveMinuteStarterScreen(
                             "Complete the five-minute session before continuing."
                         },
                     modifier = Modifier.fillMaxWidth(),
-                    color = TextSecondary,
+                    color = textSecondary,
                     fontSize = 12.sp,
                     textAlign = TextAlign.Center,
                     lineHeight = 18.sp
@@ -516,6 +529,8 @@ private fun SectionTitle(
     title: String
 ) {
 
+    val colorScheme = MaterialTheme.colorScheme
+
     Row(
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -524,13 +539,15 @@ private fun SectionTitle(
             modifier = Modifier
                 .size(30.dp)
                 .clip(CircleShape)
-                .background(SoftLavender),
+                .background(
+                    colorScheme.primaryContainer
+                ),
             contentAlignment = Alignment.Center
         ) {
 
             Text(
                 text = number,
-                color = Lavender,
+                color = colorScheme.primary,
                 fontWeight = FontWeight.Bold,
                 fontSize = 13.sp
             )
@@ -542,7 +559,7 @@ private fun SectionTitle(
 
         Text(
             text = title,
-            color = TextPrimary,
+            color = colorScheme.onBackground,
             fontWeight = FontWeight.Bold,
             fontSize = 17.sp
         )
@@ -570,6 +587,21 @@ private fun TimerCard(
     onReset: () -> Unit
 ) {
 
+    val colorScheme = MaterialTheme.colorScheme
+
+    val lavender = colorScheme.primary
+    val softLavender = colorScheme.primaryContainer
+    val paleLavender = colorScheme.surfaceVariant
+
+    val softRose = colorScheme.secondaryContainer
+    val rose = colorScheme.secondary
+
+    val softTeal = colorScheme.tertiaryContainer
+    val teal = colorScheme.tertiary
+
+    val textPrimary = colorScheme.onBackground
+    val textSecondary = colorScheme.onSurfaceVariant
+
     val minutes =
         secondsRemaining / 60
 
@@ -592,9 +624,9 @@ private fun TimerCard(
                     timerFinished ||
                     stoppedEarly
                 ) {
-                    SoftTeal
+                    softTeal
                 } else {
-                    PaleLavender
+                    paleLavender
                 }
         ),
         elevation =
@@ -617,7 +649,7 @@ private fun TimerCard(
                     imageVector =
                         Icons.Default.CheckCircle,
                     contentDescription = null,
-                    tint = Teal,
+                    tint = teal,
                     modifier = Modifier.size(34.dp)
                 )
 
@@ -627,7 +659,7 @@ private fun TimerCard(
 
                 Text(
                     text = "Five minutes are up",
-                    color = TextPrimary,
+                    color = textPrimary,
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp
                 )
@@ -639,7 +671,7 @@ private fun TimerCard(
                 Text(
                     text =
                         "You got started. That's what this exercise is about.",
-                    color = TextSecondary,
+                    color = textSecondary,
                     fontSize = 13.sp,
                     textAlign = TextAlign.Center
                 )
@@ -650,7 +682,7 @@ private fun TimerCard(
                     imageVector =
                         Icons.Default.Stop,
                     contentDescription = null,
-                    tint = Teal,
+                    tint = teal,
                     modifier = Modifier.size(34.dp)
                 )
 
@@ -660,7 +692,7 @@ private fun TimerCard(
 
                 Text(
                     text = "You stopped for now",
-                    color = TextPrimary,
+                    color = textPrimary,
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp
                 )
@@ -672,7 +704,7 @@ private fun TimerCard(
                 Text(
                     text =
                         "Starting was still progress. You can reflect on what you noticed.",
-                    color = TextSecondary,
+                    color = textSecondary,
                     fontSize = 13.sp,
                     textAlign = TextAlign.Center
                 )
@@ -681,7 +713,7 @@ private fun TimerCard(
 
                 Text(
                     text = "Time remaining",
-                    color = TextSecondary,
+                    color = textSecondary,
                     fontSize = 13.sp
                 )
 
@@ -691,7 +723,7 @@ private fun TimerCard(
 
                 Text(
                     text = timeText,
-                    color = Lavender,
+                    color = lavender,
                     fontWeight = FontWeight.Bold,
                     fontSize = 48.sp
                 )
@@ -709,9 +741,9 @@ private fun TimerCard(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(14.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Lavender,
-                        disabledContainerColor = SoftLavender,
-                        disabledContentColor = TextSecondary
+                        containerColor = lavender,
+                        disabledContainerColor = softLavender,
+                        disabledContentColor = textSecondary
                     )
                 ) {
 
@@ -754,8 +786,8 @@ private fun TimerCard(
                         modifier = Modifier.weight(1f),
                         shape = RoundedCornerShape(14.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = SoftLavender,
-                            contentColor = Lavender
+                            containerColor = softLavender,
+                            contentColor = lavender
                         )
                     ) {
 
@@ -789,8 +821,8 @@ private fun TimerCard(
                         modifier = Modifier.weight(1f),
                         shape = RoundedCornerShape(14.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = SoftRose,
-                            contentColor = Rose
+                            containerColor = softRose,
+                            contentColor = rose
                         )
                     ) {
 
@@ -818,8 +850,8 @@ private fun TimerCard(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(14.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = SoftLavender,
-                        contentColor = Lavender
+                        containerColor = softLavender,
+                        contentColor = lavender
                     )
                 ) {
 
@@ -855,11 +887,13 @@ private fun ReflectionPromptCard(
     text: String
 ) {
 
+    val colorScheme = MaterialTheme.colorScheme
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(
-            containerColor = SurfaceWhite
+            containerColor = colorScheme.surface
         ),
         elevation =
             CardDefaults.cardElevation(
@@ -876,14 +910,16 @@ private fun ReflectionPromptCard(
                 modifier = Modifier
                     .size(38.dp)
                     .clip(CircleShape)
-                    .background(SoftLavender),
+                    .background(
+                        colorScheme.primaryContainer
+                    ),
                 contentAlignment = Alignment.Center
             ) {
 
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    tint = Lavender,
+                    tint = colorScheme.primary,
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -896,7 +932,7 @@ private fun ReflectionPromptCard(
 
                 Text(
                     text = title,
-                    color = TextPrimary,
+                    color = colorScheme.onSurface,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 14.sp
                 )
@@ -907,7 +943,7 @@ private fun ReflectionPromptCard(
 
                 Text(
                     text = text,
-                    color = TextSecondary,
+                    color = colorScheme.onSurfaceVariant,
                     fontSize = 12.sp,
                     lineHeight = 18.sp
                 )
@@ -929,11 +965,13 @@ private fun ExerciseIntroCard(
     description: String
 ) {
 
+    val colorScheme = MaterialTheme.colorScheme
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(22.dp),
         colors = CardDefaults.cardColors(
-            containerColor = PaleLavender
+            containerColor = colorScheme.surfaceVariant
         )
     ) {
 
@@ -946,14 +984,16 @@ private fun ExerciseIntroCard(
                 modifier = Modifier
                     .size(46.dp)
                     .clip(CircleShape)
-                    .background(SoftLavender),
+                    .background(
+                        colorScheme.primaryContainer
+                    ),
                 contentAlignment = Alignment.Center
             ) {
 
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    tint = Lavender,
+                    tint = colorScheme.primary,
                     modifier = Modifier.size(24.dp)
                 )
             }
@@ -966,7 +1006,7 @@ private fun ExerciseIntroCard(
 
                 Text(
                     text = title,
-                    color = TextPrimary,
+                    color = colorScheme.onSurfaceVariant,
                     fontWeight = FontWeight.Bold,
                     fontSize = 17.sp
                 )
@@ -977,7 +1017,7 @@ private fun ExerciseIntroCard(
 
                 Text(
                     text = description,
-                    color = TextSecondary,
+                    color = colorScheme.onSurfaceVariant,
                     fontSize = 13.sp,
                     lineHeight = 19.sp
                 )

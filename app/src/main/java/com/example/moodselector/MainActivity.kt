@@ -61,18 +61,6 @@ class MainActivity : ComponentActivity() {
 
             /*
              * --------------------------------------------------
-             * ASSESSMENT STATE
-             * --------------------------------------------------
-             */
-
-            val hasCompletedAssessment by
-            startupViewModel
-                .hasCompletedAssessment
-                .collectAsStateWithLifecycle()
-
-
-            /*
-             * --------------------------------------------------
              * THEME STATE
              * --------------------------------------------------
              */
@@ -127,98 +115,39 @@ class MainActivity : ComponentActivity() {
                  * --------------------------------------------------
                  * STARTUP
                  * --------------------------------------------------
+                 *
+                 * Signed-out users start at Login.
+                 *
+                 * All signed-in users start at MoodInsights,
+                 * regardless of whether the assessment has been
+                 * completed.
+                 *
+                 * MoodInsightsScreen handles the incomplete
+                 * assessment state and allows the user to choose
+                 * whether to take the assessment.
                  */
 
-                when {
+                if (currentUser == null) {
 
-                    /*
-                     * ----------------------------------------------
-                     * USER NOT SIGNED IN
-                     * ----------------------------------------------
-                     */
+                    AppNavHost(
 
-                    currentUser == null -> {
+                        navController =
+                            navController,
 
-                        AppNavHost(
+                        startDestination =
+                            Screen.Login.route
+                    )
 
-                            navController =
-                                navController,
+                } else {
 
-                            startDestination =
-                                Screen.Login.route
-                        )
-                    }
+                    AppNavHost(
 
+                        navController =
+                            navController,
 
-                    /*
-                     * ----------------------------------------------
-                     * ASSESSMENT STATE STILL LOADING
-                     * ----------------------------------------------
-                     *
-                     * The authenticated user is known, but
-                     * StartupViewModel has not yet completed
-                     * cloud synchronization and resolved the
-                     * persisted assessment state.
-                     */
-
-                    hasCompletedAssessment == null -> {
-
-                        Box(
-                            modifier =
-                                Modifier.fillMaxSize(),
-
-                            contentAlignment =
-                                Alignment.Center
-                        ) {
-
-                            CircularProgressIndicator()
-                        }
-                    }
-
-
-                    /*
-                     * ----------------------------------------------
-                     * ASSESSMENT NOT COMPLETED
-                     * ----------------------------------------------
-                     *
-                     * Show the assessment onboarding screen.
-                     * The user can either begin the assessment or
-                     * choose "Skip for now".
-                     */
-
-                    hasCompletedAssessment == false -> {
-
-                        AppNavHost(
-
-                            navController =
-                                navController,
-
-                            startDestination =
-                                Screen.AssessmentOnboarding.route
-                        )
-                    }
-
-
-                    /*
-                     * ----------------------------------------------
-                     * ASSESSMENT COMPLETED
-                     * ----------------------------------------------
-                     *
-                     * Users who have already completed the
-                     * assessment go directly to Home.
-                     */
-
-                    else -> {
-
-                        AppNavHost(
-
-                            navController =
-                                navController,
-
-                            startDestination =
-                                Screen.Insights.route
-                        )
-                    }
+                        startDestination =
+                            Screen.Insights.route
+                    )
                 }
             }
         }

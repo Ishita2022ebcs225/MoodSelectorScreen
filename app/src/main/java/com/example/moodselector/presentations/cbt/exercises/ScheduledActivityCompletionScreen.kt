@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -37,6 +38,7 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -59,22 +61,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.moodselector.data.local.entity.ScheduledCBTActivityEntity
 import com.example.moodselector.presentations.cbt.progress.CBTProgressViewModel
 
-private val Lavender = Color(0xFF6C63FF)
-private val SoftLavender = Color(0xFFEDEBFF)
-private val PaleLavender = Color(0xFFF7F5FF)
-
-private val SoftRose = Color(0xFFFFEEF4)
-private val Rose = Color(0xFFE88BA5)
-
-private val SoftTeal = Color(0xFFE8F7F5)
-private val Teal = Color(0xFF4BA89C)
-
-private val TextPrimary = Color(0xFF292638)
-private val TextSecondary = Color(0xFF777282)
-
-private val SurfaceWhite = Color.White
-private val Background = Color(0xFFFAF9FD)
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ScheduledActivityCompletionScreen(
@@ -83,6 +69,35 @@ fun ScheduledActivityCompletionScreen(
     onActivityCompleted: () -> Unit,
     viewModel: CBTProgressViewModel = hiltViewModel()
 ) {
+
+    /*
+     * --------------------------------------------------
+     * THEME COLORS
+     * --------------------------------------------------
+     *
+     * All colors come from MaterialTheme so this screen
+     * responds automatically to the application's
+     * light/dark theme.
+     */
+
+    val colorScheme = MaterialTheme.colorScheme
+
+    val primaryColor = colorScheme.primary
+    val primaryContainer = colorScheme.primaryContainer
+    val onPrimaryContainer = colorScheme.onPrimaryContainer
+
+    val backgroundColor = colorScheme.background
+    val surfaceColor = colorScheme.surface
+
+    val textPrimary = colorScheme.onBackground
+    val textSecondary = colorScheme.onSurfaceVariant
+
+    val softRose = colorScheme.tertiaryContainer
+    val rose = colorScheme.onTertiaryContainer
+
+    val softTeal = colorScheme.secondaryContainer
+    val teal = colorScheme.onSecondaryContainer
+
 
     /*
      * --------------------------------------------------
@@ -111,7 +126,8 @@ fun ScheduledActivityCompletionScreen(
 
     Scaffold(
 
-        containerColor = Background,
+        containerColor =
+            backgroundColor,
 
         topBar = {
 
@@ -129,7 +145,7 @@ fun ScheduledActivityCompletionScreen(
 
                         Text(
                             text = "Activity Scheduling",
-                            color = TextSecondary,
+                            color = textSecondary,
                             fontSize = 12.sp
                         )
                     }
@@ -144,6 +160,7 @@ fun ScheduledActivityCompletionScreen(
                         Icon(
                             imageVector =
                                 Icons.Default.ArrowBack,
+
                             contentDescription =
                                 "Back"
                         )
@@ -152,7 +169,8 @@ fun ScheduledActivityCompletionScreen(
 
                 colors =
                     TopAppBarDefaults.topAppBarColors(
-                        containerColor = Background
+                        containerColor =
+                            backgroundColor
                     )
             )
         }
@@ -190,7 +208,19 @@ fun ScheduledActivityCompletionScreen(
                     "Check in with your activity",
 
                 description =
-                    "Take a moment to complete the activity you planned and notice how the experience felt."
+                    "Take a moment to complete the activity you planned and notice how the experience felt.",
+
+                primaryColor =
+                    primaryColor,
+
+                primaryContainer =
+                    primaryContainer,
+
+                textPrimary =
+                    textPrimary,
+
+                textSecondary =
+                    textSecondary
             )
 
             Spacer(
@@ -206,7 +236,16 @@ fun ScheduledActivityCompletionScreen(
              */
 
             ActivityDetailsCard(
-                activity = scheduledActivity
+                activity = scheduledActivity,
+                primaryColor = primaryColor,
+                primaryContainer = primaryContainer,
+                surfaceColor = surfaceColor,
+                textPrimary = textPrimary,
+                textSecondary = textSecondary,
+                softRose = softRose,
+                rose = rose,
+                softTeal = softTeal,
+                teal = teal
             )
 
             Spacer(
@@ -219,12 +258,6 @@ fun ScheduledActivityCompletionScreen(
              * --------------------------------------------------
              * COMPLETION CHECKBOX
              * --------------------------------------------------
-             *
-             * This is intentionally separate from the
-             * scheduling section.
-             *
-             * The user only checks this after actually
-             * completing the scheduled activity.
              */
 
             Card(
@@ -246,9 +279,9 @@ fun ScheduledActivityCompletionScreen(
 
                         containerColor =
                             if (completed) {
-                                SoftLavender
+                                primaryContainer
                             } else {
-                                SurfaceWhite
+                                surfaceColor
                             }
                     ),
 
@@ -295,7 +328,7 @@ fun ScheduledActivityCompletionScreen(
                                 "I've completed this activity",
 
                             color =
-                                TextPrimary,
+                                textPrimary,
 
                             fontWeight =
                                 FontWeight.SemiBold
@@ -312,7 +345,7 @@ fun ScheduledActivityCompletionScreen(
                                 "Check this when you have finished.",
 
                             color =
-                                TextSecondary,
+                                textSecondary,
 
                             fontSize =
                                 12.sp
@@ -330,7 +363,7 @@ fun ScheduledActivityCompletionScreen(
                                 null,
 
                             tint =
-                                Lavender,
+                                primaryColor,
 
                             modifier =
                                 Modifier.size(24.dp)
@@ -358,7 +391,22 @@ fun ScheduledActivityCompletionScreen(
 
                 onReflectionChange = {
                     reflection = it
-                }
+                },
+
+                primaryColor =
+                    primaryColor,
+
+                primaryContainer =
+                    primaryContainer,
+
+                surfaceColor =
+                    surfaceColor,
+
+                textPrimary =
+                    textPrimary,
+
+                textSecondary =
+                    textSecondary
             )
 
             Spacer(
@@ -382,20 +430,6 @@ fun ScheduledActivityCompletionScreen(
                     }
 
                     isSaving = true
-
-                    /*
-                     * Complete THIS specific scheduled
-                     * activity.
-                     *
-                     * CBTProgressViewModel uses:
-                     *
-                     * scheduledActivity.id
-                     *
-                     * when deleting the scheduled record.
-                     *
-                     * Therefore other scheduled activities
-                     * remain untouched.
-                     */
 
                     viewModel.completeScheduledActivity(
 
@@ -429,16 +463,16 @@ fun ScheduledActivityCompletionScreen(
                     ButtonDefaults.buttonColors(
 
                         containerColor =
-                            Lavender,
+                            primaryColor,
 
                         contentColor =
-                            Color.White,
+                            colorScheme.onPrimary,
 
                         disabledContainerColor =
-                            SoftLavender,
+                            primaryContainer,
 
                         disabledContentColor =
-                            TextSecondary
+                            textSecondary
                     )
             ) {
 
@@ -497,7 +531,7 @@ fun ScheduledActivityCompletionScreen(
                     Modifier.fillMaxWidth(),
 
                 color =
-                    TextSecondary,
+                    textSecondary,
 
                 fontSize =
                     12.sp
@@ -520,7 +554,16 @@ fun ScheduledActivityCompletionScreen(
 
 @Composable
 private fun ActivityDetailsCard(
-    activity: ScheduledCBTActivityEntity
+    activity: ScheduledCBTActivityEntity,
+    primaryColor: Color,
+    primaryContainer: Color,
+    surfaceColor: Color,
+    textPrimary: Color,
+    textSecondary: Color,
+    softRose: Color,
+    rose: Color,
+    softTeal: Color,
+    teal: Color
 ) {
 
     Card(
@@ -534,7 +577,7 @@ private fun ActivityDetailsCard(
         colors =
             CardDefaults.cardColors(
                 containerColor =
-                    SurfaceWhite
+                    surfaceColor
             ),
 
         elevation =
@@ -563,7 +606,7 @@ private fun ActivityDetailsCard(
                                 RoundedCornerShape(16.dp)
                             )
                             .background(
-                                SoftLavender
+                                primaryContainer
                             ),
 
                     contentAlignment =
@@ -579,7 +622,7 @@ private fun ActivityDetailsCard(
                             null,
 
                         tint =
-                            Lavender,
+                            primaryColor,
 
                         modifier =
                             Modifier.size(25.dp)
@@ -602,7 +645,7 @@ private fun ActivityDetailsCard(
                             activity.activityName,
 
                         color =
-                            TextPrimary,
+                            textPrimary,
 
                         fontWeight =
                             FontWeight.Bold,
@@ -622,7 +665,7 @@ private fun ActivityDetailsCard(
                             activity.activityTitle,
 
                         color =
-                            TextSecondary,
+                            textSecondary,
 
                         fontSize =
                             13.sp
@@ -646,7 +689,7 @@ private fun ActivityDetailsCard(
                         activity.activityDescription,
 
                     color =
-                        TextSecondary,
+                        textSecondary,
 
                     fontSize =
                         14.sp,
@@ -667,7 +710,13 @@ private fun ActivityDetailsCard(
                     Icons.Default.AccessTime,
 
                 text =
-                    activity.scheduledWhen
+                    activity.scheduledWhen,
+
+                primaryColor =
+                    primaryColor,
+
+                textSecondary =
+                    textSecondary
             )
 
             Spacer(
@@ -681,7 +730,13 @@ private fun ActivityDetailsCard(
                     Icons.Default.LocationOn,
 
                 text =
-                    activity.scheduledWhere
+                    activity.scheduledWhere,
+
+                primaryColor =
+                    primaryColor,
+
+                textSecondary =
+                    textSecondary
             )
 
             if (
@@ -713,10 +768,10 @@ private fun ActivityDetailsCard(
                                             type,
 
                                         backgroundColor =
-                                            SoftRose,
+                                            softRose,
 
                                         textColor =
-                                            Rose
+                                            rose
                                     )
                                 }
 
@@ -728,10 +783,10 @@ private fun ActivityDetailsCard(
                                             type,
 
                                         backgroundColor =
-                                            SoftTeal,
+                                            softTeal,
 
                                         textColor =
-                                            Teal
+                                            teal
                                     )
                                 }
                             }
@@ -752,7 +807,12 @@ private fun ActivityDetailsCard(
 @Composable
 private fun ReflectionSection(
     reflection: String,
-    onReflectionChange: (String) -> Unit
+    onReflectionChange: (String) -> Unit,
+    primaryColor: Color,
+    primaryContainer: Color,
+    surfaceColor: Color,
+    textPrimary: Color,
+    textSecondary: Color
 ) {
 
     Column {
@@ -763,7 +823,7 @@ private fun ReflectionSection(
                 "Reflect on your experience",
 
             color =
-                TextPrimary,
+                textPrimary,
 
             fontWeight =
                 FontWeight.Bold,
@@ -783,7 +843,7 @@ private fun ReflectionSection(
                 "There is no right or wrong answer. Notice what the experience was like for you.",
 
             color =
-                TextSecondary,
+                textSecondary,
 
             fontSize =
                 13.sp,
@@ -806,7 +866,22 @@ private fun ReflectionSection(
                 "Before the activity",
 
             text =
-                "How were you feeling before you started? Was anything making it difficult to get started?"
+                "How were you feeling before you started? Was anything making it difficult to get started?",
+
+            primaryColor =
+                primaryColor,
+
+            primaryContainer =
+                primaryContainer,
+
+            surfaceColor =
+                surfaceColor,
+
+            textPrimary =
+                textPrimary,
+
+            textSecondary =
+                textSecondary
         )
 
         Spacer(
@@ -823,7 +898,22 @@ private fun ReflectionSection(
                 "After the activity",
 
             text =
-                "How did you feel afterward? Did anything make the activity easier or harder?"
+                "How did you feel afterward? Did anything make the activity easier or harder?",
+
+            primaryColor =
+                primaryColor,
+
+            primaryContainer =
+                primaryContainer,
+
+            surfaceColor =
+                surfaceColor,
+
+            textPrimary =
+                textPrimary,
+
+            textSecondary =
+                textSecondary
         )
 
         Spacer(
@@ -857,7 +947,6 @@ private fun ReflectionSection(
             leadingIcon = {
 
                 Icon(
-
                     imageVector =
                         Icons.Default.Edit,
 
@@ -892,7 +981,7 @@ private fun ReflectionSection(
             colors =
                 CardDefaults.cardColors(
                     containerColor =
-                        PaleLavender
+                        primaryContainer
                 )
         ) {
 
@@ -914,7 +1003,7 @@ private fun ReflectionSection(
                         null,
 
                     tint =
-                        Lavender
+                        primaryColor
                 )
 
                 Spacer(
@@ -928,7 +1017,7 @@ private fun ReflectionSection(
                         "Small actions count. Completing one meaningful activity is already a step toward building a healthier routine.",
 
                     color =
-                        TextSecondary,
+                        textSecondary,
 
                     fontSize =
                         13.sp,
@@ -952,7 +1041,12 @@ private fun ReflectionSection(
 private fun ReflectionPromptCard(
     icon: ImageVector,
     title: String,
-    text: String
+    text: String,
+    primaryColor: Color,
+    primaryContainer: Color,
+    surfaceColor: Color,
+    textPrimary: Color,
+    textSecondary: Color
 ) {
 
     Card(
@@ -966,7 +1060,7 @@ private fun ReflectionPromptCard(
         colors =
             CardDefaults.cardColors(
                 containerColor =
-                    SurfaceWhite
+                    surfaceColor
             ),
 
         elevation =
@@ -991,7 +1085,7 @@ private fun ReflectionPromptCard(
                         .size(38.dp)
                         .clip(CircleShape)
                         .background(
-                            SoftLavender
+                            primaryContainer
                         ),
 
                 contentAlignment =
@@ -1007,7 +1101,7 @@ private fun ReflectionPromptCard(
                         null,
 
                     tint =
-                        Lavender,
+                        primaryColor,
 
                     modifier =
                         Modifier.size(20.dp)
@@ -1027,7 +1121,7 @@ private fun ReflectionPromptCard(
                         title,
 
                     color =
-                        TextPrimary,
+                        textPrimary,
 
                     fontWeight =
                         FontWeight.SemiBold,
@@ -1047,7 +1141,7 @@ private fun ReflectionPromptCard(
                         text,
 
                     color =
-                        TextSecondary,
+                        textSecondary,
 
                     fontSize =
                         12.sp,
@@ -1070,7 +1164,9 @@ private fun ReflectionPromptCard(
 @Composable
 private fun DetailRow(
     icon: ImageVector,
-    text: String
+    text: String,
+    primaryColor: Color,
+    textSecondary: Color
 ) {
 
     Row(
@@ -1088,7 +1184,7 @@ private fun DetailRow(
                 null,
 
             tint =
-                Lavender,
+                primaryColor,
 
             modifier =
                 Modifier.size(19.dp)
@@ -1105,7 +1201,7 @@ private fun DetailRow(
                 text,
 
             color =
-                TextSecondary,
+                textSecondary,
 
             fontSize =
                 13.sp
@@ -1171,7 +1267,11 @@ private fun TypeTag(
 private fun ExerciseIntroCard(
     icon: ImageVector,
     title: String,
-    description: String
+    description: String,
+    primaryColor: Color,
+    primaryContainer: Color,
+    textPrimary: Color,
+    textSecondary: Color
 ) {
 
     Card(
@@ -1185,7 +1285,7 @@ private fun ExerciseIntroCard(
         colors =
             CardDefaults.cardColors(
                 containerColor =
-                    PaleLavender
+                    primaryContainer
             )
     ) {
 
@@ -1205,7 +1305,7 @@ private fun ExerciseIntroCard(
                         .size(46.dp)
                         .clip(CircleShape)
                         .background(
-                            SoftLavender
+                            primaryContainer
                         ),
 
                 contentAlignment =
@@ -1221,7 +1321,7 @@ private fun ExerciseIntroCard(
                         null,
 
                     tint =
-                        Lavender
+                        primaryColor
                 )
             }
 
@@ -1238,7 +1338,7 @@ private fun ExerciseIntroCard(
                         title,
 
                     color =
-                        TextPrimary,
+                        textPrimary,
 
                     fontWeight =
                         FontWeight.Bold,
@@ -1258,7 +1358,7 @@ private fun ExerciseIntroCard(
                         description,
 
                     color =
-                        TextSecondary,
+                        textSecondary,
 
                     fontSize =
                         13.sp,
