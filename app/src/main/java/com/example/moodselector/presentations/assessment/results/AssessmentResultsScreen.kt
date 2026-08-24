@@ -98,7 +98,9 @@ fun AssessmentResultsScreen(
             DeepLavender
         }
 
-    result?.let { assessment ->
+    if (result != null) {
+
+        val assessment = result!!
 
         Column(
             modifier = modifier
@@ -402,6 +404,162 @@ fun AssessmentResultsScreen(
                 )
             }
         }
+
+    } else {
+
+        /*
+         * ==================================================
+         * NO ASSESSMENT RESULT
+         * ==================================================
+         *
+         * Displayed when the user has not attempted the
+         * questionnaire yet instead of leaving the screen
+         * blank.
+         */
+
+        Column(
+            modifier = modifier
+                .fillMaxSize()
+                .background(backgroundColor)
+                .verticalScroll(rememberScrollState())
+                .padding(24.dp),
+
+            horizontalAlignment =
+                Alignment.CenterHorizontally,
+
+            verticalArrangement =
+                Arrangement.Center
+        ) {
+
+            Card(
+                modifier =
+                    Modifier.fillMaxWidth(),
+
+                colors =
+                    CardDefaults.cardColors(
+                        containerColor =
+                            surfaceColor
+                    ),
+
+                shape =
+                    RoundedCornerShape(24.dp),
+
+                elevation =
+                    CardDefaults.cardElevation(
+                        defaultElevation = 2.dp
+                    )
+            ) {
+
+                Column(
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(28.dp),
+
+                    horizontalAlignment =
+                        Alignment.CenterHorizontally
+                ) {
+
+                    Icon(
+                        imageVector =
+                            Icons.Outlined.SelfImprovement,
+
+                        contentDescription =
+                            null,
+
+                        modifier =
+                            Modifier.height(52.dp),
+
+                        tint =
+                            iconColor
+                    )
+
+                    Spacer(
+                        modifier =
+                            Modifier.height(20.dp)
+                    )
+
+                    Text(
+                        text =
+                            "Assessment Not Completed",
+
+                        style =
+                            MaterialTheme.typography.headlineSmall,
+
+                        fontWeight =
+                            FontWeight.SemiBold,
+
+                        color =
+                            primaryTextColor,
+
+                        textAlign =
+                            TextAlign.Center
+                    )
+
+                    Spacer(
+                        modifier =
+                            Modifier.height(12.dp)
+                    )
+
+                    Text(
+                        text =
+                            "You haven't attempted the questionnaire yet.",
+
+                        style =
+                            MaterialTheme.typography.titleMedium,
+
+                        fontWeight =
+                            FontWeight.Medium,
+
+                        color =
+                            primaryTextColor,
+
+                        textAlign =
+                            TextAlign.Center
+                    )
+
+                    Spacer(
+                        modifier =
+                            Modifier.height(10.dp)
+                    )
+
+                    Text(
+                        text =
+                            "Complete the questionnaire to see your depression and anxiety screening results and receive personalized CBT support.",
+
+                        style =
+                            MaterialTheme.typography.bodyMedium,
+
+                        color =
+                            secondaryTextColor,
+
+                        textAlign =
+                            TextAlign.Center
+                    )
+
+                    Spacer(
+                        modifier =
+                            Modifier.height(24.dp)
+                    )
+
+                    Button(
+                        onClick =
+                            onContinueClicked,
+
+                        modifier =
+                            Modifier.fillMaxWidth(),
+
+                        shape =
+                            RoundedCornerShape(14.dp)
+                    ) {
+
+                        Text(
+                            text =
+                                "Attempt the Questionnaire"
+                        )
+                    }
+                }
+            }
+        }
     }
 }
-

@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.moodselector.data.local.entity.Grounding54321CompletionEntity
 import com.example.moodselector.domain.repository.AuthRepository
+import com.example.moodselector.domain.repository.CBTDailyProgressRepository
 import com.example.moodselector.domain.repository.CloudBackupRepository
 import com.example.moodselector.domain.repository.Grounding54321CompletionRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -11,6 +12,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import javax.inject.Inject
 
 data class Grounding54321UiState(
@@ -46,7 +50,9 @@ class Grounding54321ViewModel @Inject constructor(
     private val authRepository:
     AuthRepository,
     private val cloudBackupRepository:
-    CloudBackupRepository
+    CloudBackupRepository,
+    private val dailyProgressRepository:
+    CBTDailyProgressRepository
 ) : ViewModel() {
 
     private val _uiState =
@@ -162,9 +168,49 @@ class Grounding54321ViewModel @Inject constructor(
                         System.currentTimeMillis()
                 )
 
+            /*
+             * --------------------------------------------------
+             * SAVE COMPLETION LOCALLY
+             * --------------------------------------------------
+             */
+
             repository.saveCompletion(
                 completion
             )
+
+            /*
+             * --------------------------------------------------
+             * UPDATE DAILY CBT PROGRESS
+             * --------------------------------------------------
+             *
+             * The completed grounding exercise contributes
+             * exactly one completion to today's CBT progress.
+             *
+             * This happens only after the actual completion
+             * has been successfully saved locally.
+             */
+
+            val currentDate =
+                SimpleDateFormat(
+                    "yyyy-MM-dd",
+                    Locale.US
+                ).format(
+                    Date()
+                )
+
+            dailyProgressRepository.incrementDailyCompletion(
+                userId = currentUserId,
+                date = currentDate
+            )
+
+            /*
+             * --------------------------------------------------
+             * CLOUD BACKUP
+             * --------------------------------------------------
+             *
+             * The completion has already been saved locally.
+             * Cloud backup remains best-effort.
+             */
 
             cloudBackupRepository
                 .backupUserData(
@@ -193,4 +239,3 @@ class Grounding54321ViewModel @Inject constructor(
             Grounding54321UiState()
     }
 }
-

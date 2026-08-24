@@ -4,16 +4,21 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.moodselector.data.local.entity.ScheduledCBTActivityEntity
 import com.example.moodselector.domain.repository.AuthRepository
+import com.example.moodselector.domain.repository.CBTDailyProgressRepository
 import com.example.moodselector.domain.repository.CloudBackupRepository
 import com.example.moodselector.domain.repository.ScheduledCBTActivityRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import javax.inject.Inject
 
 @HiltViewModel
 class ScheduledCBTActivityViewModel @Inject constructor(
     private val repository: ScheduledCBTActivityRepository,
+    private val dailyProgressRepository: CBTDailyProgressRepository,
     private val authRepository: AuthRepository,
     private val cloudBackupRepository: CloudBackupRepository
 ) : ViewModel() {
@@ -86,6 +91,9 @@ class ScheduledCBTActivityViewModel @Inject constructor(
      *
      * id != 0:
      *     Updates the existing scheduled activity.
+     *
+     * Saving or editing a scheduled activity does NOT
+     * count as a CBT completion.
      */
 
     fun saveScheduledActivity(
@@ -186,7 +194,8 @@ class ScheduledCBTActivityViewModel @Inject constructor(
      * 2. Saves it to CBT Progress.
      * 3. Deletes only this scheduled instance.
      *
-     * No reflection is required on this screen.
+     * After the completion is successfully persisted,
+     * the user's daily CBT progress is incremented once.
      */
 
     fun completeScheduledActivity(
@@ -199,14 +208,61 @@ class ScheduledCBTActivityViewModel @Inject constructor(
 
         viewModelScope.launch {
 
+            /*
+             * Persist the actual CBT completion and remove
+             * this scheduled instance.
+             */
+
             repository.completeScheduledActivity(
                 activity
             )
 
-            cloudBackupRepository
-                .backupUserData(
-                    userId = currentUserId
+            /*
+             * --------------------------------------------------
+             * UPDATE DAILY CBT PROGRESS
+             * --------------------------------------------------
+             *
+             * Daily progress is based on the date on which
+             * the completion is recorded.
+             *
+             * Format:
+             * yyyy-MM-dd
+             */
+
+            val currentDate =
+                SimpleDateFormat(
+                    "yyyy-MM-dd",
+                    Locale.US
+                ).format(
+                    Date()
                 )
+
+            /*
+             * Daily progress is supplementary to the actual
+             * completion record. If it fails, the completion
+             * itself remains successfully persisted.
+             */
+
+            runCatching {
+
+                dailyProgressRepository
+                    .incrementDailyCompletion(
+                        userId = currentUserId,
+                        date = currentDate
+                    )
+            }
+
+            /*
+             * Cloud backup remains best-effort.
+             */
+
+            runCatching {
+
+                cloudBackupRepository
+                    .backupUserData(
+                        userId = currentUserId
+                    )
+            }
 
             onCompleted()
         }
@@ -320,4 +376,3 @@ class ScheduledCBTActivityViewModel @Inject constructor(
         }
     }
 }
-

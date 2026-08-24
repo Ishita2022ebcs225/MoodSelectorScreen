@@ -4,18 +4,21 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.moodselector.data.local.entity.FiveMinuteStarterCompletionEntity
 import com.example.moodselector.domain.repository.AuthRepository
+import com.example.moodselector.domain.repository.CBTDailyProgressRepository
 import com.example.moodselector.domain.repository.CloudBackupRepository
 import com.example.moodselector.domain.repository.FiveMinuteStarterCompletionRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 import javax.inject.Inject
 
 @HiltViewModel
 class FiveMinuteStarterViewModel @Inject constructor(
     private val repository: FiveMinuteStarterCompletionRepository,
     private val authRepository: AuthRepository,
-    private val cloudBackupRepository: CloudBackupRepository
+    private val cloudBackupRepository: CloudBackupRepository,
+    private val dailyProgressRepository: CBTDailyProgressRepository
 ) : ViewModel() {
 
     /*
@@ -26,6 +29,19 @@ class FiveMinuteStarterViewModel @Inject constructor(
 
     private val userId: String?
         get() = authRepository.currentUser?.uid
+
+
+    /*
+     * --------------------------------------------------
+     * CURRENT DATE
+     * --------------------------------------------------
+     *
+     * Uses the same yyyy-MM-dd format expected by
+     * CBTDailyProgressEntity.
+     */
+
+    private val currentDate: String
+        get() = LocalDate.now().toString()
 
 
     /*
@@ -97,8 +113,31 @@ class FiveMinuteStarterViewModel @Inject constructor(
                         System.currentTimeMillis()
                 )
 
+            /*
+             * --------------------------------------------------
+             * SAVE COMPLETION LOCALLY
+             * --------------------------------------------------
+             */
+
             repository.saveCompletion(
                 completion
+            )
+
+            /*
+             * --------------------------------------------------
+             * UPDATE DAILY CBT PROGRESS
+             * --------------------------------------------------
+             *
+             * The daily count is updated only after the
+             * completion has been successfully saved.
+             *
+             * The record is associated with the same
+             * Firebase user ID as the completion.
+             */
+
+            dailyProgressRepository.incrementDailyCompletion(
+                userId = currentUserId,
+                date = currentDate
             )
 
             /*
@@ -112,10 +151,13 @@ class FiveMinuteStarterViewModel @Inject constructor(
              * completed if Firestore is temporarily unavailable.
              */
 
-            cloudBackupRepository
-                .backupUserData(
-                    userId = currentUserId
-                )
+            runCatching {
+
+                cloudBackupRepository
+                    .backupUserData(
+                        userId = currentUserId
+                    )
+            }
 
             onCompleted()
         }
@@ -160,4 +202,3 @@ class FiveMinuteStarterViewModel @Inject constructor(
         }
     }
 }
-

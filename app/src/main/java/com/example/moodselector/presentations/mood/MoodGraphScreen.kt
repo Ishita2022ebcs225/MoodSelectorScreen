@@ -210,6 +210,157 @@ private fun moodScore(
 
 /*
  * ==========================================================
+ * RECURRING TRIGGER ANALYTICS
+ * ==========================================================
+ */
+
+private data class RecurringTrigger(
+    val trigger: String,
+    val totalOccurrences: Int,
+    val lowMoodOccurrences: Int
+) {
+
+    val lowMoodRate: Float
+        get() =
+            if (totalOccurrences > 0) {
+                lowMoodOccurrences.toFloat() /
+                        totalOccurrences.toFloat()
+            } else {
+                0f
+            }
+}
+
+
+private fun getRecurringTriggers(
+    moods: List<MoodEntry>
+): List<RecurringTrigger> {
+
+    val groupedTriggers =
+        moods
+            .filter {
+                it.trigger.isNotBlank()
+            }
+            .groupBy {
+                it.trigger
+                    .trim()
+                    .lowercase(Locale.getDefault())
+            }
+
+    return groupedTriggers
+        .mapNotNull { (normalizedTrigger, entries) ->
+
+            val totalOccurrences =
+                entries.size
+
+            if (totalOccurrences < 2) {
+                return@mapNotNull null
+            }
+
+            val lowMoodOccurrences =
+                entries.count { moodEntry ->
+
+                    moodScore(
+                        moodEntry.emoji
+                    ) <= 2f
+                }
+
+            if (lowMoodOccurrences < 2) {
+                return@mapNotNull null
+            }
+
+            val lowMoodRate =
+                lowMoodOccurrences.toFloat() /
+                        totalOccurrences.toFloat()
+
+            if (lowMoodRate < 0.5f) {
+                return@mapNotNull null
+            }
+
+            val displayTrigger =
+                entries
+                    .groupingBy {
+                        it.trigger.trim()
+                    }
+                    .eachCount()
+                    .maxByOrNull {
+                        it.value
+                    }
+                    ?.key
+                    ?: normalizedTrigger
+
+            RecurringTrigger(
+                trigger =
+                    displayTrigger,
+
+                totalOccurrences =
+                    totalOccurrences,
+
+                lowMoodOccurrences =
+                    lowMoodOccurrences
+            )
+        }
+        .sortedWith(
+            compareByDescending<RecurringTrigger> {
+                it.lowMoodRate
+            }.thenByDescending {
+                it.lowMoodOccurrences
+            }.thenByDescending {
+                it.totalOccurrences
+            }
+        )
+}
+
+
+/*
+ * ==========================================================
+ * RECURRING TRIGGER DESCRIPTION
+ * ==========================================================
+ */
+
+private fun getRecurringTriggerDescription(
+    trigger: RecurringTrigger
+): String {
+
+    val percentage =
+        (trigger.lowMoodRate * 100).toInt()
+
+    return when {
+
+        trigger.lowMoodRate >= 0.75f ->
+            "$percentage% of entries with this trigger were linked with low mood"
+
+        trigger.lowMoodRate >= 0.5f ->
+            "$percentage% of entries with this trigger were linked with low mood"
+
+        else ->
+            "$percentage% of entries with this trigger were linked with low mood"
+    }
+}
+
+
+/*
+ * ==========================================================
+ * RECURRING TRIGGER LABEL
+ * ==========================================================
+ */
+
+private fun getRecurringTriggerLabel(
+    trigger: RecurringTrigger
+): String {
+
+    return when {
+
+        trigger.lowMoodRate >= 0.75f ->
+            "Frequently linked with low mood"
+
+        else ->
+            "Often linked with low mood"
+    }
+}
+
+
+/*
+ * ==========================================================
  * CBT ACTIVITY LABEL
  * ==========================================================
  */
@@ -334,10 +485,6 @@ fun MoodGraphScreen(
      * ======================================================
      * LOCALE
      * ======================================================
-     *
-     * Use Compose's observable configuration instead of
-     * calling Locale.getDefault() directly inside the
-     * composable.
      */
 
     val configuration =
@@ -395,6 +542,18 @@ fun MoodGraphScreen(
                 ) == selectedDate
             }
             .reversed()
+
+
+    /*
+     * ======================================================
+     * RECURRING TRIGGERS
+     * ======================================================
+     */
+
+    val recurringTriggers =
+        getRecurringTriggers(
+            moods
+        )
 
 
     /*
@@ -490,6 +649,17 @@ fun MoodGraphScreen(
                 ) == selectedDate
             }
 
+
+    /*
+     * The completed CBT activity timeline is the
+     * authoritative source for the selected day's
+     * completed activity count.
+     *
+     * This ensures activities that were actually
+     * completed are reflected immediately here,
+     * without depending on a separate daily-progress
+     * counter being updated.
+     */
 
     val cbtActivityCount =
         selectedDayCBTItems.size
@@ -1217,12 +1387,6 @@ fun MoodGraphScreen(
                                     false
                                 )
 
-                                /*
-                                 * --------------------------------------------------
-                                 * ANIMATED TREND
-                                 * --------------------------------------------------
-                                 */
-
                                 chart.animateX(
                                     1200,
                                     Easing.EaseInOutCubic
@@ -1580,6 +1744,197 @@ fun MoodGraphScreen(
                             color =
                                 textSecondary
                         )
+                    }
+                }
+
+
+                /*
+                 * ==================================================
+                 * RECURRING TRIGGERS
+                 * ==================================================
+                 */
+
+                Card(
+
+                    modifier =
+                        Modifier.fillMaxWidth(),
+
+                    shape =
+                        RoundedCornerShape(20.dp),
+
+                    colors =
+                        CardDefaults.cardColors(
+                            containerColor =
+                                surface
+                        ),
+
+                    elevation =
+                        CardDefaults.cardElevation(
+                            defaultElevation = 2.dp
+                        )
+                ) {
+
+                    Column(
+
+                        modifier =
+                            Modifier.padding(
+                                horizontal = 16.dp,
+                                vertical = 14.dp
+                            ),
+
+                        verticalArrangement =
+                            Arrangement.spacedBy(10.dp)
+                    ) {
+
+                        Text(
+
+                            text =
+                                "Recurring Triggers",
+
+                            style =
+                                MaterialTheme
+                                    .typography
+                                    .titleMedium,
+
+                            fontWeight =
+                                FontWeight.SemiBold,
+
+                            color =
+                                textDark
+                        )
+
+                        Text(
+
+                            text =
+                                "Triggers that have repeatedly appeared alongside lower mood.",
+
+                            style =
+                                MaterialTheme
+                                    .typography
+                                    .bodySmall,
+
+                            color =
+                                textSecondary
+                        )
+
+                        if (
+                            recurringTriggers.isEmpty()
+                        ) {
+
+                            Text(
+
+                                text =
+                                    "No recurring low-mood triggers identified yet. Keep recording your moods and triggers so patterns can become clearer over time.",
+
+                                style =
+                                    MaterialTheme
+                                        .typography
+                                        .bodySmall,
+
+                                color =
+                                    textSecondary
+                            )
+
+                        } else {
+
+                            recurringTriggers.forEach { trigger ->
+
+                                Card(
+
+                                    modifier =
+                                        Modifier.fillMaxWidth(),
+
+                                    shape =
+                                        RoundedCornerShape(16.dp),
+
+                                    colors =
+                                        CardDefaults.cardColors(
+                                            containerColor =
+                                                softLavender
+                                        )
+                                ) {
+
+                                    Column(
+
+                                        modifier =
+                                            Modifier.padding(
+                                                horizontal = 12.dp,
+                                                vertical = 11.dp
+                                            ),
+
+                                        verticalArrangement =
+                                            Arrangement.spacedBy(4.dp)
+                                    ) {
+
+                                        Text(
+
+                                            text =
+                                                trigger.trigger,
+
+                                            style =
+                                                MaterialTheme
+                                                    .typography
+                                                    .titleSmall,
+
+                                            fontWeight =
+                                                FontWeight.SemiBold,
+
+                                            color =
+                                                textDark
+                                        )
+
+                                        Text(
+
+                                            text =
+                                                "${trigger.lowMoodOccurrences} of ${trigger.totalOccurrences} entries linked with low mood",
+
+                                            style =
+                                                MaterialTheme
+                                                    .typography
+                                                    .bodySmall,
+
+                                            color =
+                                                textSecondary
+                                        )
+
+                                        Text(
+
+                                            text =
+                                                getRecurringTriggerLabel(
+                                                    trigger
+                                                ),
+
+                                            style =
+                                                MaterialTheme
+                                                    .typography
+                                                    .labelMedium,
+
+                                            fontWeight =
+                                                FontWeight.SemiBold,
+
+                                            color =
+                                                lavender
+                                        )
+
+                                        Text(
+
+                                            text =
+                                                getRecurringTriggerDescription(
+                                                    trigger
+                                                ),
+
+                                            style =
+                                                MaterialTheme
+                                                    .typography
+                                                    .bodySmall,
+
+                                            color =
+                                                textSecondary
+                                        )
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
 

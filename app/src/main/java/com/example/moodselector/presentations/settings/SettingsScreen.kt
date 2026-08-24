@@ -45,7 +45,6 @@ fun SettingsScreen(
     val context =
         LocalContext.current
 
-
     /*
      * --------------------------------------------------
      * AUTHENTICATED USER
@@ -285,7 +284,6 @@ fun SettingsScreen(
              */
 
             Row(
-
                 modifier =
                     Modifier
                         .fillMaxWidth()
@@ -396,7 +394,6 @@ fun SettingsScreen(
             ) {
 
                 Column(
-
                     modifier =
                         Modifier.padding(
                             20.dp
@@ -404,7 +401,6 @@ fun SettingsScreen(
                 ) {
 
                     Row(
-
                         modifier =
                             Modifier.fillMaxWidth(),
 
@@ -413,7 +409,6 @@ fun SettingsScreen(
                     ) {
 
                         Icon(
-
                             imageVector =
                                 Icons.Default.Notifications,
 
@@ -430,7 +425,6 @@ fun SettingsScreen(
                         )
 
                         Column(
-
                             modifier =
                                 Modifier.weight(1f)
                         ) {
@@ -671,7 +665,6 @@ fun SettingsScreen(
             ) {
 
                 Column(
-
                     modifier =
                         Modifier.padding(
                             20.dp
@@ -679,7 +672,6 @@ fun SettingsScreen(
                 ) {
 
                     Row(
-
                         modifier =
                             Modifier.fillMaxWidth(),
 
@@ -761,9 +753,11 @@ fun SettingsScreen(
 
                     ThemeOption(
                         title = "System default",
+
                         selected =
                             settingsUiState.themeMode ==
                                     "system",
+
                         onClick = {
                             settingsViewModel.setThemeMode(
                                 "system"
@@ -774,9 +768,11 @@ fun SettingsScreen(
 
                     ThemeOption(
                         title = "Light",
+
                         selected =
                             settingsUiState.themeMode ==
                                     "light",
+
                         onClick = {
                             settingsViewModel.setThemeMode(
                                 "light"
@@ -787,9 +783,11 @@ fun SettingsScreen(
 
                     ThemeOption(
                         title = "Dark",
+
                         selected =
                             settingsUiState.themeMode ==
                                     "dark",
+
                         onClick = {
                             settingsViewModel.setThemeMode(
                                 "dark"
@@ -830,7 +828,6 @@ fun SettingsScreen(
             ) {
 
                 Column(
-
                     modifier =
                         Modifier.padding(
                             20.dp
@@ -838,7 +835,6 @@ fun SettingsScreen(
                 ) {
 
                     Row(
-
                         modifier =
                             Modifier.fillMaxWidth(),
 
@@ -907,10 +903,12 @@ fun SettingsScreen(
                         }
                     }
 
+
                     Spacer(
                         modifier =
                             Modifier.height(16.dp)
                     )
+
 
                     OutlinedButton(
 
@@ -982,7 +980,6 @@ fun SettingsScreen(
             ) {
 
                 Column(
-
                     modifier =
                         Modifier.padding(
                             20.dp
@@ -990,7 +987,6 @@ fun SettingsScreen(
                 ) {
 
                     Row(
-
                         modifier =
                             Modifier.fillMaxWidth(),
 
@@ -1059,10 +1055,12 @@ fun SettingsScreen(
                         }
                     }
 
+
                     Spacer(
                         modifier =
                             Modifier.height(16.dp)
                     )
+
 
                     OutlinedButton(
 
@@ -1306,7 +1304,12 @@ private fun ThemeOption(
             style =
                 MaterialTheme
                     .typography
-                    .bodyLarge
+                    .bodyLarge,
+
+            color =
+                MaterialTheme
+                    .colorScheme
+                    .onSurface
         )
     }
 }
@@ -1338,13 +1341,11 @@ private fun ReminderRow(
     ) {
 
         Column(
-
             modifier =
                 Modifier.weight(1f)
         ) {
 
             Text(
-
                 text =
                     title,
 
@@ -1363,7 +1364,6 @@ private fun ReminderRow(
             )
 
             Text(
-
                 text =
                     description,
 
@@ -1384,7 +1384,6 @@ private fun ReminderRow(
             )
 
             Text(
-
                 text =
                     "Daily at $time",
 

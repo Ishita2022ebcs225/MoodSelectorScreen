@@ -106,8 +106,8 @@ fun CBTProgressScreen(
             initialValue = emptyList()
         )
 
-    val completionCount by
-    viewModel.uniqueCompletedExerciseCount
+    val dailyCompletionCount by
+    viewModel.dailyCompletionCount
         .collectAsStateWithLifecycle(
             initialValue = 0
         )
@@ -220,7 +220,7 @@ fun CBTProgressScreen(
 
                     ProgressSummaryCard(
                         completionCount =
-                            completionCount
+                            dailyCompletionCount
                     )
                 }
 

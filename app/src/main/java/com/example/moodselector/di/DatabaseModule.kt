@@ -5,6 +5,7 @@ import androidx.room.Room
 import com.example.moodselector.data.local.dao.ABCModelCompletionDao
 import com.example.moodselector.data.local.dao.AssessmentResultDao
 import com.example.moodselector.data.local.dao.CBTActivityCompletionDao
+import com.example.moodselector.data.local.dao.CBTDailyProgressDao
 import com.example.moodselector.data.local.dao.FiveMinuteStarterCompletionDao
 import com.example.moodselector.data.local.dao.Grounding54321CompletionDao
 import com.example.moodselector.data.local.dao.JournalDao
@@ -193,5 +194,20 @@ object DatabaseModule {
     ): SelfCompassionReflectionCompletionDao {
 
         return database.selfCompassionReflectionCompletionDao()
+    }
+
+
+    /*
+     * --------------------------------------------------
+     * DAILY CBT PROGRESS
+     * --------------------------------------------------
+     */
+
+    @Provides
+    fun provideCBTDailyProgressDao(
+        database: AppDatabase
+    ): CBTDailyProgressDao {
+
+        return database.cbtDailyProgressDao()
     }
 }

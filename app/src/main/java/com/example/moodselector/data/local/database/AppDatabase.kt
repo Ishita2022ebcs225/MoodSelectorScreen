@@ -7,6 +7,7 @@ import com.example.moodselector.data.local.converter.AssessmentSeverityConverter
 import com.example.moodselector.data.local.dao.ABCModelCompletionDao
 import com.example.moodselector.data.local.dao.AssessmentResultDao
 import com.example.moodselector.data.local.dao.CBTActivityCompletionDao
+import com.example.moodselector.data.local.dao.CBTDailyProgressDao
 import com.example.moodselector.data.local.dao.FiveMinuteStarterCompletionDao
 import com.example.moodselector.data.local.dao.Grounding54321CompletionDao
 import com.example.moodselector.data.local.dao.JournalDao
@@ -17,6 +18,7 @@ import com.example.moodselector.data.local.dao.SelfCompassionReflectionCompletio
 import com.example.moodselector.data.local.entity.ABCModelCompletionEntity
 import com.example.moodselector.data.local.entity.AssessmentResultEntity
 import com.example.moodselector.data.local.entity.CBTActivityCompletionEntity
+import com.example.moodselector.data.local.entity.CBTDailyProgressEntity
 import com.example.moodselector.data.local.entity.FiveMinuteStarterCompletionEntity
 import com.example.moodselector.data.local.entity.Grounding54321CompletionEntity
 import com.example.moodselector.data.local.entity.JournalEntity
@@ -36,9 +38,10 @@ import com.example.moodselector.data.local.entity.SelfCompassionReflectionComple
         MindfulMeditationCompletionEntity::class,
         Grounding54321CompletionEntity::class,
         ABCModelCompletionEntity::class,
-        SelfCompassionReflectionCompletionEntity::class
+        SelfCompassionReflectionCompletionEntity::class,
+        CBTDailyProgressEntity::class
     ],
-    version = 12,
+    version = 13,
     exportSchema = false
 )
 @TypeConverters(
@@ -142,4 +145,14 @@ abstract class AppDatabase : RoomDatabase() {
 
     abstract fun selfCompassionReflectionCompletionDao():
             SelfCompassionReflectionCompletionDao
+
+
+    /*
+     * --------------------------------------------------
+     * DAILY CBT PROGRESS
+     * --------------------------------------------------
+     */
+
+    abstract fun cbtDailyProgressDao():
+            CBTDailyProgressDao
 }

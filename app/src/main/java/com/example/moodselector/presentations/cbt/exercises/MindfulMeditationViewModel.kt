@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.moodselector.data.local.entity.MindfulMeditationCompletionEntity
 import com.example.moodselector.domain.repository.AuthRepository
+import com.example.moodselector.domain.repository.CBTDailyProgressRepository
 import com.example.moodselector.domain.repository.CloudBackupRepository
 import com.example.moodselector.domain.repository.MindfulMeditationCompletionRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -11,6 +12,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import javax.inject.Inject
 
 data class MindfulMeditationUiState(
@@ -78,10 +82,15 @@ data class MindfulMeditationUiState(
 class MindfulMeditationViewModel @Inject constructor(
     private val repository:
     MindfulMeditationCompletionRepository,
+
     private val authRepository:
     AuthRepository,
+
     private val cloudBackupRepository:
-    CloudBackupRepository
+    CloudBackupRepository,
+
+    private val dailyProgressRepository:
+    CBTDailyProgressRepository
 ) : ViewModel() {
 
     private val _uiState =
@@ -433,8 +442,43 @@ class MindfulMeditationViewModel @Inject constructor(
                         System.currentTimeMillis()
                 )
 
+            /*
+             * --------------------------------------------------
+             * SAVE MEDITATION COMPLETION LOCALLY
+             * --------------------------------------------------
+             *
+             * The actual meditation completion remains stored
+             * exactly as before.
+             */
+
             repository.saveCompletion(
                 completion
+            )
+
+            /*
+             * --------------------------------------------------
+             * UPDATE DAILY CBT PROGRESS
+             * --------------------------------------------------
+             *
+             * This meditation completion contributes exactly
+             * +1 to the authenticated user's CBT progress
+             * for the current calendar date.
+             *
+             * The daily-progress record is separate from the
+             * meditation completion record.
+             */
+
+            val currentDate =
+                SimpleDateFormat(
+                    "yyyy-MM-dd",
+                    Locale.US
+                ).format(
+                    Date()
+                )
+
+            dailyProgressRepository.incrementDailyCompletion(
+                userId = currentUserId,
+                date = currentDate
             )
 
             /*
@@ -443,9 +487,9 @@ class MindfulMeditationViewModel @Inject constructor(
              * --------------------------------------------------
              *
              * The completion has already been saved locally.
-             * Cloud backup is best-effort and does not prevent
-             * the exercise from being considered completed if
-             * Firestore is temporarily unavailable.
+             * Cloud backup is therefore best-effort and does
+             * not prevent the exercise from being considered
+             * completed if Firestore is temporarily unavailable.
              */
 
             cloudBackupRepository
@@ -524,4 +568,3 @@ class MindfulMeditationViewModel @Inject constructor(
             )
     }
 }
-

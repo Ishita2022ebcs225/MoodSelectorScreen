@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.moodselector.data.local.entity.ABCModelCompletionEntity
 import com.example.moodselector.data.local.entity.CBTActivityCompletionEntity
+import com.example.moodselector.data.local.entity.CBTDailyProgressEntity
 import com.example.moodselector.data.local.entity.FiveMinuteStarterCompletionEntity
 import com.example.moodselector.data.local.entity.Grounding54321CompletionEntity
 import com.example.moodselector.data.local.entity.MindfulMeditationCompletionEntity
@@ -11,6 +12,7 @@ import com.example.moodselector.data.local.entity.ScheduledCBTActivityEntity
 import com.example.moodselector.data.local.entity.SelfCompassionReflectionCompletionEntity
 import com.example.moodselector.domain.repository.ABCModelCompletionRepository
 import com.example.moodselector.domain.repository.AuthRepository
+import com.example.moodselector.domain.repository.CBTDailyProgressRepository
 import com.example.moodselector.domain.repository.CBTProgressRepository
 import com.example.moodselector.domain.repository.FiveMinuteStarterCompletionRepository
 import com.example.moodselector.domain.repository.Grounding54321CompletionRepository
@@ -21,7 +23,11 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
 import javax.inject.Inject
 
 @HiltViewModel
@@ -38,6 +44,8 @@ class CBTProgressViewModel @Inject constructor(
     ABCModelCompletionRepository,
     private val selfCompassionReflectionRepository:
     SelfCompassionReflectionCompletionRepository,
+    private val dailyProgressRepository:
+    CBTDailyProgressRepository,
     private val authRepository: AuthRepository
 ) : ViewModel() {
 
@@ -49,6 +57,53 @@ class CBTProgressViewModel @Inject constructor(
 
     private val userId: String?
         get() = authRepository.currentUser?.uid
+
+
+    /*
+     * ==================================================
+     * CURRENT DATE
+     * ==================================================
+     *
+     * Stored using the same yyyy-MM-dd format expected
+     * by CBTDailyProgressEntity.
+     */
+
+    private val currentDate: String
+        get() = LocalDate.now().toString()
+
+
+    /*
+     * ==================================================
+     * DAILY CBT PROGRESS
+     * ==================================================
+     *
+     * This observes the persisted daily progress record.
+     */
+
+    val dailyProgress:
+            Flow<CBTDailyProgressEntity?> =
+        dailyProgressRepository.observeDailyProgress(
+            userId = userId ?: "",
+            date = currentDate
+        )
+
+
+    /*
+     * ==================================================
+     * DAILY CBT PROGRESS FOR SELECTED DATE
+     * ==================================================
+     *
+     * Used by screens such as MoodGraphScreen where
+     * the user can select a specific calendar date.
+     */
+
+    fun observeDailyProgressForDate(
+        date: String
+    ): Flow<CBTDailyProgressEntity?> =
+        dailyProgressRepository.observeDailyProgress(
+            userId = userId ?: "",
+            date = date
+        )
 
 
     /*
@@ -140,6 +195,153 @@ class CBTProgressViewModel @Inject constructor(
             .getAllCompletions(
                 userId = userId ?: ""
             )
+
+
+    /*
+     * ==================================================
+     * TODAY'S UNIQUE CBT EXERCISE COUNT
+     * ==================================================
+     *
+     * Each DIFFERENT exercise completed today counts once.
+     *
+     * Repeating the same exercise multiple times today
+     * does not increase the count.
+     *
+     * Example:
+     *
+     * Five-Minute Starter
+     * Five-Minute Starter
+     * ABC Model
+     *
+     * Result = 2
+     *
+     * This is the count intended for the daily progress
+     * display.
+     *
+     * The flows are combined in smaller groups so Kotlin
+     * can correctly infer each individual flow type.
+     */
+
+    val dailyCompletionCount:
+            Flow<Int> =
+
+        combine(
+            completions,
+            fiveMinuteStarterCompletions,
+            mindfulMeditationCompletions
+        ) {
+                cbtCompletions,
+                starterCompletions,
+                meditationCompletions ->
+
+            Triple(
+                cbtCompletions,
+                starterCompletions,
+                meditationCompletions
+            )
+
+        }.combine(
+            grounding54321Completions
+        ) {
+                existing,
+                groundingCompletions ->
+
+            val uniqueExercises =
+                mutableSetOf<String>()
+
+            val cbtCompletions =
+                existing.first
+
+            val starterCompletions =
+                existing.second
+
+            val meditationCompletions =
+                existing.third
+
+            cbtCompletions
+                .filter {
+                    it.isCompletedToday()
+                }
+                .forEach { completion ->
+
+                    if (completion.activityId.isNotBlank()) {
+                        uniqueExercises.add(
+                            "activity:${completion.activityId}"
+                        )
+                    }
+                }
+
+            if (
+                starterCompletions.any {
+                    it.isCompletedToday()
+                }
+            ) {
+                uniqueExercises.add(
+                    "five_minute_starter"
+                )
+            }
+
+            if (
+                meditationCompletions.any {
+                    it.isCompletedToday()
+                }
+            ) {
+                uniqueExercises.add(
+                    "mindful_meditation"
+                )
+            }
+
+            if (
+                groundingCompletions.any {
+                    it.isCompletedToday()
+                }
+            ) {
+                uniqueExercises.add(
+                    "grounding_54321"
+                )
+            }
+
+            uniqueExercises
+
+        }.combine(
+            abcModelCompletions
+        ) {
+                uniqueExercises,
+                abcCompletions ->
+
+            if (
+                abcCompletions.any {
+                    it.isCompletedToday()
+                }
+            ) {
+                uniqueExercises.apply {
+                    add("abc_model")
+                }
+            } else {
+                uniqueExercises
+            }
+
+        }.combine(
+            selfCompassionReflectionCompletions
+        ) {
+                uniqueExercises,
+                selfCompassionCompletions ->
+
+            if (
+                selfCompassionCompletions.any {
+                    it.isCompletedToday()
+                }
+            ) {
+                uniqueExercises.apply {
+                    add("self_compassion_reflection")
+                }
+            } else {
+                uniqueExercises
+            }
+
+        }.map {
+            it.size
+        }
 
 
     /*
@@ -237,7 +439,8 @@ class CBTProgressViewModel @Inject constructor(
      * UNIQUE COMPLETED EXERCISE COUNT
      * ==================================================
      *
-     * Counts DIFFERENT exercises completed at least once.
+     * Counts DIFFERENT exercises completed at least once
+     * across the user's complete CBT history.
      *
      * Repeating the same exercise does not increase this
      * number.
@@ -555,6 +758,16 @@ class CBTProgressViewModel @Inject constructor(
                 completion
             )
 
+            /*
+             * The persisted daily progress record is still
+             * incremented for every explicit completion.
+             */
+
+            dailyProgressRepository.incrementDailyCompletion(
+                userId = currentUserId,
+                date = currentDate
+            )
+
             onSaved()
         }
     }
@@ -610,6 +823,21 @@ class CBTProgressViewModel @Inject constructor(
             repository.saveCompletion(
                 completion
             )
+
+            /*
+             * The persisted daily progress record is still
+             * incremented for every explicit completion.
+             */
+
+            dailyProgressRepository.incrementDailyCompletion(
+                userId = activity.userId,
+                date = currentDate
+            )
+
+            /*
+             * The scheduled activity itself is removed
+             * after its completion has been persisted.
+             */
 
             scheduledRepository
                 .deleteScheduledActivityById(
@@ -761,7 +989,72 @@ class CBTProgressViewModel @Inject constructor(
                 )
         }
     }
+
+
+    /*
+     * ==================================================
+     * DELETE ALL DAILY CBT PROGRESS
+     * ==================================================
+     *
+     * Deletes only the daily progress belonging to the
+     * currently authenticated Firebase user.
+     */
+
+    fun deleteAllDailyProgress() {
+
+        val currentUserId =
+            userId ?: return
+
+        viewModelScope.launch {
+
+            dailyProgressRepository
+                .deleteAllDailyProgress(
+                    userId = currentUserId
+                )
+        }
+    }
 }
+
+
+/*
+ * ======================================================
+ * DAILY COMPLETION HELPERS
+ * ======================================================
+ */
+
+private fun Long.isCompletedToday(): Boolean {
+
+    val completionDate =
+        Instant.ofEpochMilli(this)
+            .atZone(ZoneId.systemDefault())
+            .toLocalDate()
+
+    return completionDate == LocalDate.now()
+}
+
+
+private fun CBTActivityCompletionEntity.isCompletedToday(): Boolean =
+    completedAt.isCompletedToday()
+
+
+private fun FiveMinuteStarterCompletionEntity.isCompletedToday(): Boolean =
+    completedAt.isCompletedToday()
+
+
+private fun MindfulMeditationCompletionEntity.isCompletedToday(): Boolean =
+    completedAt.isCompletedToday()
+
+
+private fun Grounding54321CompletionEntity.isCompletedToday(): Boolean =
+    completedAt.isCompletedToday()
+
+
+private fun ABCModelCompletionEntity.isCompletedToday(): Boolean =
+    completedAt.isCompletedToday()
+
+
+private fun SelfCompassionReflectionCompletionEntity.isCompletedToday(): Boolean =
+    completedAt.isCompletedToday()
 
 
 /*
@@ -860,4 +1153,3 @@ sealed class CBTProgressItem {
 
     abstract val completedAt: Long
 }
-

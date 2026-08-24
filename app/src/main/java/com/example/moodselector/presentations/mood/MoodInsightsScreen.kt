@@ -1,10 +1,5 @@
 package com.example.moodselector.presentations.mood
 
-import android.Manifest
-import android.content.pm.PackageManager
-import android.os.Build
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -23,8 +18,8 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.MenuBook
-import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.TaskAlt
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -35,15 +30,12 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.moodselector.R
-import com.example.moodselector.notifications.NotificationHelper
 import com.example.moodselector.presentations.auth.AuthViewModel
 import kotlinx.coroutines.launch
 
@@ -141,70 +133,6 @@ fun MoodInsightsScreen(
 
     val secondaryText =
         MaterialTheme.colorScheme.onSurfaceVariant
-
-    /*
-     * --------------------------------------------------
-     * NOTIFICATIONS
-     * --------------------------------------------------
-     */
-
-    val context =
-        LocalContext.current
-
-    val notificationPermissionLauncher =
-        rememberLauncherForActivityResult(
-            contract =
-                ActivityResultContracts.RequestPermission()
-        ) { isGranted ->
-
-            if (isGranted) {
-
-                NotificationHelper.showNotification(
-                    context = context,
-                    title = "HerMind",
-                    body = "Your notifications are now enabled."
-                )
-            }
-        }
-
-    fun handleNotificationClick() {
-
-        if (
-            Build.VERSION.SDK_INT >=
-            Build.VERSION_CODES.TIRAMISU
-        ) {
-
-            val permissionGranted =
-                ContextCompat.checkSelfPermission(
-                    context,
-                    Manifest.permission.POST_NOTIFICATIONS
-                ) ==
-                        PackageManager.PERMISSION_GRANTED
-
-            if (permissionGranted) {
-
-                NotificationHelper.showNotification(
-                    context = context,
-                    title = "HerMind",
-                    body = "Your notifications are enabled."
-                )
-
-            } else {
-
-                notificationPermissionLauncher.launch(
-                    Manifest.permission.POST_NOTIFICATIONS
-                )
-            }
-
-        } else {
-
-            NotificationHelper.showNotification(
-                context = context,
-                title = "HerMind",
-                body = "Your notifications are now enabled."
-            )
-        }
-    }
 
     /*
      * --------------------------------------------------
@@ -724,115 +652,19 @@ fun MoodInsightsScreen(
                         ) {
 
                             Row(
-                                modifier =
-                                    Modifier.fillMaxWidth(),
-
-                                horizontalArrangement =
-                                    Arrangement.SpaceBetween,
-
                                 verticalAlignment =
                                     Alignment.CenterVertically
                             ) {
-
-                                Row(
-                                    verticalAlignment =
-                                        Alignment.CenterVertically
-                                ) {
-
-                                    Surface(
-                                        modifier =
-                                            Modifier
-                                                .size(42.dp)
-                                                .clickable {
-
-                                                    scope.launch {
-                                                        drawerState.open()
-                                                    }
-                                                },
-
-                                        shape =
-                                            CircleShape,
-
-                                        color =
-                                            Color.White.copy(
-                                                alpha = 0.18f
-                                            )
-                                    ) {
-
-                                        Box(
-                                            contentAlignment =
-                                                Alignment.Center
-                                        ) {
-
-                                            Icon(
-                                                imageVector =
-                                                    Icons.Default.Menu,
-
-                                                contentDescription =
-                                                    "Open sidebar",
-
-                                                tint =
-                                                    Color.White,
-
-                                                modifier =
-                                                    Modifier.size(
-                                                        21.dp
-                                                    )
-                                            )
-                                        }
-                                    }
-
-                                    Spacer(
-                                        modifier =
-                                            Modifier.width(12.dp)
-                                    )
-
-                                    Column {
-
-                                        Text(
-                                            text =
-                                                "Hello, $displayName 🌸",
-
-                                            style =
-                                                MaterialTheme
-                                                    .typography
-                                                    .titleLarge,
-
-                                            fontWeight =
-                                                FontWeight.Bold,
-
-                                            color =
-                                                Color.White
-                                        )
-
-                                        Spacer(
-                                            modifier =
-                                                Modifier.height(3.dp)
-                                        )
-
-                                        Text(
-                                            text =
-                                                "Track your emotional wellbeing",
-
-                                            style =
-                                                MaterialTheme
-                                                    .typography
-                                                    .bodySmall,
-
-                                            color =
-                                                Color.White.copy(
-                                                    alpha = 0.88f
-                                                )
-                                        )
-                                    }
-                                }
 
                                 Surface(
                                     modifier =
                                         Modifier
                                             .size(42.dp)
                                             .clickable {
-                                                handleNotificationClick()
+
+                                                scope.launch {
+                                                    drawerState.open()
+                                                }
                                             },
 
                                     shape =
@@ -851,10 +683,10 @@ fun MoodInsightsScreen(
 
                                         Icon(
                                             imageVector =
-                                                Icons.Default.Notifications,
+                                                Icons.Default.Menu,
 
                                             contentDescription =
-                                                "Notifications",
+                                                "Open sidebar",
 
                                             tint =
                                                 Color.White,
@@ -865,6 +697,50 @@ fun MoodInsightsScreen(
                                                 )
                                         )
                                     }
+                                }
+
+                                Spacer(
+                                    modifier =
+                                        Modifier.width(12.dp)
+                                )
+
+                                Column {
+
+                                    Text(
+                                        text =
+                                            "Hello, $displayName 🌸",
+
+                                        style =
+                                            MaterialTheme
+                                                .typography
+                                                .titleLarge,
+
+                                        fontWeight =
+                                            FontWeight.Bold,
+
+                                        color =
+                                            Color.White
+                                    )
+
+                                    Spacer(
+                                        modifier =
+                                            Modifier.height(3.dp)
+                                    )
+
+                                    Text(
+                                        text =
+                                            "Track your emotional wellbeing",
+
+                                        style =
+                                            MaterialTheme
+                                                .typography
+                                                .bodySmall,
+
+                                        color =
+                                            Color.White.copy(
+                                                alpha = 0.88f
+                                            )
+                                    )
                                 }
                             }
 

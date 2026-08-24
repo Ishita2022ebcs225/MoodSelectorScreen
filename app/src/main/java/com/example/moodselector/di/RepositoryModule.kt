@@ -3,6 +3,7 @@ package com.example.moodselector.di
 import com.example.moodselector.data.repository.ABCModelCompletionRepositoryImpl
 import com.example.moodselector.data.repository.AssessmentRepositoryImpl
 import com.example.moodselector.data.repository.CBTProgressRepositoryImpl
+import com.example.moodselector.data.repository.CBTDailyProgressRepositoryImpl
 import com.example.moodselector.data.repository.FiveMinuteStarterCompletionRepositoryImpl
 import com.example.moodselector.data.repository.FirebaseAuthRepositoryImpl
 import com.example.moodselector.data.repository.FirestoreCloudBackupRepositoryImpl
@@ -18,6 +19,7 @@ import com.example.moodselector.domain.repository.ABCModelCompletionRepository
 import com.example.moodselector.domain.repository.AssessmentRepository
 import com.example.moodselector.domain.repository.AuthRepository
 import com.example.moodselector.domain.repository.CBTProgressRepository
+import com.example.moodselector.domain.repository.CBTDailyProgressRepository
 import com.example.moodselector.domain.repository.CloudBackupRepository
 import com.example.moodselector.domain.repository.FiveMinuteStarterCompletionRepository
 import com.example.moodselector.domain.repository.Grounding54321CompletionRepository
@@ -64,6 +66,20 @@ abstract class RepositoryModule {
     abstract fun bindCBTProgressRepository(
         impl: CBTProgressRepositoryImpl
     ): CBTProgressRepository
+
+
+    /*
+     * --------------------------------------------------
+     * DAILY CBT PROGRESS
+     * --------------------------------------------------
+     */
+
+    @Binds
+    @Singleton
+    abstract fun bindCBTDailyProgressRepository(
+        implementation:
+        CBTDailyProgressRepositoryImpl
+    ): CBTDailyProgressRepository
 
 
     @Binds
@@ -158,4 +174,3 @@ abstract class RepositoryModule {
         FirestoreCloudBackupRepositoryImpl
     ): CloudBackupRepository
 }
-

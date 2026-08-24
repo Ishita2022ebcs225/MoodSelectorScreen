@@ -41,7 +41,7 @@ private val realStories = listOf(
             "A personal experience of living with anxiety and gradually finding ways to understand it, talk about it, and manage difficult moments.",
         source = "Mind · Shiva",
         url =
-            "https://www.mind.org.uk/information-support/your-stories/how-i-learnt-to-accept-my-anxiety/"
+            "[https://www.mind.org.uk/information-support/your-stories/how-i-learnt-to-accept-my-anxiety/](https://www.mind.org.uk/information-support/your-stories/how-i-learnt-to-accept-my-anxiety/)"
     ),
 
     RealStory(
@@ -50,7 +50,7 @@ private val realStories = listOf(
             "A woman's experience of living with depression and anxiety and discovering how treatment, including CBT, could help her regain parts of everyday life.",
         source = "Mind · Rachel",
         url =
-            "https://www.mind.org.uk/information-support/your-stories/how-treatment-helped-me-to-live-with-depression-and-anxiety/"
+            "[https://www.mind.org.uk/information-support/your-stories/how-treatment-helped-me-to-live-with-depression-and-anxiety/](https://www.mind.org.uk/information-support/your-stories/how-treatment-helped-me-to-live-with-depression-and-anxiety/)"
     ),
 
     RealStory(
@@ -59,7 +59,7 @@ private val realStories = listOf(
             "A personal account of anxiety and depression, seeking therapy, and discovering how CBT techniques became useful beyond the therapy sessions.",
         source = "Mind · Sophie",
         url =
-            "https://www.mind.org.uk/information-support/your-stories/cbt-and-me/"
+            "[https://www.mind.org.uk/information-support/your-stories/cbt-and-me/](https://www.mind.org.uk/information-support/your-stories/cbt-and-me/)"
     ),
 
     RealStory(
@@ -68,7 +68,25 @@ private val realStories = listOf(
             "A woman's experience of anxiety, therapy and learning that talking about mental health could be part of finding ways to cope.",
         source = "Mind · Shetal",
         url =
-            "https://www.mind.org.uk/information-support/your-stories/my-culture-stopped-me-talking-about-my-anxiety/"
+            "[https://www.mind.org.uk/information-support/your-stories/my-culture-stopped-me-talking-about-my-anxiety/](https://www.mind.org.uk/information-support/your-stories/my-culture-stopped-me-talking-about-my-anxiety/)"
+    ),
+
+    RealStory(
+        title = "How the menopause affected my mental health",
+        summary =
+            "Gillian's personal experience of perimenopause, anxiety, low mood, poor sleep and difficult life circumstances, and how reaching out for support helped her gradually rebuild her wellbeing.",
+        source = "Mind · Gillian",
+        url =
+            "https://www.mind.org.uk/information-support/your-stories/how-the-menopause-affected-my-mental-health/"
+    ),
+
+    RealStory(
+        title = "Depression and anxiety: how running helped me",
+        summary =
+            "Claire's personal experience of anxiety and depression, including living with an underactive thyroid, seeking support and discovering that running became an important part of her wellbeing journey.",
+        source = "Mind · Claire",
+        url =
+            "https://www.mind.org.uk/information-support/your-stories/depression-and-anxiety-how-running-helped-me/"
     )
 )
 

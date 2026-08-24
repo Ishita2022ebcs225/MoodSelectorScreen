@@ -1101,6 +1101,83 @@ fun MindfulMeditationScreen(
 
             /*
              * --------------------------------------------
+             * TRIAL FINISH BUTTON
+             * --------------------------------------------
+             *
+             * Allows the meditation completion screen
+             * to be tested without waiting for the full
+             * narration duration.
+             *
+             * This does NOT save the completion.
+             * The user must still press "Complete
+             * Meditation" afterward.
+             */
+
+            if (
+                uiState.hasStarted &&
+                !uiState.isCompleted
+            ) {
+
+                Button(
+
+                    onClick = {
+
+                        narrationPlayer?.let {
+
+                            if (it.isPlaying) {
+                                it.pause()
+                            }
+                        }
+
+                        musicPlayer?.let {
+
+                            if (it.isPlaying) {
+                                it.pause()
+                            }
+                        }
+
+                        viewModel.markCompleted()
+                    },
+
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .height(48.dp),
+
+                    shape =
+                        RoundedCornerShape(16.dp),
+
+                    colors =
+                        ButtonDefaults.buttonColors(
+                            containerColor =
+                                MaterialTheme
+                                    .colorScheme
+                                    .secondaryContainer,
+
+                            contentColor =
+                                MaterialTheme
+                                    .colorScheme
+                                    .onSecondaryContainer
+                        )
+                ) {
+
+                    Text(
+                        text =
+                            "Skip to Completion (Demo)",
+
+                        fontWeight =
+                            FontWeight.SemiBold
+                    )
+                }
+
+                Spacer(
+                    modifier =
+                        Modifier.height(8.dp)
+                )
+            }
+
+            /*
+             * --------------------------------------------
              * MAIN ACTION
              * --------------------------------------------
              */

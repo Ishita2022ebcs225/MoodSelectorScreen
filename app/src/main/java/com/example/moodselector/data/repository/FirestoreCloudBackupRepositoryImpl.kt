@@ -3,6 +3,7 @@ package com.example.moodselector.data.repository
 import com.example.moodselector.data.local.dao.ABCModelCompletionDao
 import com.example.moodselector.data.local.dao.AssessmentResultDao
 import com.example.moodselector.data.local.dao.CBTActivityCompletionDao
+import com.example.moodselector.data.local.dao.CBTDailyProgressDao
 import com.example.moodselector.data.local.dao.FiveMinuteStarterCompletionDao
 import com.example.moodselector.data.local.dao.Grounding54321CompletionDao
 import com.example.moodselector.data.local.dao.JournalDao
@@ -13,6 +14,7 @@ import com.example.moodselector.data.local.dao.SelfCompassionReflectionCompletio
 import com.example.moodselector.data.local.entity.ABCModelCompletionEntity
 import com.example.moodselector.data.local.entity.AssessmentResultEntity
 import com.example.moodselector.data.local.entity.CBTActivityCompletionEntity
+import com.example.moodselector.data.local.entity.CBTDailyProgressEntity
 import com.example.moodselector.data.local.entity.FiveMinuteStarterCompletionEntity
 import com.example.moodselector.data.local.entity.Grounding54321CompletionEntity
 import com.example.moodselector.data.local.entity.JournalEntity
@@ -49,6 +51,8 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
     ABCModelCompletionDao,
     private val selfCompassionReflectionCompletionDao:
     SelfCompassionReflectionCompletionDao,
+    private val cbtDailyProgressDao:
+    CBTDailyProgressDao,
     private val userPreferencesRepository:
     UserPreferencesRepository
 ) : CloudBackupRepository {
@@ -69,6 +73,7 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
      * users/{userId}/grounding_54321_completions/{localRoomId}
      * users/{userId}/abc_model_completions/{localRoomId}
      * users/{userId}/self_compassion_reflection_completions/{localRoomId}
+     * users/{userId}/cbt_daily_progress/{localRoomId}
      *
      * Room remains the local data source.
      *
@@ -77,6 +82,7 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
      * The Room primary key is used as the Firestore
      * document ID.
      */
+
 
     /*
      * --------------------------------------------------
@@ -108,6 +114,7 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
             backupGrounding54321Completions(userId)
             backupABCModelCompletions(userId)
             backupSelfCompassionReflectionCompletions(userId)
+            backupCBTDailyProgress(userId)
 
             Result.success(Unit)
 
@@ -116,6 +123,7 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
             Result.failure(exception)
         }
     }
+
 
     /*
      * --------------------------------------------------
@@ -147,6 +155,7 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
             restoreGrounding54321Completions(userId)
             restoreABCModelCompletions(userId)
             restoreSelfCompassionReflectionCompletions(userId)
+            restoreCBTDailyProgress(userId)
 
             Result.success(Unit)
 
@@ -155,6 +164,7 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
             Result.failure(exception)
         }
     }
+
 
     /*
      * --------------------------------------------------
@@ -235,6 +245,12 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
                 )
             )
 
+            deleteCollectionDocuments(
+                userDocument.collection(
+                    "cbt_daily_progress"
+                )
+            )
+
             userDocument
                 .delete()
                 .await()
@@ -246,6 +262,7 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
             Result.failure(exception)
         }
     }
+
 
     /*
      * --------------------------------------------------
@@ -286,6 +303,7 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
             batch.commit().await()
         }
     }
+
 
     /*
      * --------------------------------------------------
@@ -336,6 +354,7 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
             Result.failure(exception)
         }
     }
+
 
     /*
      * --------------------------------------------------
@@ -428,11 +447,23 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
             return true
         }
 
-        return selfCompassionReflectionCompletionDao
-            .getAllCompletions(userId)
-            .first()
-            .isNotEmpty()
+        if (
+            selfCompassionReflectionCompletionDao
+                .getAllCompletions(userId)
+                .first()
+                .isNotEmpty()
+        ) {
+            return true
+        }
+
+        return cbtDailyProgressDao
+            .observeDailyProgress(
+                userId = userId,
+                date = ""
+            )
+            .first() != null
     }
+
 
     /*
      * ==================================================
@@ -522,6 +553,7 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
             moodDao.insertMood(mood)
         }
     }
+
 
     /*
      * ==================================================
@@ -626,6 +658,7 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
             journalDao.insertJournal(journal)
         }
     }
+
 
     /*
      * ==================================================
@@ -754,6 +787,7 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
         }
     }
 
+
     /*
      * ==================================================
      * CBT ACTIVITY COMPLETIONS
@@ -868,6 +902,7 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
         }
     }
 
+
     /*
      * ==================================================
      * SCHEDULED CBT ACTIVITIES
@@ -977,6 +1012,7 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
         }
     }
 
+
     /*
      * ==================================================
      * FIVE-MINUTE STARTER
@@ -1071,6 +1107,7 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
         }
     }
 
+
     /*
      * ==================================================
      * MINDFUL MEDITATION
@@ -1150,6 +1187,7 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
         }
     }
 
+
     /*
      * ==================================================
      * 5-4-3-2-1 GROUNDING
@@ -1228,6 +1266,7 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
             grounding54321CompletionDao.insertCompletion(completion)
         }
     }
+
 
     /*
      * ==================================================
@@ -1317,6 +1356,7 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
             abcModelCompletionDao.insertCompletion(completion)
         }
     }
+
 
     /*
      * ==================================================
@@ -1414,6 +1454,121 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
         }
     }
 
+
+    /*
+     * ==================================================
+     * DAILY CBT PROGRESS
+     * ==================================================
+     *
+     * Each record represents the total number of CBT
+     * exercises explicitly completed by one user on one
+     * calendar date.
+     *
+     * Firestore structure:
+     *
+     * users/{userId}/cbt_daily_progress/{localRoomId}
+     *
+     * The Room primary key is used as the document ID.
+     */
+
+    private suspend fun backupCBTDailyProgress(
+        userId: String
+    ) {
+
+        val progressRecords =
+            cbtDailyProgressDao
+                .getAllForUser(userId)
+                .first()
+
+        val progressCollection =
+            firestore
+                .collection("users")
+                .document(userId)
+                .collection("cbt_daily_progress")
+
+        val existingSnapshot =
+            progressCollection
+                .get()
+                .await()
+
+        val localProgressIds =
+            progressRecords
+                .map { it.id.toString() }
+                .toSet()
+
+        val batch =
+            firestore.batch()
+
+        existingSnapshot.documents.forEach { document ->
+
+            if (document.id !in localProgressIds) {
+                batch.delete(document.reference)
+            }
+        }
+
+        progressRecords.forEach { progress ->
+
+            val document =
+                progressCollection
+                    .document(progress.id.toString())
+
+            batch.set(
+                document,
+                mapOf(
+                    "id" to progress.id,
+                    "userId" to progress.userId,
+                    "date" to progress.date,
+                    "completedCount" to progress.completedCount
+                )
+            )
+        }
+
+        batch.commit().await()
+    }
+
+
+    private suspend fun restoreCBTDailyProgress(
+        userId: String
+    ) {
+
+        val snapshot =
+            firestore
+                .collection("users")
+                .document(userId)
+                .collection("cbt_daily_progress")
+                .get()
+                .await()
+
+        snapshot.documents.forEach { document ->
+
+            val progress =
+                CBTDailyProgressEntity(
+                    id =
+                        document.getLong("id")
+                            ?.toInt()
+                            ?: document.id.toInt(),
+
+                    userId =
+                        document.getString("userId")
+                            ?: userId,
+
+                    date =
+                        document.getString("date")
+                            ?: "",
+
+                    completedCount =
+                        document.getLong("completedCount")
+                            ?.toInt()
+                            ?: 0
+                )
+
+            cbtDailyProgressDao.insertOrUpdate(
+                progress
+            )
+        }
+    }
+
+
     /*
      * --------------------------------------------------
      * FLOW HELPER
@@ -1423,6 +1578,4 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
     private suspend fun <T> Flow<T>.firstValue(): T {
         return first()
     }
-
-
 }

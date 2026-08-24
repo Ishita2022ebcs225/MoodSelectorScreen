@@ -5,12 +5,16 @@ import androidx.lifecycle.viewModelScope
 import com.example.moodselector.data.local.entity.ABCModelCompletionEntity
 import com.example.moodselector.domain.repository.ABCModelCompletionRepository
 import com.example.moodselector.domain.repository.AuthRepository
+import com.example.moodselector.domain.repository.CBTDailyProgressRepository
 import com.example.moodselector.domain.repository.CloudBackupRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import javax.inject.Inject
 
 data class ABCModelUiState(
@@ -25,6 +29,7 @@ data class ABCModelUiState(
 @HiltViewModel
 class ABCModelViewModel @Inject constructor(
     private val repository: ABCModelCompletionRepository,
+    private val dailyProgressRepository: CBTDailyProgressRepository,
     private val authRepository: AuthRepository,
     private val cloudBackupRepository: CloudBackupRepository
 ) : ViewModel() {
@@ -37,6 +42,7 @@ class ABCModelViewModel @Inject constructor(
     val uiState: StateFlow<ABCModelUiState> =
         _uiState.asStateFlow()
 
+
     /*
      * --------------------------------------------------
      * CURRENT USER ID
@@ -45,6 +51,7 @@ class ABCModelViewModel @Inject constructor(
 
     private val userId: String?
         get() = authRepository.currentUser?.uid
+
 
     /*
      * --------------------------------------------------
@@ -63,6 +70,7 @@ class ABCModelViewModel @Inject constructor(
             )
     }
 
+
     /*
      * --------------------------------------------------
      * BELIEFS
@@ -80,6 +88,7 @@ class ABCModelViewModel @Inject constructor(
             )
     }
 
+
     /*
      * --------------------------------------------------
      * CONSEQUENCES
@@ -96,6 +105,7 @@ class ABCModelViewModel @Inject constructor(
                 isCompleted = false
             )
     }
+
 
     /*
      * --------------------------------------------------
@@ -122,10 +132,17 @@ class ABCModelViewModel @Inject constructor(
             )
     }
 
+
     /*
      * --------------------------------------------------
      * SAVE COMPLETION
      * --------------------------------------------------
+     *
+     * The ABC exercise is persisted only after the user
+     * explicitly completes the exercise.
+     *
+     * A successful completion also increments the user's
+     * CBT daily progress for the current calendar date.
      */
 
     fun saveCompletion(
@@ -155,7 +172,7 @@ class ABCModelViewModel @Inject constructor(
 
         /*
          * Prevent duplicate save attempts while the
-         * Room operation is running.
+         * persistence operation is running.
          */
 
         _uiState.value =
@@ -197,10 +214,40 @@ class ABCModelViewModel @Inject constructor(
                 )
 
                 /*
+                 * --------------------------------------------------
+                 * UPDATE DAILY CBT PROGRESS
+                 * --------------------------------------------------
+                 *
+                 * The daily progress record uses yyyy-MM-dd as
+                 * its calendar-date identifier.
+                 *
+                 * This is incremented once for this explicit
+                 * completion.
+                 */
+
+                val currentDate =
+                    SimpleDateFormat(
+                        "yyyy-MM-dd",
+                        Locale.US
+                    ).format(
+                        Date()
+                    )
+
+                runCatching {
+
+                    dailyProgressRepository
+                        .incrementDailyCompletion(
+                            userId = currentUserId,
+                            date = currentDate
+                        )
+                }
+
+                /*
                  * Local persistence succeeded.
                  *
-                 * The exercise is now considered saved even
-                 * if the cloud backup is temporarily unavailable.
+                 * The exercise is considered saved even if
+                 * daily-progress persistence or cloud backup
+                 * is temporarily unavailable.
                  */
 
                 _uiState.value =
@@ -217,8 +264,8 @@ class ABCModelViewModel @Inject constructor(
                  * --------------------------------------------------
                  *
                  * Cloud backup is best-effort. A Firestore
-                 * failure must not undo the successful Room save
-                 * or prevent navigation.
+                 * failure must not undo the successful local
+                 * completion or prevent navigation.
                  */
 
                 runCatching {
@@ -234,7 +281,7 @@ class ABCModelViewModel @Inject constructor(
                 /*
                  * Keep the user's responses in the
                  * ViewModel so they are not lost if
-                 * local persistence fails.
+                 * local completion persistence fails.
                  */
 
                 _uiState.value =
@@ -244,6 +291,7 @@ class ABCModelViewModel @Inject constructor(
             }
         }
     }
+
 
     /*
      * --------------------------------------------------
