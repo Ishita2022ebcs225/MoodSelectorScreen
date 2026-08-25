@@ -19,11 +19,15 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -37,10 +41,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.credentials.CredentialManager
@@ -51,28 +55,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import kotlinx.coroutines.launch
-
-
-private val Lavender =
-    Color(0xFF6C63FF)
-
-private val SoftLavender =
-    Color(0xFFEDEBFF)
-
-private val SoftRose =
-    Color(0xFFFFEEF4)
-
-private val Rose =
-    Color(0xFFE88BA5)
-
-private val TextPrimary =
-    Color(0xFF292638)
-
-private val TextSecondary =
-    Color(0xFF777282)
-
-private val Background =
-    Color(0xFFFAF9FD)
 
 
 @Composable
@@ -94,6 +76,10 @@ fun ReauthenticationScreen(
 
     var password by rememberSaveable {
         mutableStateOf("")
+    }
+
+    var passwordVisible by rememberSaveable {
+        mutableStateOf(false)
     }
 
 
@@ -128,6 +114,20 @@ fun ReauthenticationScreen(
 
     /*
      * --------------------------------------------------
+     * THEME COLORS
+     * --------------------------------------------------
+     *
+     * These colors come from the application's
+     * MaterialTheme, so the screen automatically responds
+     * to System default, Light, and Dark mode.
+     */
+
+    val colorScheme =
+        MaterialTheme.colorScheme
+
+
+    /*
+     * --------------------------------------------------
      * SCREEN
      * --------------------------------------------------
      */
@@ -137,7 +137,7 @@ fun ReauthenticationScreen(
             Modifier
                 .fillMaxSize()
                 .background(
-                    Background
+                    colorScheme.background
                 )
     ) {
 
@@ -179,7 +179,8 @@ fun ReauthenticationScreen(
                             CircleShape
                         )
                         .background(
-                            SoftLavender
+                            colorScheme
+                                .secondaryContainer
                         ),
 
                 contentAlignment =
@@ -195,7 +196,8 @@ fun ReauthenticationScreen(
                         null,
 
                     tint =
-                        Rose,
+                        colorScheme
+                            .secondary,
 
                     modifier =
                         Modifier.size(
@@ -217,7 +219,8 @@ fun ReauthenticationScreen(
                     "Verify your identity",
 
                 color =
-                    TextPrimary,
+                    colorScheme
+                        .onBackground,
 
                 fontSize =
                     28.sp,
@@ -240,7 +243,8 @@ fun ReauthenticationScreen(
                             "before continuing with account deletion.",
 
                 color =
-                    TextSecondary,
+                    colorScheme
+                        .onSurfaceVariant,
 
                 fontSize =
                     14.sp,
@@ -323,8 +327,54 @@ fun ReauthenticationScreen(
                 singleLine =
                     true,
 
+                trailingIcon = {
+
+                    IconButton(
+                        onClick = {
+
+                            passwordVisible =
+                                !passwordVisible
+                        }
+                    ) {
+
+                        Icon(
+
+                            imageVector =
+                                if (passwordVisible) {
+
+                                    Icons.Default.VisibilityOff
+
+                                } else {
+
+                                    Icons.Default.Visibility
+                                },
+
+                            contentDescription =
+                                if (passwordVisible) {
+
+                                    "Hide password"
+
+                                } else {
+
+                                    "Show password"
+                                },
+
+                            tint =
+                                colorScheme
+                                    .onSurfaceVariant
+                        )
+                    }
+                },
+
                 visualTransformation =
-                    PasswordVisualTransformation(),
+                    if (passwordVisible) {
+
+                        VisualTransformation.None
+
+                    } else {
+
+                        PasswordVisualTransformation()
+                    },
 
                 shape =
                     RoundedCornerShape(
@@ -349,9 +399,7 @@ fun ReauthenticationScreen(
                         state.errorMessage!!,
 
                     color =
-                        Color(
-                            0xFFB44A5A
-                        ),
+                        colorScheme.error,
 
                     fontSize =
                         13.sp,
@@ -405,10 +453,11 @@ fun ReauthenticationScreen(
                     ButtonDefaults.buttonColors(
 
                         containerColor =
-                            Lavender,
+                            colorScheme.primary,
 
                         disabledContainerColor =
-                            SoftLavender
+                            colorScheme
+                                .primaryContainer
                     )
             ) {
 
@@ -427,7 +476,8 @@ fun ReauthenticationScreen(
                             2.dp,
 
                         color =
-                            Color.White
+                            colorScheme
+                                .onPrimary
                     )
 
                 } else {
@@ -470,7 +520,8 @@ fun ReauthenticationScreen(
                         "  or  ",
 
                     color =
-                        TextSecondary,
+                        colorScheme
+                            .onSurfaceVariant,
 
                     fontSize =
                         12.sp
@@ -516,8 +567,12 @@ fun ReauthenticationScreen(
                                     )
                             },
 
-                            onError = { message ->
+                            onError = { _ ->
 
+                                /*
+                                 * Do not display a stale Google
+                                 * cancellation/error message here.
+                                 */
                                 viewModel.clearError()
                             }
                         )
@@ -546,7 +601,8 @@ fun ReauthenticationScreen(
                         "Verify with Google",
 
                     color =
-                        TextPrimary,
+                        colorScheme
+                            .onSurface,
 
                     fontWeight =
                         FontWeight.SemiBold
@@ -581,7 +637,7 @@ fun ReauthenticationScreen(
                         "Cancel",
 
                     color =
-                        Lavender,
+                        colorScheme.primary,
 
                     fontWeight =
                         FontWeight.Bold

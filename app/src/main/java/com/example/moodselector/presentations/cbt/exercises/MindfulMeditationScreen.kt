@@ -616,8 +616,15 @@ fun MindfulMeditationScreen(
                     setOnPreparedListener {
                             mediaPlayer ->
 
+                        /*
+                         * Play the video normally from the
+                         * beginning. The final three seconds
+                         * are looped manually in the completion
+                         * listener below.
+                         */
+
                         mediaPlayer.isLooping =
-                            true
+                            false
 
                         mediaPlayer.setVolume(
                             0f,
@@ -625,10 +632,38 @@ fun MindfulMeditationScreen(
                         )
 
                         mediaPlayer.setVideoScalingMode(
-                            MediaPlayer.VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING
+                            MediaPlayer
+                                .VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING
                         )
 
                         start()
+                    }
+
+                    setOnCompletionListener {
+                            mediaPlayer ->
+
+                        /*
+                         * Once the video reaches its actual
+                         * end, jump back three seconds and
+                         * continue playing.
+                         *
+                         * This means the full video plays
+                         * normally once, while only the final
+                         * three seconds repeat afterward.
+                         */
+
+                        val loopStartPosition =
+                            (
+                                    mediaPlayer.duration -
+                                            3_000
+                                    )
+                                .coerceAtLeast(0)
+
+                        mediaPlayer.seekTo(
+                            loopStartPosition
+                        )
+
+                        mediaPlayer.start()
                     }
                 }
             }
@@ -1151,13 +1186,11 @@ fun MindfulMeditationScreen(
                         ButtonDefaults.buttonColors(
                             containerColor =
                                 MaterialTheme
-                                    .colorScheme
-                                    .secondaryContainer,
+                                    .colorScheme.secondaryContainer,
 
                             contentColor =
                                 MaterialTheme
-                                    .colorScheme
-                                    .onSecondaryContainer
+                                    .colorScheme.onSecondaryContainer
                         )
                 ) {
 
@@ -1304,3 +1337,4 @@ fun MindfulMeditationScreen(
         }
     }
 }
+

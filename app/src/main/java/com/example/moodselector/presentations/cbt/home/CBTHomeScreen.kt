@@ -55,7 +55,6 @@ private val SoftPeriwinkle = Color(0xFFE1E3F5)
 private val TextPrimary = Color(0xFF443A48)
 private val TextSecondary = Color(0xFF766B7A)
 
-// Dark-mode text accents only.
 private val DarkTextPrimary = Color(0xFFE4C7EE)
 private val DarkTextSecondary = Color(0xFFC5B2CC)
 
@@ -71,7 +70,7 @@ fun CBTHomeScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     val completedCount by progressViewModel
-        .uniqueCompletedExerciseCount
+        .dailyCompletionCount
         .collectAsStateWithLifecycle(
             initialValue = 0
         )
@@ -85,7 +84,6 @@ fun CBTHomeScreen(
         } else {
             LavenderBackground
         }
-
 
     val visibleActivities =
         uiState.allActivities.filterNot {
@@ -253,7 +251,6 @@ private fun CBTHeader(
 ) {
 
     Card(
-
         modifier =
             Modifier.fillMaxWidth(),
 
@@ -278,16 +275,12 @@ private fun CBTHeader(
     ) {
 
         Column(
-
             modifier =
                 Modifier
                     .fillMaxWidth()
                     .background(
-
                         Brush.verticalGradient(
-
                             listOf(
-
                                 MaterialTheme
                                     .colorScheme
                                     .primary
@@ -502,9 +495,9 @@ private fun ProgressCard(
                         } else {
                             "$completedCount " +
                                     if (completedCount == 1)
-                                        "activity completed"
+                                        "activity completed today"
                                     else
-                                        "activities completed"
+                                        "activities completed today"
                         },
 
                     style =
@@ -1291,7 +1284,7 @@ private fun EmptyPlanCard(
 
             Text(
                 text =
-                    "Your plan is taking shape",
+                    "Try a CBT exercise",
 
                 style =
                     MaterialTheme.typography.titleMedium,
@@ -1310,7 +1303,7 @@ private fun EmptyPlanCard(
 
             Text(
                 text =
-                    "There are no CBT exercises to show right now.",
+                    "Even when your symptoms feel mild, practicing CBT skills can help you build healthy coping habits. Explore the exercises below and choose one that feels right for you.",
 
                 style =
                     MaterialTheme.typography.bodyMedium,
@@ -1500,4 +1493,3 @@ private fun categoryIcon(
     CBTCategory.MINDFULNESS ->
         Icons.Outlined.SelfImprovement
 }
-

@@ -58,6 +58,53 @@ class MainActivity : ComponentActivity() {
                 .currentUser
                 .collectAsStateWithLifecycle()
 
+            val authenticatedUser =
+                currentUser
+
+
+            /*
+             * --------------------------------------------------
+             * STARTUP READINESS
+             * --------------------------------------------------
+             *
+             * Signed-in users must wait until their cloud
+             * synchronization has completed before the
+             * startup destination is selected.
+             */
+
+            val isReady by
+            startupViewModel
+                .isReady
+                .collectAsStateWithLifecycle()
+
+
+            /*
+             * --------------------------------------------------
+             * NEW USER STATE
+             * --------------------------------------------------
+             */
+
+            val isNewUser by
+            startupViewModel
+                .isNewUser
+                .collectAsStateWithLifecycle()
+
+
+            /*
+             * --------------------------------------------------
+             * NEW USER RESOLUTION
+             * --------------------------------------------------
+             *
+             * Prevents the NavHost from being created with
+             * MoodInsights while isNewUser is still being
+             * resolved.
+             */
+
+            val isNewUserResolved by
+            startupViewModel
+                .isNewUserResolved
+                .collectAsStateWithLifecycle()
+
 
             /*
              * --------------------------------------------------
@@ -66,7 +113,7 @@ class MainActivity : ComponentActivity() {
              */
 
             val userId =
-                currentUser?.uid
+                authenticatedUser?.uid
 
             val themeModeFlow =
                 remember(userId) {
@@ -116,18 +163,24 @@ class MainActivity : ComponentActivity() {
                  * STARTUP
                  * --------------------------------------------------
                  *
-                 * Signed-out users start at Login.
+                 * Signed-out users:
+                 *      Login
                  *
-                 * All signed-in users start at MoodInsights,
-                 * regardless of whether the assessment has been
-                 * completed.
+                 * Signed-in users:
+                 *      Wait until BOTH cloud synchronization
+                 *      and new-user resolution are complete.
                  *
-                 * MoodInsightsScreen handles the incomplete
-                 * assessment state and allows the user to choose
-                 * whether to take the assessment.
+                 * Newly registered users:
+                 *      AssessmentOnboarding
+                 *
+                 * Existing authenticated users:
+                 *      MoodInsights
+                 *
+                 * This prevents MoodInsights from briefly
+                 * appearing for a newly registered user.
                  */
 
-                if (currentUser == null) {
+                if (authenticatedUser == null) {
 
                     AppNavHost(
 
@@ -138,6 +191,22 @@ class MainActivity : ComponentActivity() {
                             Screen.Login.route
                     )
 
+                } else if (
+                    !isReady ||
+                    !isNewUserResolved
+                ) {
+
+                    Box(
+                        modifier =
+                            Modifier.fillMaxSize(),
+
+                        contentAlignment =
+                            Alignment.Center
+                    ) {
+
+                        CircularProgressIndicator()
+                    }
+
                 } else {
 
                     AppNavHost(
@@ -146,7 +215,14 @@ class MainActivity : ComponentActivity() {
                             navController,
 
                         startDestination =
-                            Screen.Insights.route
+                            if (isNewUser) {
+
+                                Screen.AssessmentOnboarding.route
+
+                            } else {
+
+                                Screen.Insights.route
+                            }
                     )
                 }
             }

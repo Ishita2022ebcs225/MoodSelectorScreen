@@ -24,6 +24,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -44,13 +45,6 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
-private val Lavender = Color(0xFF6C63FF)
-private val SoftLavender = Color(0xFFEDEBFF)
-private val TextPrimary = Color(0xFF292638)
-private val TextSecondary = Color(0xFF777282)
-private val Background = Color(0xFFFAF9FD)
-private val ErrorRed = Color(0xFFD65C6C)
-
 @Composable
 fun RegisterScreen(
     onBackClick: () -> Unit,
@@ -58,6 +52,35 @@ fun RegisterScreen(
     onLoginClick: () -> Unit,
     viewModel: AuthViewModel = hiltViewModel()
 ) {
+
+    /*
+     * ----------------------------------------------------------
+     * THEME COLORS
+     * ----------------------------------------------------------
+     *
+     * These values come from MaterialTheme so the screen
+     * automatically responds to the app's System / Light /
+     * Dark theme selection.
+     */
+
+    val colorScheme =
+        MaterialTheme.colorScheme
+
+    val backgroundColor =
+        colorScheme.background
+
+    val textPrimary =
+        colorScheme.onBackground
+
+    val textSecondary =
+        colorScheme.onSurfaceVariant
+
+    val primaryColor =
+        colorScheme.primary
+
+    val errorColor =
+        colorScheme.error
+
 
     /*
      * ----------------------------------------------------------
@@ -130,7 +153,8 @@ fun RegisterScreen(
      */
 
     Scaffold(
-        containerColor = Background
+        containerColor =
+            backgroundColor
     ) { paddingValues ->
 
         Column(
@@ -181,7 +205,7 @@ fun RegisterScreen(
                         "Back",
 
                     tint =
-                        TextPrimary
+                        textPrimary
                 )
             }
 
@@ -204,7 +228,7 @@ fun RegisterScreen(
                     "Create your account",
 
                 color =
-                    TextPrimary,
+                    textPrimary,
 
                 fontSize =
                     28.sp,
@@ -213,13 +237,14 @@ fun RegisterScreen(
                     FontWeight.Bold
             )
 
+
             Text(
 
                 text =
                     "Create your HerMind account to keep your progress safe and accessible.",
 
                 color =
-                    TextSecondary,
+                    textSecondary,
 
                 fontSize =
                     14.sp,
@@ -257,7 +282,9 @@ fun RegisterScreen(
                     true,
 
                 label = {
-                    Text("Name")
+                    Text(
+                        text = "Name"
+                    )
                 },
 
                 leadingIcon = {
@@ -272,7 +299,9 @@ fun RegisterScreen(
                 },
 
                 shape =
-                    RoundedCornerShape(18.dp)
+                    RoundedCornerShape(
+                        18.dp
+                    )
             )
 
 
@@ -298,7 +327,9 @@ fun RegisterScreen(
                     true,
 
                 label = {
-                    Text("Email")
+                    Text(
+                        text = "Email"
+                    )
                 },
 
                 leadingIcon = {
@@ -313,7 +344,9 @@ fun RegisterScreen(
                 },
 
                 shape =
-                    RoundedCornerShape(18.dp)
+                    RoundedCornerShape(
+                        18.dp
+                    )
             )
 
 
@@ -339,7 +372,9 @@ fun RegisterScreen(
                     true,
 
                 label = {
-                    Text("Password")
+                    Text(
+                        text = "Password"
+                    )
                 },
 
                 leadingIcon = {
@@ -389,7 +424,9 @@ fun RegisterScreen(
                     },
 
                 shape =
-                    RoundedCornerShape(18.dp)
+                    RoundedCornerShape(
+                        18.dp
+                    )
             )
 
 
@@ -402,7 +439,7 @@ fun RegisterScreen(
                     Modifier.fillMaxWidth(),
 
                 color =
-                    TextSecondary,
+                    textSecondary,
 
                 fontSize =
                     12.sp
@@ -431,7 +468,9 @@ fun RegisterScreen(
                     true,
 
                 label = {
-                    Text("Confirm password")
+                    Text(
+                        text = "Confirm password"
+                    )
                 },
 
                 leadingIcon = {
@@ -485,7 +524,9 @@ fun RegisterScreen(
                             !passwordsMatch,
 
                 shape =
-                    RoundedCornerShape(18.dp)
+                    RoundedCornerShape(
+                        18.dp
+                    )
             )
 
 
@@ -503,7 +544,7 @@ fun RegisterScreen(
                         Modifier.fillMaxWidth(),
 
                     color =
-                        ErrorRed,
+                        errorColor,
 
                     fontSize =
                         12.sp
@@ -528,7 +569,7 @@ fun RegisterScreen(
                         Modifier.fillMaxWidth(),
 
                     color =
-                        ErrorRed,
+                        errorColor,
 
                     fontSize =
                         13.sp,
@@ -577,19 +618,21 @@ fun RegisterScreen(
                         .height(54.dp),
 
                 shape =
-                    RoundedCornerShape(18.dp),
+                    RoundedCornerShape(
+                        18.dp
+                    ),
 
                 colors =
                     ButtonDefaults.buttonColors(
 
                         containerColor =
-                            Lavender,
+                            primaryColor,
 
                         disabledContainerColor =
-                            SoftLavender,
+                            colorScheme.surfaceVariant,
 
                         disabledContentColor =
-                            TextSecondary
+                            textSecondary
                     )
             ) {
 
@@ -598,10 +641,12 @@ fun RegisterScreen(
                     CircularProgressIndicator(
 
                         modifier =
-                            Modifier.size(22.dp),
+                            Modifier.size(
+                                22.dp
+                            ),
 
                         color =
-                            Color.White,
+                            colorScheme.onPrimary,
 
                         strokeWidth =
                             2.dp
@@ -641,7 +686,7 @@ fun RegisterScreen(
                         "Already have an account? Sign in",
 
                     color =
-                        Lavender,
+                        primaryColor,
 
                     fontWeight =
                         FontWeight.SemiBold

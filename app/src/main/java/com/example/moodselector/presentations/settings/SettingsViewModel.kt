@@ -4,7 +4,6 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.moodselector.data.preferences.UserPreferencesRepository
-import com.example.moodselector.domain.repository.UserDataDeletionRepository
 import com.example.moodselector.notifications.ReminderScheduler
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -28,8 +27,7 @@ data class SettingsUiState(
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     application: Application,
-    private val userPreferencesRepository: UserPreferencesRepository,
-    private val userDataDeletionRepository: UserDataDeletionRepository
+    private val userPreferencesRepository: UserPreferencesRepository
 ) : AndroidViewModel(application) {
 
     private var currentUserId: String? = null
@@ -55,6 +53,12 @@ class SettingsViewModel @Inject constructor(
     private val themeMode =
         MutableStateFlow("system")
 
+
+    /*
+     * --------------------------------------------------
+     * UI STATE
+     * --------------------------------------------------
+     */
 
     val uiState: StateFlow<SettingsUiState> =
         combine(
@@ -114,6 +118,12 @@ class SettingsViewModel @Inject constructor(
             initialValue = SettingsUiState()
         )
 
+
+    /*
+     * --------------------------------------------------
+     * LOAD USER SETTINGS
+     * --------------------------------------------------
+     */
 
     fun loadForUser(
         userId: String
@@ -286,6 +296,12 @@ class SettingsViewModel @Inject constructor(
     }
 
 
+    /*
+     * --------------------------------------------------
+     * MOOD REMINDER
+     * --------------------------------------------------
+     */
+
     fun setMoodReminderEnabled(
         enabled: Boolean
     ) {
@@ -323,6 +339,12 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+
+    /*
+     * --------------------------------------------------
+     * JOURNAL REMINDER
+     * --------------------------------------------------
+     */
 
     fun setJournalReminderEnabled(
         enabled: Boolean
@@ -362,6 +384,12 @@ class SettingsViewModel @Inject constructor(
     }
 
 
+    /*
+     * --------------------------------------------------
+     * WELLBEING REMINDER
+     * --------------------------------------------------
+     */
+
     fun setWellbeingReminderEnabled(
         enabled: Boolean
     ) {
@@ -400,6 +428,12 @@ class SettingsViewModel @Inject constructor(
     }
 
 
+    /*
+     * --------------------------------------------------
+     * MOOD REMINDER TIME
+     * --------------------------------------------------
+     */
+
     fun setMoodReminderTime(
         time: String
     ) {
@@ -432,6 +466,12 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+
+    /*
+     * --------------------------------------------------
+     * JOURNAL REMINDER TIME
+     * --------------------------------------------------
+     */
 
     fun setJournalReminderTime(
         time: String
@@ -466,6 +506,12 @@ class SettingsViewModel @Inject constructor(
     }
 
 
+    /*
+     * --------------------------------------------------
+     * WELLBEING REMINDER TIME
+     * --------------------------------------------------
+     */
+
     fun setWellbeingReminderTime(
         time: String
     ) {
@@ -499,6 +545,12 @@ class SettingsViewModel @Inject constructor(
     }
 
 
+    /*
+     * --------------------------------------------------
+     * THEME
+     * --------------------------------------------------
+     */
+
     fun setThemeMode(
         selectedTheme: String
     ) {
@@ -519,61 +571,4 @@ class SettingsViewModel @Inject constructor(
                 )
         }
     }
-
-
-    /*
-     * --------------------------------------------------
-     * DELETE ALL USER DATA
-     * --------------------------------------------------
-     */
-
-    fun deleteAllUserData(
-        userId: String
-    ) {
-
-        viewModelScope.launch {
-
-            ReminderScheduler.cancel(
-                getApplication(),
-                ReminderScheduler.MOOD
-            )
-
-            ReminderScheduler.cancel(
-                getApplication(),
-                ReminderScheduler.JOURNAL
-            )
-
-            ReminderScheduler.cancel(
-                getApplication(),
-                ReminderScheduler.WELLBEING
-            )
-
-            userDataDeletionRepository
-                .deleteAllUserData(
-                    userId
-                )
-
-            moodReminderEnabled.value =
-                false
-
-            journalReminderEnabled.value =
-                false
-
-            wellbeingReminderEnabled.value =
-                false
-
-            moodReminderTime.value =
-                "09:00"
-
-            journalReminderTime.value =
-                "20:00"
-
-            wellbeingReminderTime.value =
-                "12:00"
-
-            themeMode.value =
-                "system"
-        }
-    }
 }
-

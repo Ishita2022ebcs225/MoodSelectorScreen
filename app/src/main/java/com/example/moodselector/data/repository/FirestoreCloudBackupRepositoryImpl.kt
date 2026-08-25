@@ -27,7 +27,6 @@ import com.example.moodselector.domain.assessment.model.AssessmentSeverity
 import com.example.moodselector.domain.repository.CloudBackupRepository
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.FirebaseFirestore
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
@@ -97,6 +96,7 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
         return try {
 
             if (userId.isBlank()) {
+
                 return Result.failure(
                     IllegalArgumentException(
                         "A valid Firebase user ID is required."
@@ -138,6 +138,7 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
         return try {
 
             if (userId.isBlank()) {
+
                 return Result.failure(
                     IllegalArgumentException(
                         "A valid Firebase user ID is required."
@@ -179,6 +180,7 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
         return try {
 
             if (userId.isBlank()) {
+
                 return Result.failure(
                     IllegalArgumentException(
                         "A valid Firebase user ID is required."
@@ -309,6 +311,23 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
      * --------------------------------------------------
      * SYNC USER DATA
      * --------------------------------------------------
+     *
+     * Room is the local/offline source of truth.
+     *
+     * If local data exists:
+     *
+     *     Room -> Firestore
+     *
+     * The cloud copy is updated from the current local
+     * state and is NOT immediately restored back into Room.
+     *
+     * If no local data exists:
+     *
+     *     Firestore -> Room
+     *     Room -> Firestore
+     *
+     * This allows a newly signed-in user to recover their
+     * cloud backup without replacing existing local data.
      */
 
     override suspend fun syncUserData(
@@ -318,6 +337,7 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
         return try {
 
             if (userId.isBlank()) {
+
                 return Result.failure(
                     IllegalArgumentException(
                         "A valid Firebase user ID is required."
@@ -330,6 +350,15 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
 
             if (!hasLocalData) {
 
+                /*
+                 * ------------------------------------------
+                 * NO LOCAL DATA
+                 * ------------------------------------------
+                 *
+                 * Attempt to restore the user's cloud
+                 * backup into Room.
+                 */
+
                 val restoreResult =
                     restoreUserData(userId)
 
@@ -337,17 +366,34 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
                     return restoreResult
                 }
 
+                /*
+                 * ------------------------------------------
+                 * BACK UP RESTORED DATA
+                 * ------------------------------------------
+                 *
+                 * This keeps the cloud backup consistent
+                 * with the restored local Room state.
+                 */
+
                 return backupUserData(userId)
             }
 
-            val backupResult =
-                backupUserData(userId)
+            /*
+             * ----------------------------------------------
+             * LOCAL DATA EXISTS
+             * ----------------------------------------------
+             *
+             * Room remains authoritative.
+             *
+             * Only back up the current local state.
+             *
+             * Do NOT restore immediately afterwards.
+             *
+             * This prevents the cloud copy from being
+             * written back over the current local state.
+             */
 
-            if (backupResult.isFailure) {
-                return backupResult
-            }
-
-            restoreUserData(userId)
+            backupUserData(userId)
 
         } catch (exception: Exception) {
 
@@ -675,16 +721,36 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
                 .getAllResults(userId)
                 .first()
 
+        val assessmentCollection =
+            firestore
+                .collection("users")
+                .document(userId)
+                .collection("assessment_results")
+
+        val existingSnapshot =
+            assessmentCollection
+                .get()
+                .await()
+
+        val localResultIds =
+            results
+                .map { it.id.toString() }
+                .toSet()
+
         val batch =
             firestore.batch()
+
+        existingSnapshot.documents.forEach { document ->
+
+            if (document.id !in localResultIds) {
+                batch.delete(document.reference)
+            }
+        }
 
         results.forEach { result ->
 
             val document =
-                firestore
-                    .collection("users")
-                    .document(userId)
-                    .collection("assessment_results")
+                assessmentCollection
                     .document(result.id.toString())
 
             batch.set(
@@ -1008,7 +1074,9 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
                             ?: System.currentTimeMillis()
                 )
 
-            scheduledCBTActivityDao.insertScheduledActivity(activity)
+            scheduledCBTActivityDao.insertScheduledActivity(
+                activity
+            )
         }
     }
 
@@ -1103,7 +1171,9 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
                             ?: 0L
                 )
 
-            fiveMinuteStarterCompletionDao.insertCompletion(completion)
+            fiveMinuteStarterCompletionDao.insertCompletion(
+                completion
+            )
         }
     }
 
@@ -1183,7 +1253,9 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
                             ?: 0L
                 )
 
-            mindfulMeditationCompletionDao.insertCompletion(completion)
+            mindfulMeditationCompletionDao.insertCompletion(
+                completion
+            )
         }
     }
 
@@ -1263,7 +1335,9 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
                             ?: 0L
                 )
 
-            grounding54321CompletionDao.insertCompletion(completion)
+            grounding54321CompletionDao.insertCompletion(
+                completion
+            )
         }
     }
 
@@ -1353,7 +1427,9 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
                             ?: 0L
                 )
 
-            abcModelCompletionDao.insertCompletion(completion)
+            abcModelCompletionDao.insertCompletion(
+                completion
+            )
         }
     }
 
@@ -1450,7 +1526,9 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
                 )
 
             selfCompassionReflectionCompletionDao
-                .insertCompletion(completion)
+                .insertCompletion(
+                    completion
+                )
         }
     }
 
@@ -1566,16 +1644,5 @@ class FirestoreCloudBackupRepositoryImpl @Inject constructor(
                 progress
             )
         }
-    }
-
-
-    /*
-     * --------------------------------------------------
-     * FLOW HELPER
-     * --------------------------------------------------
-     */
-
-    private suspend fun <T> Flow<T>.firstValue(): T {
-        return first()
     }
 }

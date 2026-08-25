@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -32,6 +31,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -40,8 +41,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TimePicker
+import androidx.compose.material3.TimePickerDialog
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -60,6 +66,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.moodselector.domain.cbt.model.CBTActivity
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -156,6 +166,32 @@ fun ActivitySchedulingScreen(
 
     /*
      * --------------------------------------------------
+     * Date + time picker state
+     * --------------------------------------------------
+     */
+
+    var showDatePicker by remember {
+        mutableStateOf(false)
+    }
+
+    var showTimePicker by remember {
+        mutableStateOf(false)
+    }
+
+    var selectedDateMillis by remember {
+        mutableStateOf<Long?>(null)
+    }
+
+    var selectedHour by remember {
+        mutableIntStateOf(12)
+    }
+
+    var selectedMinute by remember {
+        mutableIntStateOf(0)
+    }
+
+    /*
+     * --------------------------------------------------
      * Load existing scheduled activity when editing
      * --------------------------------------------------
      */
@@ -233,6 +269,225 @@ fun ActivitySchedulingScreen(
 
     /*
      * --------------------------------------------------
+     * Date picker
+     * --------------------------------------------------
+     */
+
+    if (showDatePicker) {
+
+        val initialDate =
+            selectedDateMillis
+                ?: System.currentTimeMillis()
+
+        val datePickerState =
+            rememberDatePickerState(
+                initialSelectedDateMillis =
+                    initialDate
+            )
+
+        DatePickerDialog(
+
+            onDismissRequest = {
+                showDatePicker = false
+            },
+
+            confirmButton = {
+
+                TextButton(
+
+                    onClick = {
+
+                        datePickerState
+                            .selectedDateMillis
+                            ?.let { millis ->
+
+                                selectedDateMillis =
+                                    millis
+
+                                showDatePicker =
+                                    false
+
+                                showTimePicker =
+                                    true
+                            }
+                    }
+                ) {
+
+                    Text(
+                        text = "Next",
+                        color = lavender
+                    )
+                }
+            },
+
+            dismissButton = {
+
+                TextButton(
+
+                    onClick = {
+                        showDatePicker = false
+                    }
+                ) {
+
+                    Text(
+                        text = "Cancel",
+                        color = textSecondary
+                    )
+                }
+            }
+        ) {
+
+            DatePicker(
+                state = datePickerState
+            )
+        }
+    }
+
+    /*
+     * --------------------------------------------------
+     * Time picker
+     * --------------------------------------------------
+     */
+
+    if (showTimePicker) {
+
+        val timePickerState =
+            rememberTimePickerState(
+                initialHour = selectedHour,
+                initialMinute = selectedMinute,
+                is24Hour = false
+            )
+
+        TimePickerDialog(
+
+            onDismissRequest = {
+                showTimePicker = false
+            },
+
+            confirmButton = {
+
+                TextButton(
+
+                    onClick = {
+
+                        selectedHour =
+                            timePickerState.hour
+
+                        selectedMinute =
+                            timePickerState.minute
+
+                        val dateMillis =
+                            selectedDateMillis
+                                ?: System.currentTimeMillis()
+
+                        val calendar =
+                            Calendar.getInstance().apply {
+
+                                timeInMillis =
+                                    dateMillis
+
+                                set(
+                                    Calendar.HOUR_OF_DAY,
+                                    selectedHour
+                                )
+
+                                set(
+                                    Calendar.MINUTE,
+                                    selectedMinute
+                                )
+
+                                set(
+                                    Calendar.SECOND,
+                                    0
+                                )
+
+                                set(
+                                    Calendar.MILLISECOND,
+                                    0
+                                )
+                            }
+
+                        /*
+                         * SimpleDateFormat uses lowercase
+                         * "a" for the AM/PM marker.
+                         *
+                         * We construct the AM/PM portion
+                         * separately so it is always
+                         * displayed as uppercase.
+                         */
+
+                        val dateFormatter =
+                            SimpleDateFormat(
+                                "dd MMM yyyy • hh:mm",
+                                Locale.getDefault()
+                            )
+
+                        val formattedDate =
+                            dateFormatter.format(
+                                Date(
+                                    calendar.timeInMillis
+                                )
+                            )
+
+                        val amPm =
+                            if (
+                                selectedHour < 12
+                            ) {
+                                "AM"
+                            } else {
+                                "PM"
+                            }
+
+                        whenText =
+                            TextFieldValue(
+                                "$formattedDate $amPm"
+                            )
+
+                        showTimePicker =
+                            false
+                    }
+                ) {
+
+                    Text(
+                        text = "Select",
+                        color = lavender
+                    )
+                }
+            },
+
+            dismissButton = {
+
+                TextButton(
+
+                    onClick = {
+                        showTimePicker = false
+                    }
+                ) {
+
+                    Text(
+                        text = "Cancel",
+                        color = textSecondary
+                    )
+                }
+            },
+
+            title = {
+
+                Text(
+                    text = "Select time",
+                    color = textPrimary
+                )
+            }
+        ) {
+
+            TimePicker(
+                state = timePickerState
+            )
+        }
+    }
+
+    /*
+     * --------------------------------------------------
      * Loading state
      * --------------------------------------------------
      */
@@ -244,9 +499,13 @@ fun ActivitySchedulingScreen(
         ) { paddingValues ->
 
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .padding(
+                            paddingValues
+                        ),
+
                 contentAlignment =
                     Alignment.Center
             ) {
@@ -269,7 +528,8 @@ fun ActivitySchedulingScreen(
 
     Scaffold(
 
-        containerColor = background,
+        containerColor =
+            background,
 
         topBar = {
 
@@ -280,10 +540,14 @@ fun ActivitySchedulingScreen(
                     Column {
 
                         Text(
-                            text = activity.title,
+                            text =
+                                activity.title,
+
                             fontWeight =
                                 FontWeight.SemiBold,
-                            fontSize = 18.sp
+
+                            fontSize =
+                                18.sp
                         )
 
                         Text(
@@ -295,8 +559,10 @@ fun ActivitySchedulingScreen(
                                 } else {
                                     "Behavioral Activation"
                                 },
+
                             color =
                                 textSecondary,
+
                             fontSize =
                                 12.sp
                         )
@@ -313,6 +579,7 @@ fun ActivitySchedulingScreen(
                         Icon(
                             imageVector =
                                 Icons.Default.ArrowBack,
+
                             contentDescription =
                                 "Back"
                         )
@@ -320,10 +587,11 @@ fun ActivitySchedulingScreen(
                 },
 
                 colors =
-                    TopAppBarDefaults.topAppBarColors(
-                        containerColor =
-                            background
-                    )
+                    TopAppBarDefaults
+                        .topAppBarColors(
+                            containerColor =
+                                background
+                        )
             )
         }
 
@@ -334,15 +602,14 @@ fun ActivitySchedulingScreen(
             modifier =
                 Modifier
                     .fillMaxSize()
-                    .padding(paddingValues)
-                    .navigationBarsPadding()
+                    .padding(
+                        paddingValues
+                    )
         ) {
 
             /*
              * --------------------------------------------------
              * Scheduled Activities shortcut
-             *
-             * This is the only calendar icon on the screen.
              * --------------------------------------------------
              */
 
@@ -375,7 +642,8 @@ fun ActivitySchedulingScreen(
 
                     elevation =
                         CardDefaults.cardElevation(
-                            defaultElevation = 1.dp
+                            defaultElevation =
+                                1.dp
                         )
                 ) {
 
@@ -511,6 +779,7 @@ fun ActivitySchedulingScreen(
                 StepHeader(
                     step =
                         currentStep + 1,
+
                     totalSteps =
                         totalSteps
                 )
@@ -519,12 +788,6 @@ fun ActivitySchedulingScreen(
                     modifier =
                         Modifier.height(18.dp)
                 )
-
-                /*
-                 * --------------------------------------------------
-                 * Scheduling steps ONLY
-                 * --------------------------------------------------
-                 */
 
                 when (currentStep) {
 
@@ -562,8 +825,10 @@ fun ActivitySchedulingScreen(
                             whenText =
                                 whenText,
 
-                            onWhenChange = {
-                                whenText = it
+                            onWhenClick = {
+
+                                showDatePicker =
+                                    true
                             },
 
                             whereText =
@@ -612,6 +877,7 @@ fun ActivitySchedulingScreen(
                                     .buttonColors(
                                         containerColor =
                                             softLavender,
+
                                         contentColor =
                                             lavender
                                     ),
@@ -623,7 +889,9 @@ fun ActivitySchedulingScreen(
                         ) {
 
                             Text(
-                                text = "Back",
+                                text =
+                                    "Back",
+
                                 fontWeight =
                                     FontWeight.SemiBold
                             )
@@ -650,39 +918,41 @@ fun ActivitySchedulingScreen(
 
                             isSaving = true
 
-                            scheduledViewModel.saveScheduledActivity(
+                            scheduledViewModel
+                                .saveScheduledActivity(
 
-                                id =
-                                    scheduledActivityId ?: 0,
+                                    id =
+                                        scheduledActivityId
+                                            ?: 0,
 
-                                activityId =
-                                    activity.id,
+                                    activityId =
+                                        activity.id,
 
-                                activityTitle =
-                                    activity.title,
+                                    activityTitle =
+                                        activity.title,
 
-                                activityDescription =
-                                    activity.description,
+                                    activityDescription =
+                                        activity.description,
 
-                                activityName =
-                                    activityName.text,
+                                    activityName =
+                                        activityName.text,
 
-                                activityType =
-                                    activityType,
+                                    activityType =
+                                        activityType,
 
-                                scheduledWhen =
-                                    whenText.text,
+                                    scheduledWhen =
+                                        whenText.text,
 
-                                scheduledWhere =
-                                    whereText.text,
+                                    scheduledWhere =
+                                        whereText.text,
 
-                                onSaved = {
+                                    onSaved = {
 
-                                    isSaving = false
+                                        isSaving = false
 
-                                    onExerciseCompleted()
-                                }
-                            )
+                                        onExerciseCompleted()
+                                    }
+                                )
                         },
 
                         modifier =
@@ -745,6 +1015,7 @@ fun ActivitySchedulingScreen(
                                     currentStep ==
                                     totalSteps - 1
                                 ) {
+
                                     if (
                                         scheduledActivityId !=
                                         null
@@ -753,7 +1024,9 @@ fun ActivitySchedulingScreen(
                                     } else {
                                         "Save Schedule"
                                     }
+
                                 } else {
+
                                     "Continue"
                                 },
 
@@ -853,9 +1126,6 @@ private fun ActivitySelectionStep(
         (Boolean) -> Unit
 ) {
 
-    val lavender =
-        MaterialTheme.colorScheme.primary
-
     val softLavender =
         MaterialTheme.colorScheme.secondaryContainer
 
@@ -919,6 +1189,7 @@ private fun ActivitySelectionStep(
             Icon(
                 imageVector =
                     Icons.Default.TaskAlt,
+
                 contentDescription =
                     null
             )
@@ -1029,8 +1300,7 @@ private fun ActivitySelectionStep(
 @Composable
 private fun SchedulingStep(
     whenText: TextFieldValue,
-    onWhenChange:
-        (TextFieldValue) -> Unit,
+    onWhenClick: () -> Unit,
     whereText: TextFieldValue,
     onWhereChange:
         (TextFieldValue) -> Unit
@@ -1062,61 +1332,98 @@ private fun SchedulingStep(
             Modifier.height(20.dp)
     )
 
-    OutlinedTextField(
+    /*
+     * --------------------------------------------------
+     * Date + time field
+     * --------------------------------------------------
+     */
 
-        value =
-            whenText,
-
-        onValueChange =
-            onWhenChange,
-
+    Box(
         modifier =
-            Modifier.fillMaxWidth(),
+            Modifier.fillMaxWidth()
+    ) {
 
-        label = {
-            Text(
-                "When will you do it?"
-            )
-        },
+        OutlinedTextField(
 
-        placeholder = {
-            Text(
-                "e.g. Tomorrow at 6:00 PM"
-            )
-        },
+            value =
+                whenText,
 
-        leadingIcon = {
+            onValueChange = {
+                // Intentionally disabled.
+                // The date/time should be selected
+                // through the picker.
+            },
 
-            Icon(
-                imageVector =
-                    Icons.Default.AccessTime,
-                contentDescription =
-                    null
-            )
-        },
+            modifier =
+                Modifier.fillMaxWidth(),
 
-        trailingIcon = {
+            label = {
+                Text(
+                    "When will you do it?"
+                )
+            },
 
-            Icon(
-                imageVector =
-                    Icons.Default.Event,
-                contentDescription =
-                    null,
-                tint =
-                    lavender
-            )
-        },
+            placeholder = {
+                Text(
+                    "Select a date and time"
+                )
+            },
 
-        shape =
-            RoundedCornerShape(16.dp),
+            leadingIcon = {
 
-        singleLine = true
-    )
+                Icon(
+                    imageVector =
+                        Icons.Default.AccessTime,
+
+                    contentDescription =
+                        null
+                )
+            },
+
+            trailingIcon = {
+
+                Icon(
+                    imageVector =
+                        Icons.Default.Event,
+
+                    contentDescription =
+                        "Select date and time",
+
+                    tint =
+                        lavender
+                )
+            },
+
+            shape =
+                RoundedCornerShape(16.dp),
+
+            singleLine = true,
+
+            readOnly = true
+        )
+
+        Box(
+
+            modifier =
+                Modifier
+                    .matchParentSize()
+                    .clickable(
+                        onClick =
+                            onWhenClick
+                    )
+        )
+    }
 
     Spacer(
         modifier =
             Modifier.height(16.dp)
     )
+
+    /*
+     * --------------------------------------------------
+     * Location
+     * --------------------------------------------------
+     */
 
     OutlinedTextField(
 
@@ -1146,6 +1453,7 @@ private fun SchedulingStep(
             Icon(
                 imageVector =
                     Icons.Default.LocationOn,
+
                 contentDescription =
                     null
             )
@@ -1371,7 +1679,8 @@ private fun ActivityTypeCard(
 
         modifier =
             modifier.clickable(
-                onClick = onClick
+                onClick =
+                    onClick
             ),
 
         shape =
@@ -1417,13 +1726,16 @@ private fun ActivityTypeCard(
                         )
                         .background(
                             if (selected) {
+
                                 MaterialTheme
                                     .colorScheme
                                     .onSurface
                                     .copy(
                                         alpha = 0.10f
                                     )
+
                             } else {
+
                                 selectedColor
                             }
                         ),
@@ -1439,8 +1751,11 @@ private fun ActivityTypeCard(
                             title ==
                             "Pleasure"
                         ) {
+
                             Icons.Default.Star
+
                         } else {
+
                             Icons.Default.TaskAlt
                         },
 
@@ -1509,3 +1824,4 @@ private fun ActivityTypeCard(
         }
     }
 }
+

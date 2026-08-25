@@ -11,15 +11,16 @@ object PHQ9Definition {
 
         title = "Patient Health Questionnaire (PHQ-9)",
 
-        description = """
-            The PHQ-9 is a widely used screening tool that helps identify and measure
-            symptoms of depression over the past two weeks. It is intended as a
-            screening instrument and should not be used as a substitute for a
-            professional diagnosis.
-        """.trimIndent(),
+        description =
+            "The PHQ-9 is a widely used screening tool that helps identify and measure " +
+                    "symptoms of depression over the past two weeks. It is intended as a " +
+                    "screening instrument and should not be used as a substitute for a " +
+                    "professional diagnosis.",
 
-        instructions = PHQ9Questions.INSTRUCTIONS,
+        instructions =
+            PHQ9Questions.INSTRUCTIONS,
 
-        questions = PHQ9Questions.questions
+        questions =
+            PHQ9Questions.questions
     )
 }

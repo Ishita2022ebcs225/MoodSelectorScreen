@@ -423,10 +423,10 @@ fun AppNavHost(
 
 
             /*
-             * ==================================================
-             * ASSESSMENT ONBOARDING
-             * ==================================================
-             */
+ * ==================================================
+ * ASSESSMENT ONBOARDING
+ * ==================================================
+ */
 
             composable(
                 route =
@@ -437,12 +437,34 @@ fun AppNavHost(
 
                     onStartAssessment = {
 
+                        /*
+                         * The user has explicitly chosen to proceed
+                         * with the assessment.
+                         *
+                         * This ends the "new user" startup state.
+                         * It does NOT mark the assessment as completed.
+                         */
+
+                        authViewModel
+                            .markInitialAssessmentDecisionHandled()
+
                         navController.navigate(
                             Screen.AssessmentQuestionnaire.route
                         )
                     },
 
                     onSkipAssessment = {
+
+                        /*
+                         * The user has explicitly chosen to skip
+                         * the initial assessment.
+                         *
+                         * The assessment remains incomplete, so
+                         * MoodInsights can still offer it later.
+                         */
+
+                        authViewModel
+                            .markInitialAssessmentDecisionHandled()
 
                         navController.navigate(
                             Screen.Insights.route

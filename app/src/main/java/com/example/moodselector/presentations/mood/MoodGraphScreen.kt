@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -498,7 +497,7 @@ fun MoodGraphScreen(
      * ======================================================
      * DATE PICKER STATE
      * ======================================================
-     */
+ */
 
     var selectedDateMillis by
     rememberSaveable {
@@ -654,11 +653,6 @@ fun MoodGraphScreen(
      * The completed CBT activity timeline is the
      * authoritative source for the selected day's
      * completed activity count.
-     *
-     * This ensures activities that were actually
-     * completed are reflected immediately here,
-     * without depending on a separate daily-progress
-     * counter being updated.
      */
 
     val cbtActivityCount =
@@ -820,7 +814,6 @@ fun MoodGraphScreen(
                     .padding(
                         paddingValues
                     )
-                    .navigationBarsPadding()
                     .verticalScroll(
                         rememberScrollState()
                     ),
@@ -2038,11 +2031,6 @@ fun MoodGraphScreen(
                         }
                     }
                 }
-
-                Spacer(
-                    modifier =
-                        Modifier.height(90.dp)
-                )
             }
         }
     }

@@ -10,19 +10,18 @@ import javax.inject.Inject
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
 @HiltViewModel
 class StartupViewModel @Inject constructor(
     private val authRepository: AuthRepository,
+    private val cloudBackupRepository: CloudBackupRepository,
     private val userPreferencesRepository:
-    UserPreferencesRepository,
-    private val cloudBackupRepository:
-    CloudBackupRepository
+    UserPreferencesRepository
 ) : ViewModel() {
 
     /*
@@ -31,12 +30,16 @@ class StartupViewModel @Inject constructor(
      * --------------------------------------------------
      */
 
-    val currentUser =
+    val currentUser:
+            StateFlow<com.google.firebase.auth.FirebaseUser?> =
         authRepository
             .authState
             .stateIn(
                 scope = viewModelScope,
-                started = SharingStarted.WhileSubscribed(5000),
+                started =
+                    SharingStarted.WhileSubscribed(
+                        5000
+                    ),
                 initialValue =
                     authRepository.currentUser
             )
@@ -46,17 +49,10 @@ class StartupViewModel @Inject constructor(
      * --------------------------------------------------
      * CLOUD SYNCHRONIZATION
      * --------------------------------------------------
-     *
-     * Whenever the authenticated Firebase user changes,
-     * that user's Room data is synchronized with Firestore.
-     *
-     * The user ID is emitted only after synchronization
-     * has completed successfully.
      */
 
     private val cloudSyncCompleted:
             StateFlow<String?> =
-
         authRepository
             .authState
             .distinctUntilChanged { oldUser, newUser ->
@@ -78,12 +74,6 @@ class StartupViewModel @Inject constructor(
                                     userId = user.uid
                                 )
 
-                        /*
-                         * Only mark synchronization as
-                         * completed when the repository
-                         * reports success.
-                         */
-
                         if (result.isSuccess) {
 
                             emit(
@@ -99,31 +89,76 @@ class StartupViewModel @Inject constructor(
             }
             .stateIn(
                 scope = viewModelScope,
-                started = SharingStarted.Eagerly,
+                started =
+                    SharingStarted.Eagerly,
                 initialValue = null
             )
 
 
     /*
      * --------------------------------------------------
-     * CURRENT USER ASSESSMENT STATE
+     * STARTUP READINESS
      * --------------------------------------------------
      *
-     * The assessment state is resolved only after cloud
-     * synchronization has completed successfully.
-     *
-     * The persisted preference is read once with first()
-     * so a temporary/default emission cannot cause
-     * MainActivity to select the wrong startup destination.
-     *
-     * null  = still resolving
-     * false = assessment has not been completed
-     * true  = assessment has been completed
+     * A signed-in user is considered ready only after
+     * their cloud synchronization has completed
+     * successfully.
      */
 
-    val hasCompletedAssessment:
-            StateFlow<Boolean?> =
+    val isReady:
+            StateFlow<Boolean> =
+        authRepository
+            .authState
+            .flatMapLatest { user ->
 
+                if (user == null) {
+
+                    flowOf(true)
+
+                } else {
+
+                    cloudSyncCompleted
+                        .flatMapLatest {
+                                syncedUserId ->
+
+                            flowOf(
+                                syncedUserId ==
+                                        user.uid
+                            )
+                        }
+                }
+            }
+            .stateIn(
+                scope = viewModelScope,
+                started =
+                    SharingStarted.WhileSubscribed(
+                        5000
+                    ),
+                initialValue = false
+            )
+
+
+    /*
+     * --------------------------------------------------
+     * NEW USER STATUS
+     * --------------------------------------------------
+     *
+     * This is intentionally separate from assessment
+     * completion.
+     *
+     * The new-user flag is checked only after the
+     * authenticated user's cloud synchronization has
+     * completed successfully.
+     *
+     * New email accounts and newly created Google
+     * accounts are marked by AuthViewModel.
+     *
+     * Existing accounts are not marked as new and
+     * therefore proceed directly to the main app.
+     */
+
+    val isNewUser:
+            StateFlow<Boolean> =
         authRepository
             .authState
             .flatMapLatest { user ->
@@ -135,37 +170,97 @@ class StartupViewModel @Inject constructor(
                 } else {
 
                     cloudSyncCompleted
-                        .flatMapLatest { syncedUserId ->
+                        .flatMapLatest {
+                                syncedUserId ->
 
                             if (
-                                syncedUserId != user.uid
+                                syncedUserId !=
+                                user.uid
                             ) {
 
-                                flowOf<Boolean?>(null)
+                                flowOf(false)
 
                             } else {
 
-                                flow {
-
-                                    val completed =
-                                        userPreferencesRepository
-                                            .hasCompletedAssessment(
-                                                userId = user.uid
-                                            )
-                                            .first()
-
-                                    emit(
-                                        completed
+                                userPreferencesRepository
+                                    .isNewUser(
+                                        user.uid
                                     )
-                                }
                             }
                         }
                 }
             }
             .stateIn(
                 scope = viewModelScope,
-                started = SharingStarted.WhileSubscribed(5000),
-                initialValue = null
+                started =
+                    SharingStarted.WhileSubscribed(
+                        5000
+                    ),
+                initialValue = false
+            )
+
+
+    /*
+     * --------------------------------------------------
+     * NEW USER RESOLUTION STATE
+     * --------------------------------------------------
+     *
+     * This is different from isNewUser.
+     *
+     * isNewUser tells us the actual result.
+     *
+     * isNewUserResolved tells MainActivity that the
+     * result has been obtained and it is now safe to
+     * create the NavHost with the correct destination.
+     *
+     * This prevents a new user from briefly seeing
+     * MoodInsights before being redirected to the
+     * assessment onboarding screen.
+     */
+
+    val isNewUserResolved:
+            StateFlow<Boolean> =
+        authRepository
+            .authState
+            .flatMapLatest { user ->
+
+                if (user == null) {
+
+                    flowOf(false)
+
+                } else {
+
+                    cloudSyncCompleted
+                        .flatMapLatest {
+                                syncedUserId ->
+
+                            if (
+                                syncedUserId !=
+                                user.uid
+                            ) {
+
+                                flowOf(false)
+
+                            } else {
+
+                                userPreferencesRepository
+                                    .isNewUser(
+                                        user.uid
+                                    )
+                                    .map {
+                                        true
+                                    }
+                            }
+                        }
+                }
+            }
+            .stateIn(
+                scope = viewModelScope,
+                started =
+                    SharingStarted.WhileSubscribed(
+                        5000
+                    ),
+                initialValue = false
             )
 }
 

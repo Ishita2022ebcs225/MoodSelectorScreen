@@ -33,7 +33,7 @@ fun QuestionCard(
 
             Text(
                 text = question.question,
-                style = MaterialTheme.typography.headlineSmall
+                style = MaterialTheme.typography.bodyLarge
             )
 
             question.options.forEachIndexed { index, option ->

@@ -16,7 +16,7 @@ import androidx.compose.material.icons.outlined.SelfImprovement
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -24,25 +24,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-
-private val LavenderBackground = Color(0xFFF8F4FC)
-private val SoftLavender = Color(0xFFE9DDF4)
-private val DeepLavender = Color(0xFF765A86)
-private val TextPrimary = Color(0xFF443A48)
-private val TextSecondary = Color(0xFF766B7A)
-
-// Dark-mode accents.
-private val DarkSoftLavender = Color(0xFF342B3B)
-private val DarkDeepLavender = Color(0xFFD0B6D9)
-private val DarkTextPrimary = Color(0xFFE8DDEB)
-private val DarkTextSecondary = Color(0xFFC6B8CA)
 
 @Composable
 fun AssessmentResultsScreen(
@@ -53,69 +39,35 @@ fun AssessmentResultsScreen(
 
     val result by viewModel.latestResult.collectAsStateWithLifecycle()
 
-    val isDarkTheme =
-        MaterialTheme.colorScheme.background.luminance() < 0.5f
-
-    val backgroundColor =
-        if (isDarkTheme) {
-            MaterialTheme.colorScheme.background
-        } else {
-            LavenderBackground
-        }
-
-    val surfaceColor =
-        if (isDarkTheme) {
-            MaterialTheme.colorScheme.surface
-        } else {
-            Color.White
-        }
-
-    val softLavenderColor =
-        if (isDarkTheme) {
-            DarkSoftLavender
-        } else {
-            SoftLavender
-        }
-
-    val primaryTextColor =
-        if (isDarkTheme) {
-            DarkTextPrimary
-        } else {
-            TextPrimary
-        }
-
-    val secondaryTextColor =
-        if (isDarkTheme) {
-            DarkTextSecondary
-        } else {
-            TextSecondary
-        }
-
-    val iconColor =
-        if (isDarkTheme) {
-            DarkDeepLavender
-        } else {
-            DeepLavender
-        }
+    val colorScheme =
+        MaterialTheme.colorScheme
 
     if (result != null) {
 
         val assessment = result!!
 
         Column(
-            modifier = modifier
-                .fillMaxSize()
-                .background(backgroundColor)
-                .verticalScroll(rememberScrollState())
-                .padding(24.dp),
+            modifier =
+                modifier
+                    .fillMaxSize()
+                    .background(
+                        colorScheme.background
+                    )
+                    .verticalScroll(
+                        rememberScrollState()
+                    )
+                    .padding(24.dp),
 
-            horizontalAlignment = Alignment.CenterHorizontally,
+            horizontalAlignment =
+                Alignment.CenterHorizontally,
 
-            verticalArrangement = Arrangement.Center
+            verticalArrangement =
+                Arrangement.Center
         ) {
 
             Text(
-                text = "Assessment Complete",
+                text =
+                    "Assessment Complete",
 
                 style =
                     MaterialTheme.typography.headlineLarge,
@@ -124,7 +76,7 @@ fun AssessmentResultsScreen(
                     FontWeight.SemiBold,
 
                 color =
-                    primaryTextColor,
+                    colorScheme.onBackground,
 
                 textAlign =
                     TextAlign.Center
@@ -134,6 +86,7 @@ fun AssessmentResultsScreen(
                 modifier =
                     Modifier.height(24.dp)
             )
+
 
             /*
              * ==================================================
@@ -148,7 +101,7 @@ fun AssessmentResultsScreen(
                 colors =
                     CardDefaults.cardColors(
                         containerColor =
-                            surfaceColor
+                            colorScheme.surface
                     ),
 
                 shape =
@@ -176,7 +129,7 @@ fun AssessmentResultsScreen(
                             FontWeight.Bold,
 
                         color =
-                            primaryTextColor
+                            colorScheme.onSurface
                     )
 
                     Spacer(
@@ -192,7 +145,7 @@ fun AssessmentResultsScreen(
                             MaterialTheme.typography.titleMedium,
 
                         color =
-                            primaryTextColor
+                            colorScheme.onSurface
                     )
 
                     Text(
@@ -203,7 +156,7 @@ fun AssessmentResultsScreen(
                             MaterialTheme.typography.bodyLarge,
 
                         color =
-                            secondaryTextColor
+                            colorScheme.onSurfaceVariant
                     )
 
                     Spacer(
@@ -211,9 +164,9 @@ fun AssessmentResultsScreen(
                             Modifier.height(20.dp)
                     )
 
-                    Divider(
+                    HorizontalDivider(
                         color =
-                            MaterialTheme.colorScheme.outlineVariant
+                            colorScheme.outlineVariant
                     )
 
                     Spacer(
@@ -232,7 +185,7 @@ fun AssessmentResultsScreen(
                             FontWeight.Bold,
 
                         color =
-                            primaryTextColor
+                            colorScheme.onSurface
                     )
 
                     Spacer(
@@ -248,7 +201,7 @@ fun AssessmentResultsScreen(
                             MaterialTheme.typography.titleMedium,
 
                         color =
-                            primaryTextColor
+                            colorScheme.onSurface
                     )
 
                     Text(
@@ -259,15 +212,17 @@ fun AssessmentResultsScreen(
                             MaterialTheme.typography.bodyLarge,
 
                         color =
-                            secondaryTextColor
+                            colorScheme.onSurfaceVariant
                     )
                 }
             }
+
 
             Spacer(
                 modifier =
                     Modifier.height(24.dp)
             )
+
 
             /*
              * ==================================================
@@ -284,16 +239,21 @@ fun AssessmentResultsScreen(
                     MaterialTheme.typography.bodyMedium,
 
                 color =
-                    secondaryTextColor,
+                    colorScheme.primary,
+
+                fontWeight =
+                    FontWeight.SemiBold,
 
                 textAlign =
                     TextAlign.Center
             )
 
+
             Spacer(
                 modifier =
                     Modifier.height(24.dp)
             )
+
 
             /*
              * ==================================================
@@ -308,7 +268,7 @@ fun AssessmentResultsScreen(
                 colors =
                     CardDefaults.cardColors(
                         containerColor =
-                            softLavenderColor
+                            colorScheme.secondaryContainer
                     ),
 
                 shape =
@@ -338,7 +298,7 @@ fun AssessmentResultsScreen(
                             null,
 
                         tint =
-                            iconColor
+                            colorScheme.onSecondaryContainer
                     )
 
                     Spacer(
@@ -357,7 +317,7 @@ fun AssessmentResultsScreen(
                             FontWeight.SemiBold,
 
                         color =
-                            primaryTextColor,
+                            colorScheme.onSecondaryContainer,
 
                         textAlign =
                             TextAlign.Center
@@ -377,7 +337,7 @@ fun AssessmentResultsScreen(
                             MaterialTheme.typography.bodyMedium,
 
                         color =
-                            secondaryTextColor,
+                            colorScheme.onSecondaryContainer,
 
                         textAlign =
                             TextAlign.Center
@@ -385,10 +345,12 @@ fun AssessmentResultsScreen(
                 }
             }
 
+
             Spacer(
                 modifier =
                     Modifier.height(32.dp)
             )
+
 
             Button(
                 onClick =
@@ -411,18 +373,19 @@ fun AssessmentResultsScreen(
          * ==================================================
          * NO ASSESSMENT RESULT
          * ==================================================
-         *
-         * Displayed when the user has not attempted the
-         * questionnaire yet instead of leaving the screen
-         * blank.
          */
 
         Column(
-            modifier = modifier
-                .fillMaxSize()
-                .background(backgroundColor)
-                .verticalScroll(rememberScrollState())
-                .padding(24.dp),
+            modifier =
+                modifier
+                    .fillMaxSize()
+                    .background(
+                        colorScheme.background
+                    )
+                    .verticalScroll(
+                        rememberScrollState()
+                    )
+                    .padding(24.dp),
 
             horizontalAlignment =
                 Alignment.CenterHorizontally,
@@ -438,7 +401,7 @@ fun AssessmentResultsScreen(
                 colors =
                     CardDefaults.cardColors(
                         containerColor =
-                            surfaceColor
+                            colorScheme.surface
                     ),
 
                 shape =
@@ -471,7 +434,7 @@ fun AssessmentResultsScreen(
                             Modifier.height(52.dp),
 
                         tint =
-                            iconColor
+                            colorScheme.primary
                     )
 
                     Spacer(
@@ -490,7 +453,7 @@ fun AssessmentResultsScreen(
                             FontWeight.SemiBold,
 
                         color =
-                            primaryTextColor,
+                            colorScheme.onSurface,
 
                         textAlign =
                             TextAlign.Center
@@ -512,7 +475,7 @@ fun AssessmentResultsScreen(
                             FontWeight.Medium,
 
                         color =
-                            primaryTextColor,
+                            colorScheme.onSurface,
 
                         textAlign =
                             TextAlign.Center
@@ -531,7 +494,7 @@ fun AssessmentResultsScreen(
                             MaterialTheme.typography.bodyMedium,
 
                         color =
-                            secondaryTextColor,
+                            colorScheme.onSurfaceVariant,
 
                         textAlign =
                             TextAlign.Center

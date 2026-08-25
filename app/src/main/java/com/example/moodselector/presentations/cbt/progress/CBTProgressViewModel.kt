@@ -22,8 +22,8 @@ import com.example.moodselector.domain.repository.SelfCompassionReflectionComple
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.LocalDate
@@ -77,7 +77,7 @@ class CBTProgressViewModel @Inject constructor(
      * DAILY CBT PROGRESS
      * ==================================================
      *
-     * This observes the persisted daily progress record.
+     * Observes the persisted daily progress record.
      */
 
     val dailyProgress:
@@ -93,8 +93,8 @@ class CBTProgressViewModel @Inject constructor(
      * DAILY CBT PROGRESS FOR SELECTED DATE
      * ==================================================
      *
-     * Used by screens such as MoodGraphScreen where
-     * the user can select a specific calendar date.
+     * Used by screens where the user can select a
+     * specific calendar date.
      */
 
     fun observeDailyProgressForDate(
@@ -202,7 +202,7 @@ class CBTProgressViewModel @Inject constructor(
      * TODAY'S UNIQUE CBT EXERCISE COUNT
      * ==================================================
      *
-     * Each DIFFERENT exercise completed today counts once.
+     * Counts DIFFERENT exercises completed today.
      *
      * Repeating the same exercise multiple times today
      * does not increase the count.
@@ -215,11 +215,12 @@ class CBTProgressViewModel @Inject constructor(
      *
      * Result = 2
      *
-     * This is the count intended for the daily progress
-     * display.
+     * When the calendar date changes, isCompletedToday()
+     * returns false for the previous day's completions.
+     * Therefore this count automatically becomes 0 until
+     * an exercise is completed on the new day.
      *
-     * The flows are combined in smaller groups so Kotlin
-     * can correctly infer each individual flow type.
+     * Historical completion records are NOT deleted.
      */
 
     val dailyCompletionCount:
@@ -227,120 +228,186 @@ class CBTProgressViewModel @Inject constructor(
 
         combine(
             completions,
-            fiveMinuteStarterCompletions,
-            mindfulMeditationCompletions
-        ) {
+            fiveMinuteStarterCompletions
+        ) { cbtCompletions, starterCompletions ->
+
+            Pair(
                 cbtCompletions,
-                starterCompletions,
-                meditationCompletions ->
+                starterCompletions
+            )
+
+        }.combine(
+            mindfulMeditationCompletions
+        ) { existing, meditationCompletions ->
 
             Triple(
-                cbtCompletions,
-                starterCompletions,
+                existing.first,
+                existing.second,
                 meditationCompletions
             )
 
         }.combine(
             grounding54321Completions
-        ) {
-                existing,
-                groundingCompletions ->
+        ) { existing, groundingCompletions ->
+
+            DailyCompletionSources(
+                cbtCompletions =
+                    existing.first,
+
+                starterCompletions =
+                    existing.second,
+
+                meditationCompletions =
+                    existing.third,
+
+                groundingCompletions =
+                    groundingCompletions
+            )
+
+        }.combine(
+            abcModelCompletions
+        ) { sources, abcCompletions ->
+
+            sources.copy(
+                abcCompletions =
+                    abcCompletions
+            )
+
+        }.combine(
+            selfCompassionReflectionCompletions
+        ) { sources, selfCompassionCompletions ->
+
+            sources.copy(
+                selfCompassionCompletions =
+                    selfCompassionCompletions
+            )
+
+        }.map { sources ->
 
             val uniqueExercises =
                 mutableSetOf<String>()
 
-            val cbtCompletions =
-                existing.first
 
-            val starterCompletions =
-                existing.second
+            /*
+             * ------------------------------------------
+             * GENERAL CBT ACTIVITIES
+             * ------------------------------------------
+             */
 
-            val meditationCompletions =
-                existing.third
-
-            cbtCompletions
+            sources.cbtCompletions
                 .filter {
                     it.isCompletedToday()
                 }
                 .forEach { completion ->
 
-                    if (completion.activityId.isNotBlank()) {
+                    if (
+                        completion.activityId.isNotBlank()
+                    ) {
+
                         uniqueExercises.add(
                             "activity:${completion.activityId}"
                         )
                     }
                 }
 
+
+            /*
+             * ------------------------------------------
+             * FIVE-MINUTE STARTER
+             * ------------------------------------------
+             */
+
             if (
-                starterCompletions.any {
+                sources.starterCompletions.any {
                     it.isCompletedToday()
                 }
             ) {
+
                 uniqueExercises.add(
                     "five_minute_starter"
                 )
             }
 
+
+            /*
+             * ------------------------------------------
+             * MINDFUL MEDITATION
+             * ------------------------------------------
+             */
+
             if (
-                meditationCompletions.any {
+                sources.meditationCompletions.any {
                     it.isCompletedToday()
                 }
             ) {
+
                 uniqueExercises.add(
                     "mindful_meditation"
                 )
             }
 
+
+            /*
+             * ------------------------------------------
+             * 5-4-3-2-1 GROUNDING
+             * ------------------------------------------
+             */
+
             if (
-                groundingCompletions.any {
+                sources.groundingCompletions.any {
                     it.isCompletedToday()
                 }
             ) {
+
                 uniqueExercises.add(
                     "grounding_54321"
                 )
             }
 
-            uniqueExercises
 
-        }.combine(
-            abcModelCompletions
-        ) {
-                uniqueExercises,
-                abcCompletions ->
+            /*
+             * ------------------------------------------
+             * ABC MODEL
+             * ------------------------------------------
+             */
 
             if (
-                abcCompletions.any {
+                sources.abcCompletions.any {
                     it.isCompletedToday()
                 }
             ) {
-                uniqueExercises.apply {
-                    add("abc_model")
-                }
-            } else {
-                uniqueExercises
+
+                uniqueExercises.add(
+                    "abc_model"
+                )
             }
 
-        }.combine(
-            selfCompassionReflectionCompletions
-        ) {
-                uniqueExercises,
-                selfCompassionCompletions ->
+
+            /*
+             * ------------------------------------------
+             * SELF-COMPASSION REFLECTION
+             * ------------------------------------------
+             */
 
             if (
-                selfCompassionCompletions.any {
+                sources.selfCompassionCompletions.any {
                     it.isCompletedToday()
                 }
             ) {
-                uniqueExercises.apply {
-                    add("self_compassion_reflection")
-                }
-            } else {
-                uniqueExercises
+
+                uniqueExercises.add(
+                    "self_compassion_reflection"
+                )
             }
 
-        }.map {
-            it.size
+
+            /*
+             * ------------------------------------------
+             * TODAY'S UNIQUE COUNT
+             * ------------------------------------------
+             */
+
+            uniqueExercises.size
         }
 
 
@@ -441,6 +508,8 @@ class CBTProgressViewModel @Inject constructor(
      *
      * Counts DIFFERENT exercises completed at least once
      * across the user's complete CBT history.
+     *
+     * This is intentionally NOT a daily count.
      *
      * Repeating the same exercise does not increase this
      * number.
@@ -759,8 +828,11 @@ class CBTProgressViewModel @Inject constructor(
             )
 
             /*
-             * The persisted daily progress record is still
-             * incremented for every explicit completion.
+             * Persisted daily progress is incremented
+             * for every explicit completion.
+             *
+             * This remains separate from dailyCompletionCount,
+             * which counts unique exercises for the current day.
              */
 
             dailyProgressRepository.incrementDailyCompletion(
@@ -825,8 +897,11 @@ class CBTProgressViewModel @Inject constructor(
             )
 
             /*
-             * The persisted daily progress record is still
-             * incremented for every explicit completion.
+             * Persisted daily progress is incremented
+             * for every explicit completion.
+             *
+             * The dailyCompletionCount shown on the home
+             * screen remains unique-per-exercise.
              */
 
             dailyProgressRepository.incrementDailyCompletion(
@@ -1014,6 +1089,39 @@ class CBTProgressViewModel @Inject constructor(
         }
     }
 }
+
+
+/*
+ * ======================================================
+ * DAILY COMPLETION SOURCES
+ * ======================================================
+ *
+ * Keeps the individual completion lists together so
+ * dailyCompletionCount does not rely on the large
+ * Kotlin combine overload that caused the type mismatch.
+ */
+
+private data class DailyCompletionSources(
+    val cbtCompletions:
+    List<CBTActivityCompletionEntity>,
+
+    val starterCompletions:
+    List<FiveMinuteStarterCompletionEntity>,
+
+    val meditationCompletions:
+    List<MindfulMeditationCompletionEntity>,
+
+    val groundingCompletions:
+    List<Grounding54321CompletionEntity>,
+
+    val abcCompletions:
+    List<ABCModelCompletionEntity> =
+        emptyList(),
+
+    val selfCompassionCompletions:
+    List<SelfCompassionReflectionCompletionEntity> =
+        emptyList()
+)
 
 
 /*

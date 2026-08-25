@@ -19,14 +19,19 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -40,6 +45,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.credentials.CredentialManager
@@ -53,12 +59,7 @@ import kotlinx.coroutines.launch
 
 private val Lavender = Color(0xFF6C63FF)
 private val SoftLavender = Color(0xFFEDEBFF)
-private val PaleLavender = Color(0xFFF7F5FF)
-private val SoftRose = Color(0xFFFFEEF4)
 private val Rose = Color(0xFFE88BA5)
-private val TextPrimary = Color(0xFF292638)
-private val TextSecondary = Color(0xFF777282)
-private val Background = Color(0xFFFAF9FD)
 
 @Composable
 fun LoginScreen(
@@ -75,6 +76,10 @@ fun LoginScreen(
         mutableStateOf("")
     }
 
+    var passwordVisible by rememberSaveable {
+        mutableStateOf(false)
+    }
+
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
     val context =
@@ -86,11 +91,33 @@ fun LoginScreen(
     val credentialManager =
         CredentialManager.create(context)
 
+
+    /*
+     * ==================================================
+     * THEME-SENSITIVE COLORS
+     * ==================================================
+     */
+
+    val backgroundColor =
+        MaterialTheme.colorScheme.background
+
+    val primaryTextColor =
+        MaterialTheme.colorScheme.onBackground
+
+    val secondaryTextColor =
+        MaterialTheme.colorScheme.onSurfaceVariant
+
+    val errorColor =
+        MaterialTheme.colorScheme.error
+
+
     Box(
         modifier =
             Modifier
                 .fillMaxSize()
-                .background(Background)
+                .background(
+                    backgroundColor
+                )
     ) {
 
         Column(
@@ -113,13 +140,22 @@ fun LoginScreen(
                 Arrangement.spacedBy(16.dp)
         ) {
 
+
+            /*
+             * ==================================================
+             * APP ICON
+             * ==================================================
+             */
+
             Box(
                 modifier =
                     Modifier
                         .size(76.dp)
                         .clip(CircleShape)
                         .background(
-                            SoftLavender
+                            MaterialTheme
+                                .colorScheme
+                                .surfaceVariant
                         ),
 
                 contentAlignment =
@@ -141,11 +177,19 @@ fun LoginScreen(
                 )
             }
 
+
+            /*
+             * ==================================================
+             * TITLE
+             * ==================================================
+             */
+
             Text(
-                text = "Welcome to HerMind",
+                text =
+                    "Welcome to HerMind",
 
                 color =
-                    TextPrimary,
+                    primaryTextColor,
 
                 fontSize =
                     28.sp,
@@ -154,13 +198,20 @@ fun LoginScreen(
                     FontWeight.Bold
             )
 
+
+            /*
+             * ==================================================
+             * DESCRIPTION
+             * ==================================================
+             */
+
             Text(
                 text =
                     "A safe space to understand yourself,\n" +
                             "build healthier patterns, and grow.",
 
                 color =
-                    TextSecondary,
+                    secondaryTextColor,
 
                 fontSize =
                     14.sp,
@@ -169,17 +220,27 @@ fun LoginScreen(
                     21.sp
             )
 
+
             Spacer(
                 modifier =
                     Modifier.height(8.dp)
             )
+
+
+            /*
+             * ==================================================
+             * EMAIL
+             * ==================================================
+             */
 
             OutlinedTextField(
                 value =
                     email,
 
                 onValueChange = {
+
                     email = it
+
                     viewModel.clearError()
                 },
 
@@ -187,21 +248,34 @@ fun LoginScreen(
                     Modifier.fillMaxWidth(),
 
                 label = {
-                    Text("Email")
+                    Text(
+                        text =
+                            "Email"
+                    )
                 },
 
-                singleLine = true,
+                singleLine =
+                    true,
 
                 shape =
                     RoundedCornerShape(16.dp)
             )
+
+
+            /*
+             * ==================================================
+             * PASSWORD
+             * ==================================================
+             */
 
             OutlinedTextField(
                 value =
                     password,
 
                 onValueChange = {
+
                     password = it
+
                     viewModel.clearError()
                 },
 
@@ -209,17 +283,65 @@ fun LoginScreen(
                     Modifier.fillMaxWidth(),
 
                 label = {
-                    Text("Password")
+                    Text(
+                        text =
+                            "Password"
+                    )
                 },
 
-                singleLine = true,
+                singleLine =
+                    true,
+
+                trailingIcon = {
+
+                    IconButton(
+                        onClick = {
+                            passwordVisible =
+                                !passwordVisible
+                        }
+                    ) {
+
+                        Icon(
+
+                            imageVector =
+                                if (passwordVisible) {
+                                    Icons.Default.VisibilityOff
+                                } else {
+                                    Icons.Default.Visibility
+                                },
+
+                            contentDescription =
+                                if (passwordVisible) {
+                                    "Hide password"
+                                } else {
+                                    "Show password"
+                                },
+
+                            tint =
+                                MaterialTheme
+                                    .colorScheme
+                                    .onSurfaceVariant
+                        )
+                    }
+                },
 
                 visualTransformation =
-                    PasswordVisualTransformation(),
+                    if (passwordVisible) {
+                        VisualTransformation.None
+                    } else {
+                        PasswordVisualTransformation()
+                    },
 
                 shape =
                     RoundedCornerShape(16.dp)
             )
+
+
+            /*
+             * ==================================================
+             * ERROR MESSAGE
+             * ==================================================
+             */
 
             if (state.errorMessage != null) {
 
@@ -228,7 +350,7 @@ fun LoginScreen(
                         state.errorMessage!!,
 
                     color =
-                        Color(0xFFB44A5A),
+                        errorColor,
 
                     fontSize =
                         13.sp,
@@ -237,6 +359,13 @@ fun LoginScreen(
                         Modifier.fillMaxWidth()
                 )
             }
+
+
+            /*
+             * ==================================================
+             * EMAIL SIGN-IN BUTTON
+             * ==================================================
+             */
 
             Button(
                 onClick = {
@@ -284,7 +413,9 @@ fun LoginScreen(
                             2.dp,
 
                         color =
-                            Color.White
+                            MaterialTheme
+                                .colorScheme
+                                .onPrimary
                     )
 
                 } else {
@@ -298,6 +429,13 @@ fun LoginScreen(
                     )
                 }
             }
+
+
+            /*
+             * ==================================================
+             * DIVIDER
+             * ==================================================
+             */
 
             Row(
                 modifier =
@@ -317,7 +455,7 @@ fun LoginScreen(
                         "  or  ",
 
                     color =
-                        TextSecondary,
+                        secondaryTextColor,
 
                     fontSize =
                         12.sp
@@ -329,8 +467,21 @@ fun LoginScreen(
                 )
             }
 
+
+            /*
+             * ==================================================
+             * GOOGLE SIGN-IN
+             * ==================================================
+             */
+
             OutlinedButton(
                 onClick = {
+
+                    /*
+                     * Remove any previous error before
+                     * beginning a new Google sign-in attempt.
+                     */
+                    viewModel.clearError()
 
                     scope.launch {
 
@@ -344,6 +495,11 @@ fun LoginScreen(
                             onIdToken =
                                 { token ->
 
+                                    /*
+                                     * Firebase authentication
+                                     * now takes control of the
+                                     * authentication state.
+                                     */
                                     viewModel.signInWithGoogle(
                                         idToken =
                                             token,
@@ -356,7 +512,19 @@ fun LoginScreen(
                             onError =
                                 { message ->
 
-                                    viewModel.clearError()
+                                    /*
+                                     * Only set an error when the
+                                     * Google credential process
+                                     * actually fails.
+                                     */
+                                    if (
+                                        message.isNotBlank()
+                                    ) {
+
+                                        viewModel.setGoogleError(
+                                            message
+                                        )
+                                    }
                                 }
                         )
                     }
@@ -379,17 +547,27 @@ fun LoginScreen(
                         "Continue with Google",
 
                     color =
-                        TextPrimary,
+                        MaterialTheme
+                            .colorScheme
+                            .onSurface,
 
                     fontWeight =
                         FontWeight.SemiBold
                 )
             }
 
+
             Spacer(
                 modifier =
                     Modifier.height(4.dp)
             )
+
+
+            /*
+             * ==================================================
+             * REGISTER
+             * ==================================================
+             */
 
             Row(
                 verticalAlignment =
@@ -401,13 +579,13 @@ fun LoginScreen(
                         "Don't have an account? ",
 
                     color =
-                        TextSecondary,
+                        secondaryTextColor,
 
                     fontSize =
                         13.sp
                 )
 
-                androidx.compose.material3.TextButton(
+                TextButton(
                     onClick =
                         onRegisterClick
                 ) {
@@ -460,12 +638,14 @@ private suspend fun signInWithGoogle(
 
                 .build()
 
+
         val request =
             GetCredentialRequest.Builder()
                 .addCredentialOption(
                     googleIdOption
                 )
                 .build()
+
 
         val result =
             credentialManager.getCredential(
@@ -476,12 +656,15 @@ private suspend fun signInWithGoogle(
                     request
             )
 
+
         val credential =
             result.credential
 
+
         if (
             credential.type ==
-            GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
+            GoogleIdTokenCredential
+                .TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
         ) {
 
             val googleCredential =
@@ -490,6 +673,14 @@ private suspend fun signInWithGoogle(
                         credential.data
                     )
 
+
+            /*
+             * A valid credential has been obtained.
+             *
+             * Do not set or clear any authentication
+             * error here. AuthViewModel handles the Firebase
+             * authentication result.
+             */
             onIdToken(
                 googleCredential.idToken
             )

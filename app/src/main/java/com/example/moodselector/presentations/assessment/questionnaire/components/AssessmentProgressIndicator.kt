@@ -28,7 +28,8 @@ fun AssessmentProgressIndicator(
 
         Text(
             text = "Question ${currentQuestion + 1} of $totalQuestions",
-            style = MaterialTheme.typography.bodyMedium
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onBackground
         )
 
         LinearProgressIndicator(

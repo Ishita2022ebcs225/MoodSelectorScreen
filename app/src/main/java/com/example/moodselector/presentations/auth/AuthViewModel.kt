@@ -2,6 +2,7 @@ package com.example.moodselector.presentations.auth
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.moodselector.data.preferences.UserPreferencesRepository
 import com.example.moodselector.domain.repository.AuthRepository
 import com.example.moodselector.domain.repository.UserDataDeletionRepository
 import com.google.firebase.auth.FirebaseUser
@@ -23,7 +24,9 @@ data class AuthUiState(
 class AuthViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val userDataDeletionRepository:
-    UserDataDeletionRepository
+    UserDataDeletionRepository,
+    private val userPreferencesRepository:
+    UserPreferencesRepository
 ) : ViewModel() {
 
     private val _uiState =
@@ -189,6 +192,22 @@ class AuthViewModel @Inject constructor(
 
                 onSuccess = { user ->
 
+                    /*
+                     * A successful registration creates a
+                     * genuinely new account.
+                     *
+                     * This marker allows startup to
+                     * distinguish this user from an existing
+                     * account that simply has not completed
+                     * the assessment.
+                     */
+
+                    userPreferencesRepository
+                        .setNewUser(
+                            userId = user.uid,
+                            isNewUser = true
+                        )
+
                     handleAuthenticationSuccess(
                         user = user,
                         onSuccess = onSuccess
@@ -215,6 +234,15 @@ class AuthViewModel @Inject constructor(
      * --------------------------------------------------
      * GOOGLE SIGN-IN
      * --------------------------------------------------
+     *
+     * Firebase reports whether the Google credential
+     * created a new Firebase account through
+     * GoogleSignInResult.isNewUser.
+     *
+     * Only genuinely new Google accounts are marked as
+     * new users.
+     *
+     * Existing Google accounts are NOT marked as new.
      */
 
     fun signInWithGoogle(
@@ -246,7 +274,31 @@ class AuthViewModel @Inject constructor(
 
             result.fold(
 
-                onSuccess = { user ->
+                onSuccess = { googleSignInResult ->
+
+                    val user =
+                        googleSignInResult.user
+
+                    /*
+                     * Firebase's isNewUser value is the
+                     * authoritative indication that this
+                     * Google authentication created a new
+                     * Firebase account.
+                     *
+                     * Existing Google users are left
+                     * untouched.
+                     */
+
+                    if (
+                        googleSignInResult.isNewUser
+                    ) {
+
+                        userPreferencesRepository
+                            .setNewUser(
+                                userId = user.uid,
+                                isNewUser = true
+                            )
+                    }
 
                     handleAuthenticationSuccess(
                         user = user,
@@ -272,15 +324,41 @@ class AuthViewModel @Inject constructor(
 
     /*
      * --------------------------------------------------
-     * RE-AUTHENTICATION WITH EMAIL / PASSWORD
+     * MARK INITIAL ASSESSMENT DECISION AS HANDLED
      * --------------------------------------------------
      *
-     * This is separate from normal sign-in.
+     * Called when a newly registered user explicitly
+     * chooses either:
      *
-     * The user is already authenticated. This operation
-     * simply refreshes their Firebase authentication so
-     * sensitive operations such as account deletion can
-     * be performed.
+     *      Start Assessment
+     *
+     * or
+     *
+     *      Skip Assessment
+     *
+     * It does NOT mark the assessment as completed.
+     */
+
+    fun markInitialAssessmentDecisionHandled() {
+
+        val userId =
+            authRepository.currentUser?.uid
+                ?: return
+
+        viewModelScope.launch {
+
+            userPreferencesRepository
+                .clearNewUser(
+                    userId
+                )
+        }
+    }
+
+
+    /*
+     * --------------------------------------------------
+     * RE-AUTHENTICATION WITH EMAIL / PASSWORD
+     * --------------------------------------------------
      */
 
     fun reauthenticateWithEmail(
@@ -358,12 +436,6 @@ class AuthViewModel @Inject constructor(
      * --------------------------------------------------
      * RE-AUTHENTICATION WITH GOOGLE
      * --------------------------------------------------
-     *
-     * This is separate from normal Google sign-in.
-     *
-     * The user is already authenticated. A fresh Google
-     * ID token is used to re-authenticate that existing
-     * Firebase account.
      */
 
     fun reauthenticateWithGoogle(
@@ -465,13 +537,6 @@ class AuthViewModel @Inject constructor(
      * --------------------------------------------------
      * DELETE ACCOUNT
      * --------------------------------------------------
-     *
-     * Application data is deleted first.
-     * Firebase Authentication account is deleted only after
-     * application data deletion succeeds.
-     *
-     * The user's uid is captured before deletion so it
-     * remains available while application data is removed.
      */
 
     fun deleteAccount(
@@ -503,36 +568,10 @@ class AuthViewModel @Inject constructor(
 
             try {
 
-                /*
-                 * --------------------------------------------------
-                 * DELETE APPLICATION DATA FIRST
-                 * --------------------------------------------------
-                 *
-                 * This removes the user's local Room data,
-                 * user-specific preferences, and Firestore
-                 * cloud backup data.
-                 *
-                 * If cloud deletion fails, the exception
-                 * propagates and the Firebase Authentication
-                 * account remains intact so deletion can be
-                 * retried.
-                 */
-
                 userDataDeletionRepository
                     .deleteAllUserData(
                         userId
                     )
-
-
-                /*
-                 * --------------------------------------------------
-                 * DELETE FIREBASE AUTHENTICATION ACCOUNT
-                 * --------------------------------------------------
-                 *
-                 * This is intentionally performed only after
-                 * all application data has been successfully
-                 * deleted.
-                 */
 
                 val accountDeletionResult =
                     authRepository
@@ -540,13 +579,6 @@ class AuthViewModel @Inject constructor(
 
                 accountDeletionResult
                     .getOrThrow()
-
-
-                /*
-                 * --------------------------------------------------
-                 * CLEAR AUTH STATE
-                 * --------------------------------------------------
-                 */
 
                 _uiState.value =
                     AuthUiState()
@@ -579,6 +611,24 @@ class AuthViewModel @Inject constructor(
         _uiState.value =
             _uiState.value.copy(
                 errorMessage = null
+            )
+    }
+
+
+    /*
+     * --------------------------------------------------
+     * SET GOOGLE SIGN-IN ERROR
+     * --------------------------------------------------
+     */
+
+    fun setGoogleError(
+        message: String
+    ) {
+
+        _uiState.value =
+            _uiState.value.copy(
+                isLoading = false,
+                errorMessage = message
             )
     }
 
@@ -652,3 +702,4 @@ class AuthViewModel @Inject constructor(
         }
     }
 }
+

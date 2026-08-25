@@ -3,11 +3,40 @@ package com.example.moodselector.domain.repository
 import com.google.firebase.auth.FirebaseUser
 import kotlinx.coroutines.flow.Flow
 
+/*
+ * --------------------------------------------------
+ * GOOGLE SIGN-IN RESULT
+ * --------------------------------------------------
+ *
+ * Contains both the authenticated Firebase user and
+ * whether Firebase reports that this authentication
+ * created a new account.
+ *
+ * This distinction is required because Google
+ * authentication is used for both:
+ *
+ *      New Google account
+ *
+ * and
+ *
+ *      Existing Google account
+ *
+ * Firebase provides this information through
+ * AuthResult.additionalUserInfo?.isNewUser.
+ */
+
+data class GoogleSignInResult(
+    val user: FirebaseUser,
+    val isNewUser: Boolean
+)
+
+
 interface AuthRepository {
 
     val currentUser: FirebaseUser?
 
     val authState: Flow<FirebaseUser?>
+
 
     /*
      * --------------------------------------------------
@@ -25,11 +54,15 @@ interface AuthRepository {
      * --------------------------------------------------
      * GOOGLE SIGN-IN
      * --------------------------------------------------
+     *
+     * Returns both the authenticated Firebase user and
+     * whether Firebase reports that this is a newly
+     * created account.
      */
 
     suspend fun signInWithGoogle(
         idToken: String
-    ): Result<FirebaseUser>
+    ): Result<GoogleSignInResult>
 
 
     /*

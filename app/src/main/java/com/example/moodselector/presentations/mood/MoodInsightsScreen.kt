@@ -19,7 +19,6 @@ import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.TaskAlt
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -73,10 +72,19 @@ fun MoodInsightsScreen(
      * --------------------------------------------------
      * ASSESSMENT STATUS
      * --------------------------------------------------
+     *
+     * null  = still loading/restoring
+     * true  = completed
+     * false = not completed
+     *
+     * The prompt is only displayed when the value is
+     * definitively false. This prevents the prompt from
+     * flashing during Firebase startup.
      */
 
     val assessmentCompleted by
     viewModel.assessmentCompleted.collectAsStateWithLifecycle()
+
 
     /*
      * --------------------------------------------------
@@ -91,6 +99,7 @@ fun MoodInsightsScreen(
 
     val scope =
         rememberCoroutineScope()
+
 
     /*
      * --------------------------------------------------
@@ -134,6 +143,7 @@ fun MoodInsightsScreen(
     val secondaryText =
         MaterialTheme.colorScheme.onSurfaceVariant
 
+
     /*
      * --------------------------------------------------
      * MOOD INPUT
@@ -175,6 +185,7 @@ fun MoodInsightsScreen(
                 emoji = "😤"
             )
         )
+
 
     /*
      * --------------------------------------------------
@@ -228,6 +239,7 @@ fun MoodInsightsScreen(
             else ->
                 "You've been emotionally overwhelmed lately 💙"
         }
+
 
     /*
      * ==================================================
@@ -743,87 +755,28 @@ fun MoodInsightsScreen(
                                     )
                                 }
                             }
-
-                            Spacer(
-                                modifier =
-                                    Modifier.height(22.dp)
-                            )
-
-                            Row(
-                                verticalAlignment =
-                                    Alignment.Bottom
-                            ) {
-
-                                Text(
-                                    text =
-                                        String.format(
-                                            "%.1f",
-                                            averageMood
-                                        ),
-
-                                    style =
-                                        MaterialTheme
-                                            .typography
-                                            .displaySmall,
-
-                                    fontWeight =
-                                        FontWeight.Bold,
-
-                                    color =
-                                        Color.White
-                                )
-
-                                Spacer(
-                                    modifier =
-                                        Modifier.width(8.dp)
-                                )
-
-                                Text(
-                                    text =
-                                        "/ 5.0",
-
-                                    style =
-                                        MaterialTheme
-                                            .typography
-                                            .bodyMedium,
-
-                                    color =
-                                        Color.White.copy(
-                                            alpha = 0.78f
-                                        ),
-
-                                    modifier =
-                                        Modifier.padding(
-                                            bottom = 5.dp
-                                        )
-                                )
-                            }
-
-                            Text(
-                                text =
-                                    "Current emotional score",
-
-                                style =
-                                    MaterialTheme
-                                        .typography
-                                        .bodySmall,
-
-                                color =
-                                    Color.White.copy(
-                                        alpha = 0.85f
-                                    )
-                            )
                         }
                     }
                 }
+
 
                 /*
                  * ==================================================
                  * ASSESSMENT PROMPT
                  * ==================================================
+                 *
+                 * IMPORTANT:
+                 *
+                 * Do NOT render this item while
+                 * assessmentCompleted == null.
+                 *
+                 * This prevents the prompt from flashing for
+                 * a moment while Firebase restores the account
+                 * and UserPreferencesRepository reads the
+                 * assessment-completion value.
                  */
 
-                if (!assessmentCompleted) {
+                if (assessmentCompleted == false) {
 
                     item {
 
@@ -986,6 +939,7 @@ fun MoodInsightsScreen(
                     }
                 }
 
+
                 /*
                  * ==================================================
                  * SUMMARY
@@ -1124,6 +1078,7 @@ fun MoodInsightsScreen(
                         }
                     }
                 }
+
 
                 /*
                  * ==================================================
@@ -1325,7 +1280,6 @@ fun MoodInsightsScreen(
                             )
 
                             OutlinedTextField(
-
                                 value =
                                     moodText,
 
@@ -1385,7 +1339,6 @@ fun MoodInsightsScreen(
                             )
 
                             OutlinedTextField(
-
                                 value =
                                     triggerText,
 
@@ -1451,7 +1404,6 @@ fun MoodInsightsScreen(
                             )
 
                             Button(
-
                                 onClick = {
 
                                     if (
@@ -1510,6 +1462,7 @@ fun MoodInsightsScreen(
                     }
                 }
 
+
                 /*
                  * ==================================================
                  * MOOD INSIGHT
@@ -1519,7 +1472,6 @@ fun MoodInsightsScreen(
                 item {
 
                     Card(
-
                         modifier =
                             Modifier
                                 .fillMaxWidth()
@@ -1620,6 +1572,7 @@ fun MoodInsightsScreen(
                     }
                 }
 
+
                 /*
                  * ==================================================
                  * READING
@@ -1629,7 +1582,6 @@ fun MoodInsightsScreen(
                 item {
 
                     Card(
-
                         modifier =
                             Modifier
                                 .fillMaxWidth()
@@ -1660,7 +1612,6 @@ fun MoodInsightsScreen(
                     ) {
 
                         Row(
-
                             modifier =
                                 Modifier
                                     .fillMaxWidth()
@@ -1674,7 +1625,6 @@ fun MoodInsightsScreen(
                         ) {
 
                             Box(
-
                                 modifier =
                                     Modifier
                                         .size(46.dp)
@@ -1695,7 +1645,6 @@ fun MoodInsightsScreen(
                             ) {
 
                                 Icon(
-
                                     imageVector =
                                         Icons.Default.MenuBook,
 
@@ -1723,7 +1672,6 @@ fun MoodInsightsScreen(
                             ) {
 
                                 Text(
-
                                     text =
                                         "Reading",
 
@@ -1745,7 +1693,6 @@ fun MoodInsightsScreen(
                                 )
 
                                 Text(
-
                                     text =
                                         "Explore recommended books about mental health, wellbeing, and personal growth.",
 
@@ -1765,7 +1712,6 @@ fun MoodInsightsScreen(
                             )
 
                             Icon(
-
                                 imageVector =
                                     Icons.Default.ChevronRight,
 
@@ -1779,6 +1725,7 @@ fun MoodInsightsScreen(
                     }
                 }
 
+
                 /*
                  * ==================================================
                  * REAL STORIES
@@ -1788,7 +1735,6 @@ fun MoodInsightsScreen(
                 item {
 
                     Card(
-
                         modifier =
                             Modifier
                                 .fillMaxWidth()
@@ -1819,7 +1765,6 @@ fun MoodInsightsScreen(
                     ) {
 
                         Row(
-
                             modifier =
                                 Modifier
                                     .fillMaxWidth()
@@ -1833,7 +1778,6 @@ fun MoodInsightsScreen(
                         ) {
 
                             Box(
-
                                 modifier =
                                     Modifier
                                         .size(46.dp)
@@ -1854,7 +1798,6 @@ fun MoodInsightsScreen(
                             ) {
 
                                 Icon(
-
                                     imageVector =
                                         Icons.Default.MenuBook,
 
@@ -1882,7 +1825,6 @@ fun MoodInsightsScreen(
                             ) {
 
                                 Text(
-
                                     text =
                                         "Real Stories",
 
@@ -1904,7 +1846,6 @@ fun MoodInsightsScreen(
                                 )
 
                                 Text(
-
                                     text =
                                         "Read personal experiences with anxiety, depression, and CBT from people who have been through it.",
 
@@ -1924,7 +1865,6 @@ fun MoodInsightsScreen(
                             )
 
                             Icon(
-
                                 imageVector =
                                     Icons.Default.ChevronRight,
 
@@ -1941,3 +1881,4 @@ fun MoodInsightsScreen(
         }
     }
 }
+

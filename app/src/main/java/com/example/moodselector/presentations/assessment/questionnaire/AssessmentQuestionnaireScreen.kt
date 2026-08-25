@@ -1,5 +1,6 @@
 package com.example.moodselector.presentations.assessment.questionnaire
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -17,6 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -35,7 +37,8 @@ fun AssessmentQuestionnaireScreen(
     ) -> Unit = { _, _, _, _ -> }
 ) {
 
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val uiState by
+    viewModel.uiState.collectAsStateWithLifecycle()
 
 
     LaunchedEffect(uiState.isCompleted) {
@@ -57,21 +60,37 @@ fun AssessmentQuestionnaireScreen(
     }
 
 
-    val assessment = uiState.assessment ?: return
+    val assessment =
+        uiState.assessment
+            ?: return
 
     val currentQuestion =
-        uiState.currentQuestion ?: return
-
+        uiState.currentQuestion
+            ?: return
 
     val selectedScore =
-        uiState.selectedAnswers[currentQuestion.id]
+        uiState.selectedAnswers[
+            currentQuestion.id
+        ]
 
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(
+                    MaterialTheme
+                        .colorScheme
+                        .background
+                )
+                .padding(16.dp)
     ) {
+
+        /*
+         * --------------------------------------------------
+         * ASSESSMENT TITLE
+         * --------------------------------------------------
+         */
 
         Text(
             text =
@@ -85,7 +104,13 @@ fun AssessmentQuestionnaireScreen(
             color =
                 MaterialTheme
                     .colorScheme
-                    .onBackground
+                    .onBackground,
+
+            modifier =
+                Modifier.fillMaxWidth(),
+
+            textAlign =
+                TextAlign.Start
         )
 
 
@@ -94,6 +119,12 @@ fun AssessmentQuestionnaireScreen(
                 Modifier.height(8.dp)
         )
 
+
+        /*
+         * --------------------------------------------------
+         * ASSESSMENT DESCRIPTION
+         * --------------------------------------------------
+         */
 
         Text(
             text =
@@ -107,7 +138,13 @@ fun AssessmentQuestionnaireScreen(
             color =
                 MaterialTheme
                     .colorScheme
-                    .onSurfaceVariant
+                    .onSurfaceVariant,
+
+            modifier =
+                Modifier.fillMaxWidth(),
+
+            textAlign =
+                TextAlign.Start
         )
 
 
@@ -116,6 +153,12 @@ fun AssessmentQuestionnaireScreen(
                 Modifier.height(12.dp)
         )
 
+
+        /*
+         * --------------------------------------------------
+         * INSTRUCTIONS
+         * --------------------------------------------------
+         */
 
         Text(
             text =
@@ -129,7 +172,13 @@ fun AssessmentQuestionnaireScreen(
             color =
                 MaterialTheme
                     .colorScheme
-                    .onBackground
+                    .onBackground,
+
+            modifier =
+                Modifier.fillMaxWidth(),
+
+            textAlign =
+                TextAlign.Start
         )
 
 
@@ -138,6 +187,12 @@ fun AssessmentQuestionnaireScreen(
                 Modifier.height(20.dp)
         )
 
+
+        /*
+         * --------------------------------------------------
+         * PROGRESS
+         * --------------------------------------------------
+         */
 
         AssessmentProgressIndicator(
             currentQuestion =
@@ -153,6 +208,12 @@ fun AssessmentQuestionnaireScreen(
                 Modifier.height(20.dp)
         )
 
+
+        /*
+         * --------------------------------------------------
+         * QUESTION + ANSWERS
+         * --------------------------------------------------
+         */
 
         LazyColumn(
             modifier =
@@ -188,11 +249,16 @@ fun AssessmentQuestionnaireScreen(
         }
 
 
+        /*
+         * --------------------------------------------------
+         * NAVIGATION BUTTONS
+         * --------------------------------------------------
+         */
+
         Column(
             verticalArrangement =
                 Arrangement.spacedBy(8.dp)
         ) {
-
 
             if (
                 uiState.currentQuestionIndex > 0
@@ -217,9 +283,7 @@ fun AssessmentQuestionnaireScreen(
 
             Button(
                 onClick = {
-
                     viewModel.nextQuestion()
-
                 },
 
                 enabled =
@@ -228,7 +292,6 @@ fun AssessmentQuestionnaireScreen(
                 modifier =
                     Modifier.fillMaxWidth()
             ) {
-
 
                 val buttonText =
                     if (

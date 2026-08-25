@@ -30,6 +30,35 @@ class UserPreferencesRepository @Inject constructor(
 
     /*
      * --------------------------------------------------
+     * NEW USER KEY
+     * --------------------------------------------------
+     *
+     * This is intentionally separate from assessment
+     * completion.
+     *
+     * A newly registered user is marked as new until
+     * they explicitly choose either:
+     *
+     *      Start Assessment
+     *
+     * or
+     *
+     *      Skip Assessment
+     *
+     * This allows the application to distinguish a
+     * genuinely new account from an existing account
+     * that simply has not completed the assessment.
+     */
+
+    private fun newUserKey(
+        userId: String
+    ) = booleanPreferencesKey(
+        "is_new_user_$userId"
+    )
+
+
+    /*
+     * --------------------------------------------------
      * NOTIFICATION PREFERENCE KEYS
      * --------------------------------------------------
      */
@@ -148,6 +177,50 @@ class UserPreferencesRepository @Inject constructor(
 
             preferences.remove(
                 assessmentCompletedKey(userId)
+            )
+        }
+    }
+
+
+    /*
+     * ==================================================
+     * NEW USER STATUS
+     * ==================================================
+     */
+
+    fun isNewUser(
+        userId: String
+    ): Flow<Boolean> =
+        dataStore.data.map { preferences ->
+
+            preferences[
+                newUserKey(userId)
+            ] ?: false
+        }
+
+
+    suspend fun setNewUser(
+        userId: String,
+        isNewUser: Boolean
+    ) {
+
+        dataStore.edit { preferences ->
+
+            preferences[
+                newUserKey(userId)
+            ] = isNewUser
+        }
+    }
+
+
+    suspend fun clearNewUser(
+        userId: String
+    ) {
+
+        dataStore.edit { preferences ->
+
+            preferences.remove(
+                newUserKey(userId)
             )
         }
     }
@@ -387,19 +460,6 @@ class UserPreferencesRepository @Inject constructor(
      * ==================================================
      * CLEAR ALL USER PREFERENCES
      * ==================================================
-     *
-     * Removes user-specific notification, reminder, and
-     * theme preferences.
-     *
-     * The assessment-completion state is intentionally
-     * preserved here. Deleting user data must not make
-     * StartupViewModel treat an already-assessed user as
-     * a brand-new user.
-     *
-     * The assessment-completion state can still be
-     * explicitly cleared through clearAssessmentCompleted()
-     * when the user actually chooses to retake the
-     * assessment.
      */
 
     suspend fun clearUserPreferences(
@@ -407,6 +467,14 @@ class UserPreferencesRepository @Inject constructor(
     ) {
 
         dataStore.edit { preferences ->
+
+            preferences.remove(
+                assessmentCompletedKey(userId)
+            )
+
+            preferences.remove(
+                newUserKey(userId)
+            )
 
             preferences.remove(
                 notificationsEnabledKey(userId)
@@ -442,4 +510,3 @@ class UserPreferencesRepository @Inject constructor(
         }
     }
 }
-

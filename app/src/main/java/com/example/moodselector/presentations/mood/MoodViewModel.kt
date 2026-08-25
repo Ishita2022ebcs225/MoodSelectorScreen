@@ -10,6 +10,8 @@ import com.example.moodselector.domain.repository.MoodRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -60,30 +62,42 @@ class MoodViewModel @Inject constructor(
      * ASSESSMENT STATUS
      * --------------------------------------------------
      *
-     * This observes the current user's assessment
-     * completion preference.
+     * null  = authentication / assessment status
+     *         is still being restored
      *
-     * When the assessment-completion preference is
-     * deleted, this flow becomes false and the
-     * MoodInsightsScreen can show the assessment prompt
-     * again.
+     * true  = assessment has been completed
+     *
+     * false = assessment has not been completed
+     *
+     * Using null as the initial state prevents the
+     * assessment prompt from briefly appearing while
+     * Firebase restores the authenticated user and the
+     * corresponding preference is loaded.
      */
 
-    val assessmentCompleted: StateFlow<Boolean> =
-        if (userId != null) {
+    val assessmentCompleted: StateFlow<Boolean?> =
+        authRepository.authState
+            .flatMapLatest { user ->
 
-            userPreferencesRepository
-                .hasCompletedAssessment(userId!!)
-                .stateIn(
-                    scope = viewModelScope,
-                    started = SharingStarted.WhileSubscribed(5000),
-                    initialValue = false
-                )
+                val currentUserId =
+                    user?.uid
 
-        } else {
+                if (currentUserId != null) {
 
-            kotlinx.coroutines.flow.MutableStateFlow(false)
-        }
+                    userPreferencesRepository
+                        .hasCompletedAssessment(
+                            currentUserId
+                        )
+                } else {
+
+                    flowOf(false)
+                }
+            }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5000),
+                initialValue = null
+            )
 
 
     /*
@@ -98,13 +112,14 @@ class MoodViewModel @Inject constructor(
         trigger: String
     ) {
 
-        val currentUserId = userId
-            ?: return
+        val currentUserId =
+            userId ?: return
 
-        val timestamp = SimpleDateFormat(
-            "dd MMM yyyy • hh:mm a",
-            Locale.getDefault()
-        ).format(Date())
+        val timestamp =
+            SimpleDateFormat(
+                "dd MMM yyyy • hh:mm a",
+                Locale.getDefault()
+            ).format(Date())
 
         viewModelScope.launch {
 
@@ -152,3 +167,4 @@ class MoodViewModel @Inject constructor(
         }
     }
 }
+

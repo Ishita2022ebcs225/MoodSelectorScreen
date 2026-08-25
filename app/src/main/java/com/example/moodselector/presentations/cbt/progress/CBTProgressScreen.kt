@@ -412,9 +412,9 @@ private fun ProgressSummaryCard(
                                 if (
                                     completionCount == 1
                                 ) {
-                                    "activity completed"
+                                    "activity completed today"
                                 } else {
-                                    "activities completed"
+                                    "activities completed today"
                                 },
 
                     color =

@@ -121,26 +121,6 @@ fun AssessmentOnboardingScreen(
 
         Spacer(
             modifier =
-                Modifier.height(8.dp)
-        )
-
-        Text(
-            text =
-                "Optional",
-
-            style =
-                MaterialTheme
-                    .typography
-                    .labelLarge,
-
-            color =
-                MaterialTheme
-                    .colorScheme
-                    .primary
-        )
-
-        Spacer(
-            modifier =
                 Modifier.height(20.dp)
         )
 

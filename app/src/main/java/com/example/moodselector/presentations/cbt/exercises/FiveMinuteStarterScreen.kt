@@ -285,7 +285,7 @@ fun FiveMinuteStarterScreen(
                     icon = Icons.Default.Psychology,
                     title = "You don't have to finish everything",
                     description =
-                        "The goal is simply to get started. Commit to five minutes of focused effort and see what happens."
+                        "The goal is simply to start. Commit to five minutes of focused effort and see what happens."
                 )
 
                 Spacer(
@@ -670,7 +670,7 @@ private fun TimerCard(
 
                 Text(
                     text =
-                        "You got started. That's what this exercise is about.",
+                        "You’ve taken the first step. That's what this exercise is about.",
                     color = textSecondary,
                     fontSize = 13.sp,
                     textAlign = TextAlign.Center

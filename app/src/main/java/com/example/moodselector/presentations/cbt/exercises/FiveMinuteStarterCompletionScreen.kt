@@ -187,7 +187,7 @@ fun FiveMinuteStarterCompletionScreen(
                         )
 
                         Text(
-                            text = "You got started",
+                            text = "You’ve taken the first step ",
                             color = textPrimary,
                             fontWeight = FontWeight.Bold,
                             fontSize = 20.sp
