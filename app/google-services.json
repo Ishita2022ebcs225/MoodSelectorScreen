@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "257876217690",
+    "project_id": "hermind-9613a",
+    "storage_bucket": "hermind-9613a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:257876217690:android:260d3a5e8bfc7db57eed63",
+        "android_client_info": {
+          "package_name": "com.example.moodselector"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "257876217690-djlsn8chdercqhhuegkjev224u3hn0cb.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.moodselector",
+            "certificate_hash": "6635d47dd33adde59b44220c6e81610414406a48"
+          }
+        },
+        {
+          "client_id": "257876217690-knb7ammtctvegrmkl11sfa6h7g865oi8.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBCI3YsC-FZh5-sPwHQftnwRQ_VJR2NrYI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "257876217690-knb7ammtctvegrmkl11sfa6h7g865oi8.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
