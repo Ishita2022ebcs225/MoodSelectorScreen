@@ -184,29 +184,6 @@ fun ABCModelScreen(
                             textPrimary
                     )
                 }
-
-                Spacer(
-                    modifier = Modifier.weight(1f)
-                )
-
-                Text(
-                    text =
-                        when (currentPage) {
-                            0 -> "About"
-                            1 -> "A / 3"
-                            2 -> "B / 3"
-                            else -> "C / 3"
-                        },
-
-                    color =
-                        textSecondary,
-
-                    fontSize =
-                        13.sp,
-
-                    fontWeight =
-                        FontWeight.Medium
-                )
             }
 
             Spacer(
@@ -815,3 +792,4 @@ private fun ABCResponsePage(
         }
     }
 }
+

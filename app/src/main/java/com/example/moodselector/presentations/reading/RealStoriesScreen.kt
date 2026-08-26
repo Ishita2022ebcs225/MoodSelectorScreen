@@ -41,7 +41,7 @@ private val realStories = listOf(
             "A personal experience of living with anxiety and gradually finding ways to understand it, talk about it, and manage difficult moments.",
         source = "Mind · Shiva",
         url =
-            "[https://www.mind.org.uk/information-support/your-stories/how-i-learnt-to-accept-my-anxiety/](https://www.mind.org.uk/information-support/your-stories/how-i-learnt-to-accept-my-anxiety/)"
+            "https://www.mind.org.uk/information-support/your-stories/how-i-learnt-to-accept-my-anxiety/"
     ),
 
     RealStory(
@@ -50,7 +50,7 @@ private val realStories = listOf(
             "A woman's experience of living with depression and anxiety and discovering how treatment, including CBT, could help her regain parts of everyday life.",
         source = "Mind · Rachel",
         url =
-            "[https://www.mind.org.uk/information-support/your-stories/how-treatment-helped-me-to-live-with-depression-and-anxiety/](https://www.mind.org.uk/information-support/your-stories/how-treatment-helped-me-to-live-with-depression-and-anxiety/)"
+            "https://www.mind.org.uk/information-support/your-stories/how-treatment-helped-me-to-live-with-depression-and-anxiety/"
     ),
 
     RealStory(
@@ -59,7 +59,7 @@ private val realStories = listOf(
             "A personal account of anxiety and depression, seeking therapy, and discovering how CBT techniques became useful beyond the therapy sessions.",
         source = "Mind · Sophie",
         url =
-            "[https://www.mind.org.uk/information-support/your-stories/cbt-and-me/](https://www.mind.org.uk/information-support/your-stories/cbt-and-me/)"
+            "https://www.mind.org.uk/information-support/your-stories/cbt-and-me/"
     ),
 
     RealStory(
@@ -68,7 +68,7 @@ private val realStories = listOf(
             "A woman's experience of anxiety, therapy and learning that talking about mental health could be part of finding ways to cope.",
         source = "Mind · Shetal",
         url =
-            "[https://www.mind.org.uk/information-support/your-stories/my-culture-stopped-me-talking-about-my-anxiety/](https://www.mind.org.uk/information-support/your-stories/my-culture-stopped-me-talking-about-my-anxiety/)"
+            "https://www.mind.org.uk/information-support/your-stories/my-culture-stopped-me-talking-about-my-anxiety/"
     ),
 
     RealStory(
@@ -145,16 +145,6 @@ fun RealStoriesScreen(
      */
 
     Scaffold(
-
-        /*
-         * Important:
-         *
-         * Previously this was transparent, which allowed
-         * whatever was underneath the screen to determine
-         * the background. Using the theme background keeps
-         * this screen synchronized with the app's dark
-         * and light themes.
-         */
 
         containerColor =
             background,

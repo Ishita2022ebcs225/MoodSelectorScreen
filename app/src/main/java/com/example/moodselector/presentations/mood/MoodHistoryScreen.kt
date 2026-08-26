@@ -276,10 +276,17 @@ fun MoodHistoryScreen(
                  * ==================================================
                  * MOOD ENTRIES
                  * ==================================================
+                 *
+                 * MoodDao already returns entries using:
+                 *
+                 * ORDER BY id DESC
+                 *
+                 * Therefore the list is already ordered from
+                 * newest entry to oldest entry.
                  */
 
                 items(
-                    moods.reversed()
+                    moods
                 ) { mood ->
 
                     Box(
@@ -306,3 +313,4 @@ fun MoodHistoryScreen(
         }
     }
 }
+
