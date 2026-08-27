@@ -423,10 +423,10 @@ fun AppNavHost(
 
 
             /*
- * ==================================================
- * ASSESSMENT ONBOARDING
- * ==================================================
- */
+             * ==================================================
+             * ASSESSMENT ONBOARDING
+             * ==================================================
+             */
 
             composable(
                 route =
@@ -435,33 +435,37 @@ fun AppNavHost(
 
                 AssessmentOnboardingScreen(
 
+                    /*
+                     * --------------------------------------------------
+                     * BEGIN ASSESSMENT
+                     * --------------------------------------------------
+                     *
+                     * Do NOT mark the initial assessment decision
+                     * as handled here.
+                     *
+                     * The user is proceeding into the questionnaire,
+                     * so the assessment flow is still active.
+                     */
+
                     onStartAssessment = {
-
-                        /*
-                         * The user has explicitly chosen to proceed
-                         * with the assessment.
-                         *
-                         * This ends the "new user" startup state.
-                         * It does NOT mark the assessment as completed.
-                         */
-
-                        authViewModel
-                            .markInitialAssessmentDecisionHandled()
 
                         navController.navigate(
                             Screen.AssessmentQuestionnaire.route
                         )
                     },
 
-                    onSkipAssessment = {
+                    /*
+                     * --------------------------------------------------
+                     * SKIP ASSESSMENT
+                     * --------------------------------------------------
+                     *
+                     * Skipping is the point at which the new-user
+                     * onboarding decision is considered handled.
+                     *
+                     * The assessment itself remains incomplete.
+                     */
 
-                        /*
-                         * The user has explicitly chosen to skip
-                         * the initial assessment.
-                         *
-                         * The assessment remains incomplete, so
-                         * MoodInsights can still offer it later.
-                         */
+                    onSkipAssessment = {
 
                         authViewModel
                             .markInitialAssessmentDecisionHandled()
